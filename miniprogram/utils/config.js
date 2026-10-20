@@ -8,5 +8,5 @@ module.exports = {
   API_BASE_URL: "",
   // 开发登录的固定身份：同一个 key 每次登录都是同一个用户，数据不会丢。
   DEV_LOGIN_KEY: "owner",
-  PRIVACY_VERSION: "2026-10-20.1",
+  PRIVACY_VERSION: "2026-10-20.2",
 };

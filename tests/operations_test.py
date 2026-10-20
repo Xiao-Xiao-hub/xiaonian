@@ -144,6 +144,79 @@ class BackupBundleTests(unittest.TestCase):
         self.assertIn('Missing referenced upload', result.stderr)
         self.assertFalse((self.bundle / 'bundle.manifest.json').exists())
 
+    def avatar_fixture(self):
+        self.fixture(with_image=False)
+        body = b'\x89PNG\r\n\x1a\nsynthetic-profile-backup-fixture'
+        version = '1234567890abcdef1234567890abcdef'
+        avatar = {
+            'version': version, 'path': f'usr_profile_fixture/profile/{version}.png',
+            'type': 'png', 'bytes': len(body), 'updatedAt': '2026-10-20T00:00:00.000Z',
+        }
+        with contextlib.closing(sqlite3.connect(self.source)) as db, db:
+            db.execute("ALTER TABLE users ADD COLUMN data TEXT NOT NULL DEFAULT '{}' CHECK(json_valid(data))")
+            db.execute('INSERT INTO users VALUES(?,?)', (
+                'usr_profile_fixture', json.dumps({'id': 'usr_profile_fixture', 'avatar': avatar}),
+            ))
+            # Accounts that never chose an avatar, or cleared it, remain valid.
+            db.execute('INSERT INTO users VALUES(?,?)', ('usr_no_avatar', '{"avatar":null}'))
+        path = self.uploads / avatar['path']
+        path.parent.mkdir(parents=True)
+        path.write_bytes(body)
+        return avatar, body
+
+    def test_v2_preserves_profile_avatar_and_user_reference_on_restore(self):
+        avatar, body = self.avatar_fixture()
+        result = self.backup()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.manifest()['images'], [{
+            'path': avatar['path'], 'bytes': len(body), 'sha256': hashlib.sha256(body).hexdigest(),
+        }])
+        result = self.restore()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((self.restored / 'uploads' / avatar['path']).read_bytes(), body)
+        with contextlib.closing(sqlite3.connect(self.restored / 'app.sqlite')) as db:
+            restored = json.loads(db.execute("SELECT data FROM users WHERE id='usr_profile_fixture'").fetchone()[0])
+        self.assertEqual(restored['avatar'], avatar)
+
+    def test_v2_missing_profile_avatar_never_marks_backup_complete(self):
+        avatar, _ = self.avatar_fixture()
+        (self.uploads / avatar['path']).rename(self.work / 'held-avatar.png')
+        result = self.backup()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing referenced upload', result.stderr)
+        self.assertTrue((self.bundle / 'app.sqlite').exists())
+        self.assertFalse((self.bundle / 'bundle.manifest.json').exists())
+
+    def test_v2_restore_rejects_avatar_missing_even_when_manifest_omits_it(self):
+        avatar, _ = self.avatar_fixture()
+        self.assertEqual(self.backup().returncode, 0)
+        (self.bundle / 'uploads' / avatar['path']).rename(self.work / 'held-avatar.png')
+        # A tree/manifest match alone cannot establish a complete snapshot:
+        # the database still names this missing persistent avatar.
+        manifest = self.manifest()
+        manifest['images'] = []
+        self.write_manifest(manifest)
+        result = self.restore()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing referenced upload', result.stderr)
+        self.assertFalse(self.restored.exists())
+
+    def test_v2_rejects_invalid_or_escaping_profile_avatar_references(self):
+        self.avatar_fixture()
+        outside = self.work / 'outside-avatar.png'
+        outside.write_bytes(b'outside-stays-unchanged')
+        for number, avatar in enumerate(['invalid', {}, {'path': '../../outside-avatar.png'}]):
+            with self.subTest(avatar=avatar):
+                with contextlib.closing(sqlite3.connect(self.source)) as db, db:
+                    db.execute("UPDATE users SET data=? WHERE id='usr_profile_fixture'", (
+                        json.dumps({'avatar': avatar}),
+                    ))
+                target = self.work / f'invalid-avatar-backup-{number}'
+                result = self.backup(target=target)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertFalse((target / 'bundle.manifest.json').exists())
+                self.assertEqual(outside.read_bytes(), b'outside-stays-unchanged')
+
     def test_v2_restore_rejects_missing_or_tampered_unreferenced_import_files(self):
         self.chat_and_import_fixture()
         self.assertEqual(self.backup().returncode, 0)

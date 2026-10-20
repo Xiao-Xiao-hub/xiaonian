@@ -6,6 +6,7 @@ const api = require("../../utils/api");
 const auth = require("../../utils/auth");
 const gate = require("../../utils/gate");
 const session = require("../../utils/session");
+const profile = require("../../utils/profile");
 const { errorText } = require("../../utils/format");
 const { asset } = require("../../utils/assets");
 const studyClock = require("../../utils/study-clock");
@@ -117,11 +118,10 @@ const ICONS = {
   export: asset("ic-inbox-tray.webp"),
   help: asset("ic-open-book.webp"),
 };
-// WeChat logins all carry this placeholder nickname; greet without it.
-const PLACEHOLDER_NAME = "微信用户";
 const EMPTY = {
   name: "",
   initial: "",
+  avatarPath: "",
   usage: [],
   left: null,
   budget: "",
@@ -149,6 +149,20 @@ Page({
     error: "",
     prefBusy: false,
     showMood: true,
+    editingProfile: false,
+    profileReady: false,
+    profileAuthorizing: false,
+    profileUnsupported: false,
+    profileSaving: false,
+    profileWaiting: false,
+    profileError: "",
+    profileFirst: false,
+    profileEditId: 0,
+    draftNickname: "",
+    draftAvatar: "",
+    nicknamePending: false,
+    nicknameInputId: 0,
+    profileCanReset: false,
   },
   onShow() {
     this.alive = true;
@@ -158,22 +172,43 @@ Page({
     }
     // A guest sees the page without anything personal and sends nothing.
     if (gate.state() === "guest") {
+      this.discardProfile();
       this.loadVersion = (this.loadVersion || 0) + 1;
       this.owner = undefined;
       this.setData({ guest: true, ...EMPTY, loading: false, error: "" });
       return;
     }
     const owner = (auth.getUser() || {}).id;
-    if (owner !== this.owner || this.data.guest) this.setData({ ...EMPTY });
+    if (owner !== this.owner || this.data.guest ||
+      (this.data.editingProfile && this.editGeneration !== auth.consentGeneration())) {
+      this.discardProfile();
+      this.setData({ ...EMPTY });
+    }
     this.owner = owner;
     this.setData({ guest: false, prefBusy: false, showMood: showMood(owner) });
-    this.load();
+    const completed = this.completedProfile;
+    this.completedProfile = null;
+    if (completed) this.acceptProfile(completed.user, completed.id, completed.message);
+    return this.load().then(() => {
+      const intent = getApp().globalData.profileSetup;
+      const user = auth.getUser();
+      if (!intent || !user || intent.owner !== user.id || this.alive === false) return;
+      delete getApp().globalData.profileSetup;
+      if (profile.prompted(user.id) || profile.displayName(user) || user.avatar) {
+        profile.markPrompted(user.id);
+        wx.reLaunch({ url: intent.next });
+        return;
+      }
+      this.profileSetupReturn = intent.next;
+      this.editProfile(true);
+    });
   },
   onHide() {
     this.alive = false;
     this.loadVersion = (this.loadVersion || 0) + 1;
   },
   onUnload() {
+    this.discardProfile();
     this.onHide();
   },
   load() {
@@ -208,19 +243,24 @@ Page({
             "/v1/me/suggest-cards",
             "/v1/me/prefs",
             "/v1/me/study-time",
+            "/v1/auth/me",
           ].map(part),
         );
       })
       .then((result) => {
         if (!result) return;
-        const [chat, usage, map, stats, suggest, prefs, study] = result;
+        const [chat, usage, map, stats, suggest, prefs, study, identity] = result;
         if (!active()) return;
-        const user = auth.getUser();
+        let user = auth.getUser();
         if (owner !== (user || {}).id) {
           this.setData({ ...EMPTY });
           return this.load();
         }
         this.owner = (user || {}).id;
+        if (!identity.error && identity.value && identity.value.id === owner) {
+          session.updateUser(identity.value);
+          user = auth.getUser();
+        }
         // v4 only: on a server rolled back to v3.3 their rows are left out.
         // Any other failure is not "missing": the rows stay as they were.
         const absent = (r) =>
@@ -257,8 +297,7 @@ Page({
             { day: usage.value.date || "" },
           );
         }
-        const nickname = user ? user.nickname : "";
-        const named = nickname && nickname !== PLACEHOLDER_NAME ? nickname : "";
+        const named = profile.displayName(user);
         // By code point, so an emoji or a rare character stays whole.
         Object.assign(patch, { name: named, initial: Array.from(named)[0] || "" });
         if (!map.error) {
@@ -288,6 +327,7 @@ Page({
           patch.picked = null;
         }
         this.setData(patch);
+        this.loadAvatar(user, active);
       })
       .catch((error) => {
         if (active() && !api.needsConsent(error))
@@ -296,6 +336,242 @@ Page({
       .finally(() => {
         if (active()) this.setData({ loading: false });
       });
+  },
+  // 图片下载与编辑草稿都绑定账号；网络晚返回时不能把 A 的头像显示给 B。
+  loadAvatar(user, active) {
+    const version = user && user.avatar && user.avatar.version;
+    const key = version ? `${user.id}:${version}` : "";
+    if (!key) {
+      this.avatarKey = "";
+      this.setData({ avatarPath: "" });
+      return;
+    }
+    if (this.avatarKey === key && this.data.avatarPath) return;
+    this.avatarKey = key;
+    this.setData({ avatarPath: "" });
+    api.download(`/v1/me/profile/avatar?v=${encodeURIComponent(version)}`, "头像")
+      .then((filePath) => {
+        if (active() && this.avatarKey === key && (auth.getUser() || {}).id === user.id)
+          this.setData({ avatarPath: filePath });
+      })
+      .catch(() => {
+        if (active() && this.avatarKey === key) this.setData({ avatarPath: "" });
+      });
+  },
+  avatarError() {
+    this.avatarKey = "";
+    this.setData({ avatarPath: "" });
+  },
+  editCurrent(id = this.editId) {
+    return this.data.editingProfile && id === this.editId &&
+      this.editOwner === (auth.getUser() || {}).id &&
+      this.editGeneration === auth.consentGeneration() && auth.hasConsent();
+  },
+  editActive(id = this.editId) {
+    return this.alive !== false && this.editCurrent(id);
+  },
+  async editProfile(first = false) {
+    if (this.data.guest) return gate.ask();
+    if (this.data.profileSaving || this.data.profileAuthorizing) return;
+    const user = auth.getUser();
+    if (!user) return;
+    this.discardProfile();
+    this.editOwner = user.id;
+    this.editGeneration = auth.consentGeneration();
+    const id = this.editId;
+    this.originalNickname = profile.displayName(user);
+    this.reviewValue = this.originalNickname;
+    this.reviewState = "unchanged";
+    this.setData({
+      editingProfile: true, profileFirst: first === true, profileEditId: id,
+      nicknameInputId: 0,
+      draftNickname: this.originalNickname, draftAvatar: "",
+      profileCanReset: Boolean(this.originalNickname || user.avatar),
+      profileUnsupported: !profile.supported(),
+    });
+    if (!this.data.profileUnsupported) await this.authorizeProfile();
+  },
+  async authorizeProfile() {
+    if (this.data.profileAuthorizing) return;
+    const id = this.editId;
+    this.setData({ profileAuthorizing: true, profileError: "" });
+    try {
+      await profile.authorize();
+      if (this.editActive(id)) this.setData({ profileReady: true });
+    } catch (error) {
+      if (this.editActive(id)) this.setData({ profileError: errorText(error) });
+    } finally {
+      if (this.editCurrent(id)) this.setData({ profileAuthorizing: false });
+    }
+  },
+  discardProfile() {
+    this.editId = (this.editId || 0) + 1;
+    clearTimeout(this.reviewTimer);
+    this.pendingProfileSave = null;
+    this.completedProfile = null;
+    this.setData({
+      editingProfile: false, profileReady: false, profileAuthorizing: false,
+      profileUnsupported: false, profileSaving: false, profileWaiting: false,
+      profileError: "", profileFirst: false, draftNickname: "", draftAvatar: "",
+      nicknamePending: false,
+      profileCanReset: false,
+    });
+  },
+  cancelProfile() {
+    if (this.data.profileSaving) return;
+    const owner = this.editOwner;
+    if (this.data.profileFirst && owner === (auth.getUser() || {}).id)
+      profile.markPrompted(owner);
+    const next = this.data.profileFirst ? this.profileSetupReturn : "";
+    this.profileSetupReturn = "";
+    this.discardProfile();
+    if (next) wx.reLaunch({ url: next });
+  },
+  chooseAvatar(event) {
+    if (!this.editActive() || !this.data.profileReady || this.data.profileSaving) return;
+    if (String(event.currentTarget.dataset.edit) !== String(this.editId)) return;
+    const filePath = event.detail && event.detail.avatarUrl;
+    // 取消或微信审核未通过时没有可用的临时路径，不清掉原头像。
+    if (typeof filePath !== "string" || !filePath) return;
+    this.pendingProfileSave = null;
+    this.setData({ draftAvatar: filePath, profileError: "", profileWaiting: false });
+  },
+  nicknameInput(event) {
+    if (!this.editActive() || this.data.profileSaving || this.data.nicknamePending) return;
+    if (String(event.currentTarget.dataset.edit) !== String(this.editId) ||
+      Number(event.currentTarget.dataset.input) !== this.data.nicknameInputId) return;
+    const value = String(event.detail.value || "");
+    this.pendingProfileSave = null;
+    this.reviewValue = "";
+    this.reviewState = value === this.originalNickname ? "unchanged" : "typing";
+    this.setData({ draftNickname: value, profileError: "", profileWaiting: false });
+  },
+  nicknameBlur(event) {
+    if (!this.editActive() || String(event.currentTarget.dataset.edit) !== String(this.editId)) return;
+    if (Number(event.currentTarget.dataset.input) !== this.data.nicknameInputId) return;
+    const value = String(event.detail.value || "");
+    // blur 的值仍可能等待微信审核；只能由 nicknamereview 认可这一轮输入。
+    if (value !== this.data.draftNickname) {
+      this.reviewValue = "";
+      this.reviewState = "typing";
+      this.pendingProfileSave = null;
+      this.setData({ draftNickname: value, profileWaiting: false });
+    }
+    if (value === this.originalNickname || (this.reviewState === "passed" && this.reviewValue === value)) return;
+    this.waitNicknameReview();
+  },
+  waitNicknameReview() {
+    this.reviewState = "pending";
+    this.setData({ nicknamePending: true });
+    clearTimeout(this.reviewTimer);
+    const id = this.editId;
+    this.reviewTimer = setTimeout(() => {
+      if (!this.editCurrent(id) || this.reviewState !== "pending") return;
+      this.reviewState = "timeout";
+      this.pendingProfileSave = null;
+      this.setData({
+        nicknamePending: false, profileWaiting: false,
+        nicknameInputId: this.data.nicknameInputId + 1,
+        profileError: "昵称检查暂时没有完成，请重新填写后再保存",
+      });
+    }, 10000);
+  },
+  nicknameReview(event) {
+    if (!this.editCurrent() || String(event.currentTarget.dataset.edit) !== String(this.editId)) return;
+    if (Number(event.currentTarget.dataset.input) !== this.data.nicknameInputId) return;
+    clearTimeout(this.reviewTimer);
+    const accepted = event.detail && event.detail.pass === true && event.detail.timeout !== true;
+    this.reviewState = accepted ? "passed" : (event.detail && event.detail.timeout ? "timeout" : "failed");
+    this.reviewValue = accepted ? this.data.draftNickname : "";
+    const pending = this.pendingProfileSave;
+    this.pendingProfileSave = null;
+    this.setData({
+      nicknamePending: false, profileWaiting: false,
+      profileError: accepted ? "" : "昵称没有通过检查，请换一个昵称后再保存",
+      ...(!accepted ? { draftNickname: "", nicknameInputId: this.data.nicknameInputId + 1 } : {}),
+    });
+    if (accepted && pending && pending.nickname === this.reviewValue) this.commitProfile(pending);
+  },
+  saveProfile(event) {
+    if (!this.editActive() || !this.data.profileReady || this.data.profileSaving) return;
+    const value = String((event.detail.value || {}).nickname || "");
+    // form 提供原生组件当前值；不能把较早的 blur 值或审核超时当作已通过。
+    if (value !== this.data.draftNickname)
+      return this.setData({ profileError: "昵称正在更新，请确认内容后再保存" });
+    const nickname = value.trim();
+    const changed = value !== this.originalNickname;
+    if (changed && (!nickname || nickname.length > 24))
+      return this.setData({ profileError: "昵称需要 1–24 个字，请重新填写" });
+    const pending = { nickname: value, changed, avatar: this.data.draftAvatar };
+    if (changed && !(this.reviewState === "passed" && this.reviewValue === value)) {
+      if (this.reviewState === "failed" || this.reviewState === "timeout")
+        return this.setData({ profileError: "请重新填写昵称，完成检查后再保存" });
+      this.pendingProfileSave = pending;
+      this.setData({ profileWaiting: true, profileError: "" });
+      if (this.reviewState !== "pending") this.waitNicknameReview();
+      return;
+    }
+    this.commitProfile(pending);
+  },
+  async commitProfile(draft) {
+    if (!this.editCurrent() || this.data.profileSaving) return;
+    if (!draft.changed && !draft.avatar) return this.cancelProfile();
+    const id = this.editId;
+    this.setData({ profileSaving: true, profileError: "" });
+    try {
+      const user = draft.avatar
+        ? await api.uploadTo("/v1/me/profile", draft.avatar, draft.changed ? { nickname: draft.nickname.trim() } : undefined)
+        : await api.patch("/v1/me/profile", { nickname: draft.nickname.trim() });
+      this.acceptProfile(user, id, "资料已保存");
+    } catch (error) {
+      if (this.editCurrent(id)) this.setData({ profileError: errorText(error) });
+    } finally {
+      if (this.editCurrent(id)) this.setData({ profileSaving: false });
+    }
+  },
+  acceptProfile(user, id, message) {
+    if (!this.editCurrent(id) || !user || user.id !== this.editOwner) return;
+    if (this.alive === false) {
+      // 切页后只记住同账号的完成结果；返回时再更新可见资料，busy 仍须正常释放。
+      this.completedProfile = { user, id, message };
+      return;
+    }
+    session.updateUser(user);
+    profile.markPrompted(user.id);
+    // 旧的 /auth/me 读取不能晚于这次保存，再把旧昵称盖回来。
+    this.loadVersion = (this.loadVersion || 0) + 1;
+    const name = profile.displayName(user);
+    this.setData({ name, initial: Array.from(name)[0] || "", loading: false, profileSaving: false });
+    const next = this.data.profileFirst ? this.profileSetupReturn : "";
+    this.profileSetupReturn = "";
+    this.discardProfile();
+    this.loadAvatar(user, () => this.alive && (auth.getUser() || {}).id === user.id);
+    wx.showToast({ title: message, icon: "success" });
+    if (next) wx.reLaunch({ url: next });
+  },
+  resetProfile() {
+    if (!this.editActive() || this.data.profileSaving || this.resetPrompt || !this.data.profileCanReset) return;
+    const id = this.editId;
+    this.resetPrompt = true;
+    wx.showModal({
+      title: "恢复默认资料？",
+      content: "已保存的头像和昵称会移除，账号和学习资料不会改变。",
+      confirmText: "恢复默认",
+      success: async ({ confirm }) => {
+        this.resetPrompt = false;
+        if (!confirm || !this.editActive(id)) return;
+        this.setData({ profileSaving: true, profileError: "" });
+        try {
+          const user = await api.del("/v1/me/profile", { avatar: true, nickname: true });
+          this.acceptProfile(user, id, "已恢复默认资料");
+        } catch (error) {
+          if (this.editCurrent(id)) this.setData({ profileError: errorText(error) });
+        } finally {
+          if (this.editCurrent(id)) this.setData({ profileSaving: false });
+        }
+      },
+      fail: () => { this.resetPrompt = false; },
+    });
   },
   // Tapping a day shows its minutes under the map; tapping it again goes back to today.
   pickDay(event) {
@@ -497,6 +773,7 @@ Page({
           .del("/v1/me", { confirm: true }, { account: true })
           .then(() => {
             learningSpace.clear(owner);
+            profile.clearPrompt(owner);
             // A completed deletion of A must not erase a newer B session.
             if (
               (auth.getUser() || {}).id !== owner ||

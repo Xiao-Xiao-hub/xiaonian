@@ -4,6 +4,7 @@
  */
 const auth = require("../../utils/auth");
 const gate = require("../../utils/gate");
+const profile = require("../../utils/profile");
 const { errorText } = require("../../utils/format");
 const { asset } = require("../../utils/assets");
 // The guided tour is shown once per phone (zhiye_onboarded, cleared when the
@@ -54,6 +55,15 @@ Page({
         // anyone who has not seen the tour on this phone sees it, also
         // after agreeing again to new documents (随心记 checks the same flag).
         const tour = wx.getStorageSync(ONBOARDED) !== "1";
+        const user = auth.getUser();
+        if (user && !profile.displayName(user) && !user.avatar && !profile.prompted(user.id)) {
+          getApp().globalData.profileSetup = {
+            owner: user.id,
+            next: tour ? "/pages/onboard/index" : NOTES,
+          };
+          wx.switchTab({ url: "/pages/profile/index" });
+          return;
+        }
         wx.reLaunch({ url: tour ? "/pages/onboard/index" : NOTES });
       })
       .catch((error) => {

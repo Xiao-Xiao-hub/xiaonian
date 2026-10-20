@@ -4,9 +4,43 @@
   <view class="who">
     <view class="who-l">
       <text class="who-name">{{guest ? '游客' : (name || '你好')}}</text>
+      <button wx:if="{{!guest}}" class="edit-profile" hover-class="btn-press" disabled="{{loading || profileSaving}}" bindtap="editProfile">编辑资料</button>
       <view wx:if="{{learn}}" class="who-tags"><text class="lv">Lv {{learn.level}}</text><text wx:if="{{learn.rank}}">{{learn.rank}}</text><text>高数上</text></view>
     </view>
-    <view class="me-av">{{initial || '我'}}</view>
+    <view class="me-av"><image wx:if="{{avatarPath}}" class="avatar-image" src="{{avatarPath}}" mode="aspectFill" binderror="avatarError" /><text wx:else>{{initial || '我'}}</text></view>
+  </view>
+  <view wx:if="{{editingProfile}}" class="profile-editor">
+    <text class="profile-title">{{profileFirst ? '设置头像和昵称' : '编辑资料'}}</text>
+    <text class="profile-note">头像和昵称由你选择，只用于晓念里的个人展示。先跳过也能正常使用。</text>
+    <text wx:if="{{profileUnsupported}}" class="profile-note">当前微信版本暂不支持安全填写头像昵称。升级微信后可再设置，现在可以继续使用默认资料。</text>
+    <view wx:elif="{{!profileReady}}" class="profile-authorization">
+      <text class="profile-note">先确认微信隐私授权，再选择头像或填写昵称。</text>
+      <button class="btn-line" hover-class="btn-press" loading="{{profileAuthorizing}}" disabled="{{profileAuthorizing}}" bindtap="authorizeProfile">{{profileAuthorizing ? '正在确认…' : '确认隐私授权'}}</button>
+    </view>
+    <form wx:else bindsubmit="saveProfile">
+      <view class="profile-avatar-row">
+        <button class="avatar-picker" hover-class="btn-press" open-type="chooseAvatar" data-edit="{{profileEditId}}" bindchooseavatar="chooseAvatar" disabled="{{profileSaving || profileWaiting}}" aria-label="选择头像">
+          <image wx:if="{{draftAvatar || avatarPath}}" class="avatar-image" src="{{draftAvatar || avatarPath}}" mode="aspectFill" />
+          <text wx:else>{{initial || '我'}}</text>
+        </button>
+        <view><text class="profile-label">头像</text><text class="profile-note">点击选择，保存后更新</text></view>
+      </view>
+      <label class="profile-label" for="profile-nickname">昵称</label>
+      <block wx:for="{{[nicknameInputId]}}" wx:key="*this">
+        <input id="profile-nickname" class="profile-nickname" type="nickname" name="nickname" value="{{draftNickname}}" maxlength="24" placeholder="填写你喜欢的昵称" placeholder-class="profile-placeholder" data-edit="{{profileEditId}}" data-input="{{item}}" disabled="{{profileSaving || nicknamePending}}" bindinput="nicknameInput" bindblur="nicknameBlur" bindnicknamereview="nicknameReview" />
+      </block>
+      <text wx:if="{{nicknamePending}}" class="profile-note">正在检查昵称，请稍等…</text>
+      <text wx:if="{{profileError}}" class="profile-error" role="alert">{{profileError}}</text>
+      <view class="profile-actions">
+        <button class="btn" hover-class="btn-press" form-type="submit" loading="{{profileSaving || profileWaiting}}" disabled="{{profileSaving || profileWaiting}}">{{profileSaving ? '正在保存…' : (profileWaiting ? '等待昵称检查…' : '保存')}}</button>
+        <button class="btn-line" hover-class="btn-press" disabled="{{profileSaving}}" bindtap="cancelProfile">{{profileFirst ? '先跳过' : '取消'}}</button>
+      </view>
+      <button wx:if="{{profileCanReset}}" class="profile-skip tap-area" hover-class="btn-press" disabled="{{profileSaving || profileWaiting}}" bindtap="resetProfile">恢复默认资料</button>
+    </form>
+    <block wx:if="{{!profileReady}}">
+      <text wx:if="{{profileError}}" class="profile-error" role="alert">{{profileError}}</text>
+      <button class="profile-skip tap-area" hover-class="btn-press" bindtap="cancelProfile">{{profileFirst ? '先跳过，继续使用' : '取消'}}</button>
+    </block>
   </view>
   <view wx:if="{{error}}" class="alert">{{error}}<button wx:if="{{!guest}}" class="retry tap-area" disabled="{{loading || busy}}" bindtap="load">重试</button></view>
   <block wx:if="{{!guest}}">

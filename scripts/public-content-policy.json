@@ -149,6 +149,12 @@
       "reason": "Reviewed injected-transport/session fixture, example signing fixture, or synthetic privacy assertion; not an external credential."
     },
     {
+      "path": "tests/frontend-user-profile.test.cjs",
+      "rule": "credential-literal",
+      "sha256": "f8035ce61770d045a314abdf846583c41fd2af18e957ad9517fc66b072e0586d",
+      "reason": "Explicit fake session in a mocked wx runtime; no external authentication or network is used."
+    },
+    {
       "path": "tests/frontend-v4-gate.test.cjs",
       "rule": "credential-literal",
       "sha256": "80e935032a2202ebc91e7d3d03858f8065195901d6d4c93ee8833c19caa7b5c1",
@@ -255,6 +261,12 @@
       "rule": "credential-literal",
       "sha256": "9bb0a505b4843f811dfbc97e48702b5e60a9bf20d48ba9586e48c5cf120d9df3",
       "reason": "Reviewed injected-transport/session fixture, example signing fixture, or synthetic privacy assertion; not an external credential."
+    },
+    {
+      "path": "tests/profile.test.ts",
+      "rule": "credential-literal",
+      "sha256": "eaea8227f81e8e308109a8ad21f86e8a351795388ccef8e11ae44c3145a6b2f9",
+      "reason": "Explicit fake WeChat secret in an injected code2Session transport returning a synthetic OpenID; never sent to WeChat."
     },
     {
       "path": "tests/public_release_test.py",

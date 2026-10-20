@@ -460,6 +460,12 @@ export class AccountService {
       user: {
         id: user.id,
         nickname: user.nickname,
+        avatar: user.avatar ? {
+          type: user.avatar.type,
+          bytes: user.avatar.bytes,
+          updatedAt: user.avatar.updatedAt,
+          note: "头像原图不在 JSON 导出中，可在“我的”查看、修改或清除；仅本人登录后可读取。",
+        } : null,
         createdAt: user.createdAt,
         ageBand: user.ageBand ?? null,
         consents: user.consents ?? [],

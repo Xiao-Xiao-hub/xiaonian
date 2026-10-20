@@ -14,6 +14,7 @@ export const publicUser = (user: User) => ({
   role: user.role,
   authMode: user.authMode,
   createdAt: user.createdAt,
+  avatar: user.avatar ? { version: user.avatar.version } : null,
 });
 export class AuthService {
   readonly adminSessions: AdminSessions;

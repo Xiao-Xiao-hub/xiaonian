@@ -1,15 +1,15 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { PREVIOUS_PRIVACY_VERSION, PRIVACY_VERSION } from "../server/src/shared/domain.js";
+import { ACCEPTED_PRIVACY_VERSIONS, PREVIOUS_PRIVACY_VERSION, PRIVACY_VERSION } from "../server/src/shared/domain.js";
 import { SqliteStore } from "../server/src/shared/store.js";
 import { fakeServices, makeApp } from "./fixtures.js";
 
-// Keep one-version compatibility for an older client during rollout.
+// Keep released clients compatible with existing features during rollout.
 // Store the version actually consented to, rather than silently upgrading it.
 test("consent takes the current and the previous version and records which", async (t) => {
-  assert.equal(PRIVACY_VERSION, "2026-10-20.1");
-  assert.equal(PREVIOUS_PRIVACY_VERSION, "2026-10-17.1");
+  assert.equal(PRIVACY_VERSION, "2026-10-20.2");
+  assert.equal(PREVIOUS_PRIVACY_VERSION, "2026-10-20.1");
   const store = new SqliteStore(":memory:");
   const app = makeApp(fakeServices(), {}, undefined, store);
   t.after(() => app.close());
@@ -37,6 +37,12 @@ test("consent takes the current and the previous version and records which", asy
     store.getUser(old.id)!.consents!.map((c) => c.version),
     [PREVIOUS_PRIVACY_VERSION, PRIVACY_VERSION],
   );
+  for (const version of ACCEPTED_PRIVACY_VERSIONS) {
+    const compatible = await login(`compatible-${version.replaceAll(".", "-")}`);
+    const accepted = await compatible.put(version);
+    assert.equal(accepted.statusCode, 200, accepted.body);
+    assert.equal(store.getUser(compatible.id)!.consents!.at(-1)!.version, version);
+  }
   const other = await login("consent-other");
   for (const version of ["2026-10-16.1", "2026-10-18.1", "2026-10-21.1", "2026-01-01.1"]) {
     const res = await other.put(version);
@@ -48,11 +54,11 @@ test("consent takes the current and the previous version and records which", asy
   for (const doc of ["privacy-policy", "user-agreement", "children-privacy"])
     assert.match(
       readFileSync(new URL(`../server/legal/${doc}.md`, import.meta.url), "utf8"),
-      /版本：2026-10-20\.1　更新日期：2026-10-20　生效日期：2026-10-20/,
+      /版本：2026-10-20\.2　更新日期：2026-10-20　生效日期：2026-10-20/,
     );
   assert.match(
     readFileSync(new URL("../miniprogram/utils/config.js", import.meta.url), "utf8"),
-    /PRIVACY_VERSION: "2026-10-20\.1"/,
+    /PRIVACY_VERSION: "2026-10-20\.2"/,
   );
 });
 

@@ -64,7 +64,7 @@ test("map export includes every schema column while keeping existing names and r
   assert.doesNotMatch(response.body, /other-marker|user_id|userId/);
 });
 
-test("export adds only the four designed user preferences", async (t) => {
+test("export includes declared profile and preferences but excludes internal user fields", async (t) => {
   const { store, login } = fixture(t);
   const owner = await login("preferences");
   const preferences = {
@@ -79,8 +79,9 @@ test("export adds only the four designed user preferences", async (t) => {
   assert.equal(response.statusCode, 200);
   const user = response.json().user;
   for (const [key, value] of Object.entries(preferences)) assert.deepEqual(user[key], value);
+  assert.equal(user.avatar, null);
   assert.deepEqual(Object.keys(user).sort(), [
-    "ageBand", "consents", "createdAt", "id", "moodConsentAt", "nickname", "personalized",
+    "ageBand", "avatar", "consents", "createdAt", "id", "moodConsentAt", "nickname", "personalized",
     "resume", "studyTime", "suggestCards", "taughtTo",
   ]);
   assert.doesNotMatch(response.body, /openid|authMode|must-not-export/);

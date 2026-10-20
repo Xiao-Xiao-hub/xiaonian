@@ -158,6 +158,16 @@ def check_upload_references(database: Path, uploads: Path):
     with closing(sqlite3.connect(database.resolve(strict=True).as_uri() + '?mode=ro', uri=True)) as db:
         if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='chat_images'").fetchone():
             references += [row[0] for row in db.execute('SELECT DISTINCT path FROM chat_images ORDER BY path')]
+        # Avatars are persistent uploads too, but their reference lives in the
+        # user JSON rather than an image table. Older snapshots may lack data.
+        if any(row[1] == 'data' for row in db.execute('PRAGMA table_info(users)')):
+            for row in db.execute('SELECT data FROM users ORDER BY id'):
+                user = json.loads(row[0])
+                avatar = user.get('avatar')
+                if avatar is not None:
+                    if not isinstance(avatar, dict):
+                        raise ValueError('Invalid profile avatar reference')
+                    references.append(avatar.get('path'))
     for relative in references:
         path = image_path(uploads, relative, strict=True)
         if not path.is_file():

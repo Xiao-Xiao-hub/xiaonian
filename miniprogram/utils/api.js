@@ -130,24 +130,25 @@ function upload(kind, filePath) {
 const noBase = () =>
   Promise.reject(fail("尚未配置 HTTPS 服务地址", "NO_API_BASE_URL"));
 // After a 401 the session is cleared and one fresh login is tried, like call.
-function uploadTo(url, filePath) {
+function uploadTo(url, filePath, formData) {
   if (!baseUrl()) return noBase();
   const first = transferGuard(false);
   return auth
     .login()
-    .then(() => sendFile(url, filePath, first))
+    .then(() => sendFile(url, filePath, first, formData))
     .catch((error) => {
       if (error.statusCode !== 401) throw error;
       const retry = transferGuard(false, first.state());
-      return auth.login().then(() => sendFile(url, filePath, retry));
+      return auth.login().then(() => sendFile(url, filePath, retry, formData));
     });
 }
-function sendFile(url, filePath, current) {
+function sendFile(url, filePath, current, formData) {
   return new Promise((resolve, reject) =>
     wx.uploadFile({
       url: `${baseUrl()}${url}`,
       filePath,
       name: "file",
+      ...(formData ? { formData } : {}),
       header: current(),
       // Photos for the chat are read by the vision model before the reply.
       timeout: 90000,

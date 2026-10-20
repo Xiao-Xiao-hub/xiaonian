@@ -42,6 +42,7 @@ import { ReviewService } from "./modules/review/service.js";
 import { registerReviewRoutes } from "./modules/review/routes.js";
 import { AccountService } from "./modules/account/service.js";
 import { registerAccountRoutes } from "./modules/account/routes.js";
+import { ProfileService } from "./modules/account/profile.js";
 import { registerStudyTimeRoutes } from "./modules/study-time/routes.js";
 import { StudyTimeService } from "./modules/study-time/service.js";
 import { AdminService } from "./modules/admin/service.js";
@@ -178,6 +179,7 @@ export function buildApp(options: BuildOptions = {}) {
     options.fetcher,
   );
   const materials = new MaterialService(store, env.UPLOAD_DIR, businessNow);
+  const profiles = new ProfileService(store, env.UPLOAD_DIR);
   const toolLinks = new ToolLinkService(store, jev, businessNow);
   const mistakes = new MistakeService(
     store,
@@ -542,6 +544,8 @@ export function buildApp(options: BuildOptions = {}) {
     // day by anyone (0.6.0; their owner's next visit drops them too).
     const daily = () => {
       pruneFormulas();
+      const profilesRemoved = profiles.sweepOrphans();
+      if (profilesRemoved) app.log.info({ removed: profilesRemoved }, "unreferenced avatars pruned");
       const dropped = chat.sweepStale();
       if (dropped) app.log.info({ dropped }, "unsent chat attachments pruned");
     };
@@ -593,6 +597,7 @@ export function buildApp(options: BuildOptions = {}) {
     });
     registerAccountRoutes(app, {
       auth,
+      profiles,
       account: new AccountService(store, materials, runner, {
         ai: env.DAILY_AI_LIMIT,
         ocr: env.DAILY_OCR_LIMIT,

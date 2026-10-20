@@ -63,6 +63,7 @@ function fixture() {
       login: async () => {},
     },
     session: {},
+    profile: require("../miniprogram/utils/profile.js"),
     gate: { state: () => "ok", check: () => true, ask() {} },
     assets: { asset: (name) => name },
     "study-clock": { setEnabled() {} },
@@ -81,6 +82,8 @@ function fixture() {
       Page: (x) => (definition = x),
       require: (n) => deps[n.split("/").at(-1)],
       getApp: () => app,
+      setTimeout,
+      clearTimeout,
       wx: {
         switchTab: (x) => nav.push(x.url),
         navigateTo: (x) => nav.push(x.url),
@@ -120,7 +123,8 @@ test("profile shows owned card totals, seven actual allowance buckets and recomm
   assert.equal(p.data.suggestCards, false);
   assert.equal(p.data.name, "one");
   assert.equal(p.data.left, 59, "今天还能用 shows the 问 AI count");
-  assert.equal(requests.length, 7);
+  assert.equal(requests.length, 8);
+  assert.ok(requests.includes("/v1/auth/me"), "refresh profile data from the current account");
   // Allowances stay folded under 今天还能用 until opened.
   assert.equal(p.data.usageOpen, false);
   p.openUsage();

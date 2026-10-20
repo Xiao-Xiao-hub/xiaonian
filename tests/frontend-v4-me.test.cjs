@@ -79,6 +79,7 @@ function fixture({ state = "ok", study, missing = [], fail = [], nickname = "小
     },
     gate: { state: () => state, check: () => state !== "none", ask: () => asks.push(1) },
     session: {},
+    profile: require("../miniprogram/utils/profile.js"),
     format: { errorText: (e) => e.message },
     assets: { asset: (name) => `https://x/v1/assets/${name}` },
     "study-clock": { setEnabled: (on) => enabled.push(on) },
@@ -91,6 +92,8 @@ function fixture({ state = "ok", study, missing = [], fail = [], nickname = "小
     Page: (x) => (definition = x),
     require: (n) => deps[n.split("/").at(-1)],
     getApp: () => ({ globalData: {} }),
+    setTimeout,
+    clearTimeout,
     wx: {
       navigateTo() {},
       switchTab() {},

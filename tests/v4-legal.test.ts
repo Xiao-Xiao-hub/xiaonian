@@ -36,7 +36,7 @@ test("server/legal is self-contained and matches the current privacy version", (
   for (const doc of LEGAL_DOCS) {
     const served = readFileSync(`${LEGAL_DIR}${doc}.md`, "utf8");
     assert.ok(served.includes(`版本：${PRIVACY_VERSION}`), doc);
-    assert.match(served, /版本：2026-10-20\.1　更新日期：2026-10-20　生效日期：2026-10-20/);
+    assert.match(served, /版本：2026-10-20\.2　更新日期：2026-10-20　生效日期：2026-10-20/);
   }
 });
 

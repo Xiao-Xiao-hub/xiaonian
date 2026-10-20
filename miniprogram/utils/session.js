@@ -24,6 +24,13 @@ function lastUser() {
 function setSession(value) {
   wx.setStorageSync(KEY, value);
 }
+// 只合并当前账号的公开资料，保留可能已续期的 token 和到期时间。
+function updateUser(user) {
+  const current = getSession();
+  if (!current || !user || current.user.id !== user.id) return false;
+  setSession({ ...current, user: { ...current.user, ...user } });
+  return true;
+}
 function clearSession() {
   wx.removeStorageSync(KEY);
 }
@@ -35,4 +42,4 @@ const LOCAL_FLAGS = [
   "zhiye_notes_tidy_later",
   "ask_tip_seen",
 ];
-module.exports = { getSession, lastUser, setSession, clearSession, LOCAL_FLAGS };
+module.exports = { getSession, lastUser, setSession, updateUser, clearSession, LOCAL_FLAGS };

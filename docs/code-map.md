@@ -18,6 +18,7 @@
 | 页面文案与交互 | `miniprogram/pages/<页面>/`；WXML是结构、WXSS是样式、JS是状态和事件、JSON是组件声明 |
 | 公共界面 | `miniprogram/components/`及`app.wxss`；优先复用已有组件和颜色尺寸变量 |
 | 登录与请求 | `miniprogram/utils/`、`server/src/modules/auth/`；保留过期请求和账号切换保护 |
+| 头像与昵称 | `miniprogram/pages/profile/`、`utils/profile.js` → `server/src/modules/account/routes.ts`、`profile.ts`；原生授权、昵称检查、本人头像存储与清除。对应 `frontend-user-profile.test.cjs`、`profile.test.ts` |
 | 资料、卡片、对话、导入 | `server/src/modules/`对应领域；接口入口与业务处理分开阅读 |
 | 大模型提示词／输出结构 | 对应模块的`prompts.ts`或`schema.ts`，以及`providers/`；同时核对字段校验 |
 | 地图题库与判题 | `server/src/modules/learn/`；题目、答案、解析、图布局和判题各自分文件 |
