@@ -1,0 +1,29 @@
+.mood-log { padding-top: 20rpx; }
+.mood-section { margin-top: 18rpx; padding: 8rpx 4rpx 12rpx; }
+.mood-list { overflow: hidden; background: var(--card); border-radius: 28rpx; box-shadow: var(--shadow); }
+.mood-item { position: relative; overflow: hidden; }
+.mood-item + .mood-item { border-top: 2rpx solid var(--rule); }
+.mood-row { position: relative; z-index: 1; display: flex; align-items: center; gap: 18rpx; min-height: 104rpx; padding: 20rpx 24rpx 20rpx 32rpx; background: var(--card); transition: transform 180ms ease; }
+.mood-row.swiped { transform: translateX(-152rpx); }
+.grow { flex: 1; min-width: 0; }
+.mood-del { flex: none; width: auto !important; min-height: 64rpx; padding: 0 4rpx 0 16rpx; color: var(--pencil); font-size: 26rpx; }
+.mood-fold { margin-top: 32rpx; padding: 0 4rpx; }
+.mood-fold text { flex: 1; min-width: 0; }
+.mood-counts .mood-row + .mood-row, .mood-counts .mood-sub + .mood-row { border-top: 2rpx solid var(--rule); }
+.mood-row.on .count-name { color: var(--primary); font-weight: 600; }
+.mood-chevron { display: inline-block; }
+.mood-row.on .mood-chevron { transform: rotate(90deg); }
+.mood-sub { border-top: 2rpx solid var(--rule); }
+.mood-sub .mood-row { padding-left: 110rpx; }
+.mood-sub .mood-row + .mood-row { border-top: 2rpx solid var(--rule); }
+.mood-title { display: block; overflow: hidden; font-size: 30rpx; font-weight: 600; line-height: 1.45; white-space: nowrap; text-overflow: ellipsis; }
+.mood-meta { display: block; margin-top: 6rpx; font-size: 24rpx; color: var(--pencil); }
+.mood-chevron { flex: none; color: var(--faint); font-size: 40rpx; line-height: 1; }
+.delete-action { position: absolute; top: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; width: 152rpx; background: var(--red); color: var(--on-primary); font-size: 30rpx; }
+.mood-icon { display: flex; align-items: center; justify-content: center; width: 60rpx; height: 60rpx; flex: none; border-radius: 18rpx; background: var(--chip); color: var(--pencil); font-size: 34rpx; }
+.count-name { flex: 1; min-width: 0; font-size: 30rpx; }
+.count-value { flex: none; color: var(--pencil); font-size: 28rpx; }
+.mood-danger { margin-top: 42rpx; color: var(--red-ink); }
+.mood-revoke { display: block; width: auto !important; margin: 24rpx auto 0; padding: 10rpx 24rpx; border: 0; background: transparent; color: var(--pencil); font-size: 28rpx; text-align: center; }
+.mood-empty { padding: 88rpx 16rpx; text-align: center; }
+.mood-empty .hint { margin-top: 12rpx; font-size: 26rpx; }

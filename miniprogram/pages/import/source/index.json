@@ -1,0 +1,5 @@
+{
+  "navigationBarTitleText": "导入",
+  "enablePullDownRefresh": false,
+  "usingComponents": { "task-progress": "/components/task-progress/index" }
+}

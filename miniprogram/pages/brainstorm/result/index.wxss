@@ -1,0 +1,262 @@
+.result {
+  padding-bottom: 180rpx;
+}
+.ai-line {
+  margin: -10rpx 0 16rpx;
+  color: var(--pencil);
+  font-size: 24rpx;
+  text-align: center;
+}
+.ai-dot {
+  margin-right: 5rpx;
+  color: var(--violet-ink);
+}
+.head {
+  color: var(--pencil);
+  font-size: 24rpx;
+}
+.head > view {
+  margin-bottom: 4rpx;
+  color: var(--ink);
+  font-size: 34rpx;
+  font-weight: 700;
+}
+.graph {
+  width: calc(100% + 64rpx);
+  margin: 22rpx -32rpx 0;
+  border-top: 2rpx solid var(--rule);
+  border-bottom: 2rpx solid var(--rule);
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--rule-2) 2rpx, transparent 2rpx);
+  background-size: 28rpx 28rpx;
+}
+.graph-inner {
+  position: relative;
+  box-sizing: border-box;
+}
+.trunk,
+.stem {
+  position: absolute;
+  z-index: 0;
+  background: var(--primary);
+}
+.trunk {
+  height: 8rpx;
+  border-radius: 999rpx;
+}
+.stem {
+  width: 4rpx;
+}
+.group-name {
+  position: absolute;
+  z-index: 2;
+  box-sizing: border-box;
+  min-height: 64rpx;
+  padding: 12rpx 8rpx;
+  border: 4rpx solid var(--primary);
+  border-radius: 20rpx;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 24rpx;
+  font-weight: 700;
+  text-align: center;
+}
+.graph-card {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  box-sizing: border-box;
+  gap: 7rpx;
+  padding: 13rpx 12rpx;
+  overflow: hidden;
+  border: 2rpx solid var(--type-border, var(--rule-2));
+  border-radius: 8rpx 18rpx 18rpx 18rpx;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 24rpx;
+  font-weight: 650;
+  line-height: 1.4;
+}
+.graph-card image {
+  flex: none;
+  width: 26rpx;
+  height: 26rpx;
+}
+.tie {
+  position: absolute;
+  z-index: 1;
+  box-sizing: border-box;
+}
+.tie-v {
+  width: 0;
+  border-left: 3rpx dashed var(--pencil);
+}
+.tie-h {
+  height: 0;
+  border-top: 3rpx dashed var(--pencil);
+}
+.end {
+  position: absolute;
+  z-index: 3;
+  box-sizing: border-box;
+  width: 220rpx;
+  padding: 14rpx 16rpx;
+  border: 4rpx solid var(--primary);
+  border-radius: 8rpx 24rpx 24rpx 24rpx;
+  background: var(--card);
+  color: var(--ink);
+}
+.end text {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 25rpx;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.end .end-label {
+  margin-top: 0;
+  color: var(--primary);
+  font-size: 24rpx;
+}
+.tensions {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  padding: 12rpx 0 0;
+  color: var(--pencil);
+  font-size: 24rpx;
+}
+.section {
+  margin: 24rpx 0 12rpx;
+  color: var(--pencil);
+  font-size: 28rpx;
+  font-weight: 700;
+}
+.conclusion-card {
+  position: relative;
+  box-sizing: border-box;
+  padding: 24rpx 26rpx;
+  overflow: hidden;
+  border: 2rpx solid var(--type-border);
+  border-radius: 8rpx 30rpx 30rpx 30rpx;
+  background: var(--type-wash);
+  box-shadow: var(--shadow);
+}
+.conclusion-watermark {
+  position: absolute;
+  top: 24rpx;
+  right: 22rpx;
+  width: 94rpx;
+  height: 94rpx;
+  opacity: 0.07;
+}
+.card-head,
+.detail-row,
+.card-tags {
+  display: flex;
+  align-items: center;
+}
+.card-head {
+  gap: 8rpx;
+  color: var(--type-ink);
+  font-size: 24rpx;
+  font-weight: 700;
+}
+.card-head > image {
+  width: 30rpx;
+  height: 30rpx;
+}
+.conclusion-title {
+  position: relative;
+  z-index: 1;
+  margin: 18rpx 0 16rpx;
+  color: var(--ink);
+  font-size: 34rpx;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.detail-row {
+  align-items: flex-start;
+  gap: 14rpx;
+  padding: 9rpx 0;
+  color: var(--body);
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+.detail-row > text:last-child {
+  flex: 1;
+}
+.detail-key {
+  flex: none;
+  width: 90rpx;
+  color: var(--pencil);
+  font-weight: 700;
+}
+.card-tags {
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 14rpx;
+}
+.card-tags > text {
+  padding: 5rpx 13rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+}
+.wall {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+.empty,
+.alert {
+  display: block;
+  padding: 50rpx 0;
+  text-align: center;
+}
+.alert {
+  color: var(--red-ink);
+}
+.bottom-bar {
+  position: fixed;
+  z-index: 8;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  padding: 16rpx 32rpx calc(16rpx + env(safe-area-inset-bottom));
+  border-top: 2rpx solid var(--rule);
+  background: var(--card);
+}
+.bottom-bar .btn-text {
+  flex: none;
+}
+.bottom-bar .btn {
+  flex: 1;
+  min-width: 0;
+  width: auto !important;
+  margin: 0;
+}
+/* V4.2 (G1b): scroll hint, report status lines. */
+.graph-hint {
+  display: block;
+  padding-top: 8rpx;
+  color: var(--faint);
+  font-size: 22rpx;
+  text-align: right;
+}
+.report-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+  color: var(--pencil);
+  font-size: 26rpx;
+}
+/* V4.2 G9: no text under 24rpx (app.wxss floor). */
+.graph-hint {
+  font-size: 24rpx;
+}

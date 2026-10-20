@@ -1,0 +1,19 @@
+<view class="se">
+  <view wx:for="{{lines}}" wx:key="index" class="se-row">
+    <text class="se-no tnum">{{index + 1}}</text>
+    <view wx:if="{{item && editing !== index}}" class="se-show" hover-class="pressed" data-index="{{index}}" bindtap="edit" aria-role="button" aria-label="改第 {{index + 1}} 步">
+      <rich wx:if="{{views[index]}}" blocks="{{views[index]}}" />
+      <text wx:else class="se-text">{{item}}</text>
+    </view>
+    <view wx:else class="se-edit">
+      <textarea class="se-in" auto-height disable-default-padding maxlength="500" placeholder="{{placeholder}}" placeholder-class="placeholder" value="{{item}}" focus="{{editing === index}}" data-index="{{index}}" bindinput="input" />
+      <view wx:if="{{editing === index && (preview || item)}}" class="se-foot">
+        <view wx:if="{{preview}}" class="se-pv"><rich blocks="{{preview}}" /></view>
+        <text wx:if="{{item}}" class="se-done link tap-area" bindtap="done" aria-role="button">好了</text>
+      </view>
+    </view>
+    <view class="se-x tap-area" hover-class="pressed" data-index="{{index}}" bindtap="remove" aria-role="button" aria-label="删掉第 {{index + 1}} 步">×</view>
+  </view>
+  <view wx:if="{{undo}}" class="se-undo"><text>删掉了第 {{undo.no}} 步</text><text class="link" bindtap="restore" aria-role="button">撤销</text></view>
+  <view wx:if="{{lines.length < max}}" class="se-add tap-area" hover-class="pressed" bindtap="add" aria-role="button">＋ 加一步</view>
+</view>

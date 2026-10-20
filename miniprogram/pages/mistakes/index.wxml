@@ -1,0 +1,97 @@
+<view class="page" capture-bind:touchstart="studyTouch">
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+  <guest-bar />
+  <view wx:if="{{pointId}}" class="drill-line"><text>{{counts.point.name || '相关知识点'}}</text><text bindtap="clearPoint" aria-role="button" aria-label="看全部">×</text></view>
+
+  <view class="seg">
+    <view class="{{status === 'open' ? 'on' : ''}}" data-status="open" bindtap="setStatus">没弄懂<text wx:if="{{counts}}"> {{counts.open}}</text></view>
+    <view class="{{status === 'mastered' ? 'on' : ''}}" data-status="mastered" bindtap="setStatus">弄懂了<text wx:if="{{counts}}"> {{counts.mastered}}</text></view>
+  </view>
+  <text wx:if="{{status === 'open' && counts && counts.due}}" class="due">今天该做 {{counts.due}} 道</text>
+
+  <scroll-view wx:if="{{status === 'open' && counts && counts.chapters.length > 1}}" class="chips" scroll-x enhanced show-scrollbar="{{false}}">
+    <view class="chip {{chapter ? '' : 'on'}}" data-chapter="" bindtap="setChapter">全部章节</view>
+    <view wx:for="{{counts.chapters}}" wx:key="chapter" class="chip {{chapter === item.chapter ? 'on' : ''}}" data-chapter="{{item.chapter}}" bindtap="setChapter">{{item.label}} {{item.n}}</view>
+  </scroll-view>
+
+  <view wx:if="{{status === 'open' && chapter && practicable}}" class="drill-line" hover-class="pressed" bindtap="practice">
+    <text>这一章再来一道新的</text>
+    <text>›</text>
+  </view>
+  <view wx:if="{{error && !items.length}}" class="alert">{{error}}<text class="link" bindtap="load">再试一次</text></view>
+  <view wx:elif="{{error}}" class="alert">{{error}}</view>
+
+  <view wx:for="{{shown}}" wx:key="id" class="wq" bindlongpress="manage" data-id="{{item.id}}">
+    <view class="wq-top">
+      <text wx:if="{{item.mapPoint}}" class="tag blue">{{item.mapPoint.name}}</text>
+      <text wx:if="{{item.chapterLabel}}" class="tag">{{item.chapterLabel}}</text>
+      <text class="wq-when {{item.whenTone}}">{{item.when}}</text>
+      <view class="btn-icon card-more" hover-class="pressed" data-id="{{item.id}}" catchtap="cardMore" aria-role="button" aria-label="更多">⋯</view>
+    </view>
+    <view class="problem"><rich blocks="{{item.blocks}}" /></view>
+    <view wx:if="{{item.answer}}" class="mine"><text class="mine-k">我的答案</text><text class="mine-v">{{item.answer}}</text></view>
+    <view wx:if="{{item.cause}}" class="why"><text class="why-k">错因</text><text class="why-v">{{item.cause}}</text></view>
+    <view wx:if="{{item.wrong > 0 || item.status === 'open' || item.threadId}}" class="wq-ft">
+      <text wx:if="{{item.wrong > 0}}">错过 {{item.wrong}} 次</text>
+      <text wx:elif="{{item.status === 'open'}}">自己收进来的</text>
+      <text wx:if="{{item.threadId}}" class="link wq-explain" data-id="{{item.id}}" catchtap="explain" aria-role="button">看讲解</text>
+      <view wx:if="{{item.status === 'open'}}" class="btn-line sm blue redo" hover-class="btn-press" data-id="{{item.id}}" catchtap="redo">{{item.redoText}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{!shown.length && !loading && !(error && !items.length)}}" class="empty">
+    <block wx:if="{{status === 'open'}}">
+      <image wx:if="{{counts && counts.mastered}}" class="done-mark" src="/assets/marks/tick-green.png" />
+      <text class="h3 block">{{counts && counts.mastered ? '没弄懂的都清完了' : '还没有错题'}}</text>
+      <text class="block">没弄懂的题收在这儿，有的会自动放进来。</text>
+      <button class="btn" hover-class="btn-press" bindtap="askPhoto">拍一道题试试</button>
+    </block>
+    <text wx:else class="block">弄懂了的题会放在这儿。</text>
+  </view>
+  <view wx:if="{{loading && !shown.length}}" class="empty">打开中…</view>
+  <view wx:if="{{more && shown.length}}" class="more-line" hover-class="pressed" bindtap="loadMore">{{moreBusy ? '打开中…' : '接着看更早的'}}</view>
+
+  <!-- redo: the problem only; after the verdict, decide what to look at -->
+  <view wx:if="{{redo}}" class="scrim" bindtap="closeRedo">
+    <view class="pop" catchtap="noop">
+      <view class="pop-top">
+        <text class="h3">重做这道题</text>
+        <text class="close" bindtap="closeRedo">关闭</text>
+      </view>
+      <view class="problem pop-problem"><rich blocks="{{redo.item.blocks}}" /></view>
+      <block wx:if="{{!redo.verdict}}">
+        <text class="label">你的答案</text>
+        <textarea class="field redo-field" placeholder="写下答案，分数写成 a/b" placeholder-class="placeholder" maxlength="500" auto-height value="{{redo.answer}}" focus="{{!redo.answer}}" bindinput="onAnswer" />
+        <view wx:if="{{redo.error}}" class="alert">{{redo.error}}</view>
+        <button class="btn" hover-class="btn-press" disabled="{{!redo.answer || redo.sending}}" bindtap="submitRedo">{{redo.sending ? '正在看…' : redo.error ? (redo.judgeId ? '再看一次结果' : '再交一次') : '看看对不对'}}</button>
+        <text class="hint center redo-hint">写最后结果就行；想看过程，去拍草稿</text>
+      </block>
+      <block wx:else>
+        <view class="verdict {{redo.verdict.tone === 'green' ? 'good' : redo.verdict.tone === 'red' ? 'bad' : ''}}">
+          <image class="mark" src="/assets/marks/{{redo.verdict.mark}}.png" />
+          <view class="copy">
+            <text class="title">{{redo.verdict.title}}</text>
+            <text wx:if="{{redo.verdict.cause}}" class="sub">错因：{{redo.verdict.cause}}</text>
+          </view>
+        </view>
+        <view wx:if="{{redo.verdict.reference}}" class="ref">
+          <view class="row"><text class="k">参考答案</text><text class="tag">{{redo.verdict.sourceText}}</text></view>
+          <text class="v">{{redo.verdict.reference}}</text>
+        </view>
+        <view wx:if="{{redo.blocks.length}}" class="comment"><rich blocks="{{redo.blocks}}" /></view>
+        <view wx:if="{{redo.item.mapPoint}}" class="map-link" hover-class="pressed" bindtap="openMap">
+          <view class="map-link-copy"><text class="map-link-k">相关知识点</text><text class="map-link-title">{{redo.item.mapPoint.name}}</text></view>
+          <text class="map-link-go">去看看 ›</text>
+        </view>
+        <block wx:if="{{redo.verdict.correct}}">
+          <button class="btn" hover-class="btn-press" bindtap="similar">再来一道差不多的</button>
+          <view class="links"><text class="link" bindtap="closeRedo">好的</text></view>
+        </block>
+        <block wx:else>
+          <button class="btn" hover-class="btn-press" bindtap="again">再做一次</button>
+          <view class="links"><text class="link" bindtap="explain">看看怎么做</text></view>
+        </block>
+      </block>
+    </view>
+  </view>
+</view>

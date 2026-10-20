@@ -1,0 +1,21 @@
+/* The same night sky as the portrait map (pages/map/index.wxss, 40-map.html);
+   a tap opens the point's detail page. */
+page { height:100%; overflow:hidden; background:#060b20; }
+.landscape-page { position:relative; display:flex; flex-direction:column; height:100vh; overflow:hidden; background:linear-gradient(180deg,#060b20 0%,#0b1a45 55%,#142a5f 100%); color:#e8eefc; }
+.stars { position:absolute; left:0; top:0; width:100%; height:100%; opacity:.75; pointer-events:none; }
+.land-nav { position:relative; z-index:2; display:flex; flex:none; align-items:center; gap:20px; height:54px; padding:0 120px 0 20px; }
+.land-nav>text { min-width:64px; font-size:15px; }.land-nav .land-title { flex:none; font-size:20px; font-weight:700; }
+.land-chapters { flex:1; min-width:0; font-size:14px; line-height:20px; white-space:nowrap; }.land-chapters text { display:inline-block; margin-right:5px; padding:6px 12px; border-radius:13px; color:rgba(214,224,248,.62); font-size:14px; line-height:20px; }.land-chapters .on { background:rgba(20,36,84,.6); color:#fff; font-weight:700; }
+.switch { display:flex; flex:none; width:112px; padding:3px; border:1px solid rgba(160,190,255,.2); border-radius:18px; background:rgba(20,36,84,.6); }.switch text { flex:1; padding:4px; border-radius:14px; color:rgba(214,224,248,.62); font-size:14px; line-height:20px; text-align:center; }.switch .on { background:#3d8bff; color:#fff; font-weight:700; }
+.land-stage { position:relative; z-index:1; flex:1; min-height:0; }.status { position:absolute; z-index:5; left:0; right:0; top:45%; text-align:center; }.status { color:rgba(214,224,248,.62); }.status.error { padding:12px 0; color:#ffb4b4; }
+/* Zoomed in (components/stage .detail): inside each point card the first
+   formula at 20px (18px on screen at .9; a wide one shrinks to the card's
+   width, components/rich .r-math) and up to two keys as plain 14px text, two
+   lines each: no marks, no wavy underline. */
+.lx-fx .rich { font-size:20px; line-height:26px; color:#cfe0ff; white-space:nowrap; }
+.lx-fx .r-p, .lx-key .r-p { margin:0; }
+.lx-key .rich { font-size:14px; line-height:20px; color:#c4d2f2; }
+.lx-key .r-p { display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
+/* !important: app.wxss .mk.key.hi and the like are as specific and load later in the rich component. */
+.lx-key .rich .mk { padding:0 !important; border-radius:0; background:none !important; box-shadow:none !important; color:inherit !important; font-weight:inherit !important; text-decoration:none !important; }
+.landscape-page > .ai-line { position:relative; z-index:1; flex:none; margin:4px 0; color:rgba(214,224,248,.45); font-size:11px; }

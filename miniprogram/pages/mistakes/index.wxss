@@ -1,0 +1,39 @@
+/* 错题本（v4 样张 wrongbook）：分段切换、章节小胶囊、每题一张白卡 */
+.page .seg { margin-top: 8rpx; }
+.due { display: block; margin: 16rpx 4rpx 0; font-size: 24rpx; color: var(--faint); }
+.chips { white-space: nowrap; margin: 20rpx -32rpx 0; padding: 0 32rpx; width: auto; }
+.chips .chip { display: inline-flex; margin-right: 16rpx; border: 2rpx solid var(--rule-2); background: var(--card); }
+.chips .chip.on { border-color: var(--primary-soft); background: var(--primary-wash); color: var(--primary-ink); font-weight: 600; }
+
+.drill-line { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin-top: 20rpx; padding: 20rpx 24rpx; border-radius: 24rpx; background: var(--primary-wash); font-size: 26rpx; font-weight: 600; color: var(--primary-ink); }
+.wq { margin-top: 24rpx; padding: 28rpx 28rpx 24rpx; border-radius: 32rpx; background: var(--card); box-shadow: var(--shadow-sm, var(--shadow)); }
+.wq-top { display: flex; align-items: center; gap: 12rpx; }
+.wq-when { margin-left: auto; font-size: 24rpx; color: var(--faint); }
+.wq-when.red { color: var(--red-ink); }
+.wq-when.green { color: var(--green-ink); }
+.card-more { width: 56rpx !important; height: 56rpx; font-size: 30rpx; background: transparent; color: var(--faint); }
+.problem { margin-top: 16rpx; font-size: 32rpx; line-height: 1.9; color: var(--ink); }
+.mine { display: flex; gap: 12rpx; margin-top: 12rpx; font-size: 26rpx; line-height: 1.6; color: var(--sub); }
+.mine-k { flex: none; }
+.mine-v { flex: 1; min-width: 0; word-break: break-all; color: var(--body); }
+.why { display: flex; align-items: flex-start; gap: 12rpx; margin-top: 12rpx; padding: 16rpx 20rpx; border-radius: 20rpx; background: var(--red-wash); font-size: 26rpx; line-height: 1.5; color: var(--red-ink); }
+.why-k { flex: none; font-weight: 600; }
+.why-v { flex: 1; min-width: 0; }
+.wq-ft { display: flex; align-items: center; gap: 16rpx; margin-top: 20rpx; font-size: 24rpx; color: var(--faint); }
+.wq-ft .redo { margin-left: auto; }
+
+.map-link { display: flex; align-items: center; gap: 20rpx; margin-top: 20rpx; padding: 18rpx 20rpx; border-radius: 24rpx; background: var(--primary-wash); }
+.map-link-copy { flex: 1; min-width: 0; }
+.map-link-k { display: block; font-size: 24rpx; color: var(--sub); }
+.map-link-title { display: block; margin-top: 4rpx; font-size: 28rpx; font-weight: 600; color: var(--ink); }
+.map-link-go { flex: none; font-size: 26rpx; color: var(--link); }
+
+.pop-problem { padding: 8rpx 0 4rpx; }
+.comment { margin-top: 20rpx; font-size: 28rpx; line-height: 1.8; color: var(--body); }
+.redo-hint { margin-top: 16rpx; }
+.pop .links { margin-top: 24rpx; }
+
+/* V4.2: 看讲解 on the card, the next page, a redo box that fits a few lines */
+.wq-ft .wq-explain { font-size: 26rpx; }
+.more-line { margin-top: 24rpx; padding: 24rpx; text-align: center; font-size: 26rpx; color: var(--link); }
+.redo-field { min-height: 88rpx; width: auto; }

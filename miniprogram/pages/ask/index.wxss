@@ -1,0 +1,823 @@
+/* Ask: the chat above, a fixed composer below; leave room for it. */
+.page {
+  padding-bottom: 340rpx;
+}
+
+/* 历史 · 新对话, at the top right of the page (D112). */
+.ph-acts {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4rpx;
+}
+.tb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  height: 64rpx;
+  padding: 0 14rpx;
+  border-radius: 999rpx;
+  font-size: 28rpx;
+  color: var(--body);
+}
+.tb .icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+.tb.more {
+  width: 72rpx;
+  padding: 0;
+  font-size: 34rpx;
+  line-height: 1;
+  color: var(--body);
+}
+.usage {
+  margin: -12rpx 0 16rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--sub);
+}
+
+/* A chat with nothing asked yet. */
+.start {
+  padding-top: 72rpx;
+}
+.start-title {
+  display: block;
+  font-size: 44rpx;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ink);
+}
+.start-lede {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 28rpx;
+  line-height: 1.7;
+  color: var(--body);
+}
+
+/* The empty page: big input, four tiles, examples, recent chats. */
+.home {
+  padding-bottom: 40rpx;
+}
+.askbox {
+  padding: 28rpx 28rpx 24rpx;
+  border-radius: 40rpx;
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+.ask-in {
+  width: 100%;
+  min-height: 140rpx;
+  font-size: 32rpx;
+  line-height: 1.55;
+  color: var(--ink);
+}
+.acts {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-top: 12rpx;
+}
+.acts .btn.sm {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+.acts .btn.sm .icon {
+  width: 34rpx;
+  height: 34rpx;
+}
+.ibtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: var(--fill);
+}
+.ibtn .icon {
+  width: 36rpx;
+  height: 36rpx;
+}
+.grow {
+  flex: 1;
+}
+.acts .send {
+  width: 72rpx;
+  height: 72rpx;
+}
+.sh {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 36rpx 4rpx 16rpx;
+}
+.sh-t {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+.sh-more {
+  font-size: 26rpx;
+  color: var(--sub);
+}
+.recent {
+  padding: 0 28rpx;
+  border-radius: 36rpx;
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+.rc {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  min-height: 100rpx;
+  border-bottom: 2rpx solid var(--rule);
+  font-size: 28rpx;
+  color: var(--ink);
+}
+.rc:last-child {
+  border-bottom: none;
+}
+.rc .icon {
+  width: 32rpx;
+  height: 32rpx;
+  opacity: 0.45;
+}
+.rc-t {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.rc-v {
+  flex: none;
+  font-size: 24rpx;
+  color: var(--faint);
+}
+
+/* Chat */
+.chat {
+  padding-top: 8rpx;
+}
+.me {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 32rpx;
+}
+.bubble {
+  max-width: 84%;
+  padding: 20rpx 26rpx;
+  border-radius: 28rpx 8rpx 28rpx 28rpx;
+  background: var(--primary-wash);
+}
+.bubble .rich {
+  font-size: 29rpx;
+}
+/* Bubbles shrink to their content. Punctuation after a formula takes no extra room, or a line holding only a formula and a half-width mark shrinks the formula. */
+.bubble .r-glue .r-math {
+  max-width: 100%;
+}
+.me-problem {
+  justify-content: stretch;
+}
+.me-problem .bubble {
+  width: 100%;
+  max-width: 100%;
+  padding: 24rpx 28rpx;
+  border-radius: var(--radius);
+  border: 2rpx solid var(--line);
+  border-left: 8rpx solid var(--primary);
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+.bubble-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+.bubble-kind {
+  display: block;
+  margin-bottom: 6rpx;
+  font-size: 24rpx;
+  color: var(--pencil);
+}
+.bubble-quote {
+  display: block;
+  margin-bottom: 10rpx;
+  padding: 4rpx 0 4rpx 16rpx;
+  border-left: 6rpx solid var(--marker);
+  font-size: 24rpx;
+  line-height: 1.6;
+  color: var(--body);
+}
+
+.ai {
+  margin-top: 36rpx;
+}
+.ai-card {
+  position: relative;
+  padding: 26rpx 28rpx;
+  border: 2rpx solid var(--line);
+  border-radius: 8rpx var(--radius) var(--radius) var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+.ai-card.working {
+  padding: 26rpx 28rpx;
+}
+.ai-lead {
+  display: block;
+  margin-bottom: 10rpx;
+  font-size: 24rpx;
+  color: var(--pencil);
+}
+/* The check mark sits on the reply's top-right corner; red only on a mismatch. */
+.tick {
+  position: absolute;
+  top: -20rpx;
+  right: 20rpx;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40rpx;
+  height: 40rpx;
+  padding: 0 8rpx;
+  border: 2rpx solid var(--line);
+  border-radius: 999rpx;
+  background: var(--card);
+  color: var(--green);
+  font-size: 24rpx;
+  font-weight: 700;
+  line-height: 1;
+}
+.tick.amber {
+  padding: 0 12rpx;
+  color: var(--amber-ink);
+}
+.tick.red {
+  padding: 0 14rpx;
+  border-color: var(--red);
+  background: var(--red);
+  color: var(--on-primary);
+}
+.judge-green {
+  border-top: 6rpx solid var(--green);
+}
+.judge-red {
+  border-top: 6rpx solid var(--red);
+}
+.judge-amber {
+  border-top: 6rpx solid var(--amber);
+}
+.failed {
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  color: var(--red-ink);
+}
+
+.dots {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  height: 48rpx;
+}
+.dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: var(--violet);
+  animation: hop 1.2s ease-in-out infinite;
+}
+.dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.dots-text {
+  margin-left: 8rpx;
+  font-size: 24rpx;
+  color: var(--pencil);
+}
+@keyframes hop {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-8rpx);
+  }
+}
+
+/* Judge result */
+.judge {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+.judge .mark {
+  width: 76rpx;
+  height: 76rpx;
+  flex: none;
+}
+.judge-copy {
+  flex: 1;
+  min-width: 0;
+}
+.judge-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.judge-green .judge-title {
+  color: var(--green);
+}
+.judge-red .judge-title {
+  color: var(--red-ink);
+}
+.judge-ref {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10rpx 14rpx;
+  margin: 20rpx 0 4rpx;
+  padding: 16rpx 20rpx;
+  border-radius: var(--radius-s);
+  background: var(--bg);
+}
+.judge-ref-value {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+.judge + .rich,
+.judge-ref + .rich {
+  margin-top: 18rpx;
+}
+
+/* Similar problem */
+.sim-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-top: 20rpx;
+  padding-top: 18rpx;
+  border-top: 2rpx dashed var(--rule-2);
+}
+.sim-acts {
+  display: flex;
+  gap: 28rpx;
+  flex: none;
+}
+.sim-acts .quiet {
+  color: var(--pencil);
+  text-decoration-color: var(--rule-2);
+}
+.sim-key {
+  margin-top: 20rpx;
+  padding-top: 18rpx;
+  border-top: 2rpx dashed var(--rule-2);
+}
+.sim-answer {
+  margin-bottom: 16rpx;
+  padding: 16rpx 20rpx;
+  border-radius: var(--radius-s);
+  background: var(--green-wash);
+}
+.sim-answer .tag {
+  margin-bottom: 8rpx;
+}
+
+/* Other problems in the photo, and the scan result's ask button */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 64rpx;
+  padding: 0 26rpx;
+  border: 2rpx solid var(--rule-2);
+  border-radius: 999rpx;
+  background: var(--card);
+  font-size: 26rpx;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.chip.primary {
+  border-color: transparent;
+  background: var(--primary-fill);
+  box-shadow: var(--btn-shadow);
+  color: var(--on-primary);
+  font-weight: 600;
+}
+.pending {
+  margin-top: 32rpx;
+}
+.pending-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+  margin-top: 12rpx;
+}
+.tip {
+  display: block;
+  margin-top: 28rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--faint);
+}
+/* While a photo is read (or a problem made), float above the composer so it
+   shows without scrolling. V4.2 FX4: the card is <task-progress>'s own. */
+.scan-working {
+  position: fixed;
+  left: 24rpx;
+  right: 24rpx;
+  bottom: 200rpx;
+  z-index: 11;
+}
+.scan-working .tp { margin-top: 0; border: 2rpx solid var(--line); }
+.ask-wait .tp { margin-top: 0; }
+
+/* Composer: camera, input, the menu (once a chat exists), send. */
+.composer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  padding: 14rpx 24rpx 18rpx;
+  border-top: 2rpx solid var(--rule);
+  background: var(--card);
+}
+.hint-chip {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 12rpx;
+  padding: 12rpx 20rpx;
+  border-radius: var(--radius-s);
+  background: var(--marker-wash);
+  font-size: 24rpx;
+}
+.hint-chip.answer {
+  background: var(--green-wash);
+}
+.hint-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--body);
+}
+.hint-x {
+  flex: none;
+  color: var(--link);
+}
+.input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 14rpx;
+}
+.collect-link {
+  display: block;
+  margin-top: 12rpx;
+  text-align: right;
+  color: var(--link);
+  font-size: 24rpx;
+}
+.guide-spot {
+  margin-top: 14rpx;
+  padding: 12rpx 16rpx;
+  border-radius: var(--radius-s);
+  background: var(--marker-wash);
+  color: var(--body);
+  font-size: 24rpx;
+}
+.spot-go {
+  color: var(--link);
+  font-weight: 600;
+}
+.message-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  margin: 8rpx 0 12rpx;
+}
+.message-cards text {
+  padding: 6rpx 12rpx;
+  border-radius: 999rpx;
+  background: var(--card);
+  color: var(--body);
+  font-size: 24rpx;
+}
+.cam,
+.tool,
+.send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80rpx;
+  height: 80rpx;
+  flex: none;
+  border-radius: 50%;
+}
+.cam,
+.tool {
+  background: var(--bg);
+}
+.tool {
+  color: var(--body);
+  font-size: 34rpx;
+  line-height: 1;
+}
+.cam .icon,
+.send .icon {
+  width: 38rpx;
+  height: 38rpx;
+}
+.send {
+  background: var(--disabled);
+}
+.send.on {
+  background: var(--primary-fill);
+  box-shadow: var(--btn-shadow);
+}
+.input {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  min-height: 80rpx;
+  max-height: 260rpx;
+  padding: 18rpx 26rpx;
+  border-radius: 40rpx;
+  background: var(--bg);
+  font-size: 30rpx;
+  line-height: 44rpx;
+  color: var(--ink);
+}
+
+/* Popups: scan, history, checks. */
+.scan-item {
+  margin-top: 20rpx;
+  padding: 22rpx 24rpx;
+  border: 2rpx solid var(--rule);
+  border-radius: var(--radius-s);
+}
+.scan-unclear {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: var(--amber-ink);
+}
+.scan-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+.scan-notes {
+  max-height: 50vh;
+  overflow: hidden;
+}
+.rows.flat {
+  margin-top: 8rpx;
+  padding: 0;
+  box-shadow: none;
+  border-radius: 0;
+}
+.check-sum {
+  display: block;
+  margin-top: 20rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--green);
+}
+.check-sum.amber {
+  color: var(--amber-ink);
+}
+.check-sum.red {
+  color: var(--red-ink);
+}
+.check-item {
+  padding: 22rpx 0;
+  border-bottom: 2rpx solid var(--rule);
+}
+.check-item:last-child {
+  border-bottom: none;
+}
+.check-item .rich {
+  margin-top: 12rpx;
+}
+.check-tex {
+  display: block;
+  margin-top: 12rpx;
+  word-break: break-all;
+}
+.check-detail {
+  display: block;
+  margin-top: 8rpx;
+  color: var(--body);
+}
+
+/* Notebook skin: flat cards, ink as the main colour. */
+.notebook .bubble {
+  border: 2rpx solid var(--line);
+}
+.notebook .me-problem .bubble {
+  border-left-color: var(--ink);
+}
+.notebook .cam,
+.notebook .tool,
+.notebook .input {
+  border: 2rpx solid var(--rule-2);
+  background: var(--card);
+}
+.notebook .tick {
+  border-color: var(--rule-2);
+}
+.notebook .tick.red {
+  border-color: var(--red);
+}
+.notebook .judge-ref {
+  background: var(--primary-wash);
+}
+
+/* Mistake-book strip: added, and when to try again. */
+.book-strip {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  margin-top: 24rpx;
+  padding: 16rpx 22rpx;
+  border-radius: var(--radius-s);
+  background: var(--red-wash);
+  font-size: 26rpx;
+  color: var(--red-ink);
+}
+.book-strip.mastered {
+  background: var(--green-wash);
+  color: var(--green);
+}
+.book-strip .icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+.book-strip-text {
+  flex: 1;
+  min-width: 0;
+}
+.book-strip .link {
+  flex: none;
+}
+.map-link {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-top: 16rpx;
+  padding: 20rpx 24rpx;
+  border: 2rpx solid var(--rule);
+  border-radius: var(--radius-s);
+  background: var(--primary-wash);
+}
+.map-link-copy {
+  flex: 1;
+  min-width: 0;
+}
+.map-link-k {
+  display: block;
+  font-size: 24rpx;
+  color: var(--pencil);
+}
+.map-link-title {
+  display: block;
+  margin-top: 4rpx;
+  font-size: 27rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+.map-link-go {
+  flex: none;
+  font-size: 25rpx;
+  color: var(--link);
+}
+.from-strip {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  margin-top: 16rpx;
+  padding: 16rpx 22rpx;
+  border-radius: var(--radius-s);
+  background: var(--primary-wash);
+  font-size: 26rpx;
+  color: var(--ink);
+}
+.from-strip-text {
+  flex: 1;
+  min-width: 0;
+}
+.hw-cta {
+  margin-bottom: 8rpx;
+}
+.hw-cta .btn {
+  margin-top: 8rpx;
+  margin-bottom: 14rpx;
+}
+
+/* Single-choice options (D112), as on the point page: the whole row is tappable. */
+.choice-option {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  min-height: 108rpx;
+  padding: 16rpx 28rpx;
+  margin-top: 20rpx;
+  box-sizing: border-box;
+  border: 3rpx solid var(--rule-2);
+  border-radius: 28rpx;
+  background: var(--card);
+  font-size: 34rpx;
+  color: var(--ink);
+}
+.choice-option.selected {
+  border-color: var(--primary);
+  background: var(--primary-wash);
+}
+.choice-option.right {
+  border-color: var(--green);
+  background: var(--green-wash);
+}
+.choice-option.wrong {
+  border-color: var(--red);
+}
+.option-id {
+  flex: none;
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: var(--fill);
+  color: var(--sub);
+  text-align: center;
+  line-height: 56rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+.selected .option-id {
+  background: var(--primary);
+  color: #fff;
+}
+.right .option-id {
+  background: var(--green);
+  color: #fff;
+}
+.option-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 拍一道题 (V4.1 G5): typing sits inside the tool card; then the check and the three ways. */
+.askbox.typed { margin-top: 24rpx; padding: 20rpx 20rpx 16rpx 24rpx; border-radius: 28rpx; background: var(--fill); box-shadow: none; }
+.askbox.typed .ask-in { min-height: 88rpx; font-size: 30rpx; }
+.cf { padding-bottom: 40rpx; }
+.cf-card { margin-top: 8rpx; padding: 28rpx; border-radius: 36rpx; background: var(--card); box-shadow: var(--shadow); }
+.cf-card + .cf-card { margin-top: 24rpx; }
+.cf-top { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; }
+.cf-photo { display: block; width: 100%; height: 280rpx; margin-top: 20rpx; border-radius: var(--radius-s); background: var(--fill); }
+.cf-switch { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin-top: 20rpx; padding: 18rpx 24rpx; border-radius: var(--radius-s); background: var(--marker-wash); font-size: 26rpx; color: var(--ink); }
+.cf-go { flex: none; color: var(--link); font-weight: 600; }
+.cf-chips { margin-top: 20rpx; }
+.cf-problem { margin-top: 20rpx; padding: 20rpx 24rpx; border-radius: var(--radius-s); background: var(--fill); font-size: 30rpx; line-height: 1.8; }
+.cf-field { display: block; box-sizing: border-box; margin-top: 20rpx; }
+.cf-edit { display: inline-block; margin-top: 14rpx; }
+.cf-k { display: block; margin-top: 24rpx; font-size: 26rpx; color: var(--sub); }
+.cf-snap { display: flex; gap: 16rpx; margin-top: 20rpx; }
+.ways { display: flex; flex-direction: column; gap: 16rpx; }
+.way { display: flex; align-items: baseline; justify-content: space-between; gap: 16rpx; padding: 30rpx 28rpx; border-radius: 28rpx; background: var(--card); box-shadow: var(--shadow); }
+.way-t { font-size: 32rpx; font-weight: 700; color: var(--ink); }
+.way-s { font-size: 26rpx; color: var(--sub); }
+
+/* V4.2 FX5b: 更早的记录 is a full row in the link colour (as on 错题本). */
+.more-line { display: flex; align-items: center; justify-content: center; min-height: 88rpx; margin-top: 8rpx; font-size: 26rpx; color: var(--link); }
+/* V4.2 FX5b (F08): a wrap finished in the background waits here (as on 聊一聊). */
+.wrap-ready { margin-top: 20rpx; padding: 18rpx 24rpx; border-radius: 20rpx; background: var(--fill); color: var(--body); font-size: 26rpx; line-height: 1.5; }
+.wrap-ready .go { margin-left: 12rpx; color: var(--primary-ink); }
+/* V4.2 FX5b (V5): the corrected problem typeset under its box (step-edit's look). */
+.pv-foot { display: flex; align-items: flex-start; gap: 16rpx; margin-top: 12rpx; padding-top: 12rpx; border-top: 2rpx dashed var(--rule-2); }
+.pv-rich { flex: 1; min-width: 0; }
+.pv-done { flex: none; margin-left: auto; font-size: 26rpx; line-height: 44rpx; }
+/* V4.2 FX5b (V1): clear of the system gesture bar, as on 对话; over the
+   keyboard no home-bar room between the input and the keys. */
+.composer { padding-bottom: calc(18rpx + env(safe-area-inset-bottom)); }
+.composer.kb-up { padding-bottom: 18rpx; }

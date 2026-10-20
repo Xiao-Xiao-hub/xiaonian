@@ -1,0 +1,91 @@
+<view class="page split-page">
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+
+  <view wx:if="{{item && item.status==='saved'}}" class="saved">
+    <view class="saved-mark">✓</view>
+    <text class="saved-title">存好了 {{savedCards.length || selectedCount || item.candidates.length}} 张</text>
+    <view wx:if="{{crisis}}" class="crisis-notice"><text>有一段内容，可能需要找人说说。</text><text class="link" bindtap="openCrisis">看看能联系谁 ›</text></view>
+    <view wx:if="{{pointAsk.length}}" class="point-ask">
+      <text class="point-ask-title">{{pointAsk.length===1 ? '把「' + pointAsk[0].title + '」放进「' + pointAsk[0].pointName + '」？' : '这 ' + pointAsk.length + ' 张放进各自的知识点？'}}</text>
+      <view wx:if="{{pointAsk.length>1}}" class="point-ask-list"><text wx:for="{{pointAsk}}" wx:key="cardId">{{item.title}} → 「{{item.pointName}}」</text></view>
+      <view class="point-ask-actions"><button class="btn-text" disabled="{{pointSaving}}" bindtap="skipPoints">先不放</button><button class="btn-line point-yes" loading="{{pointSaving}}" disabled="{{pointSaving}}" bindtap="acceptPoints">{{pointAsk.length===1 ? '放进去' : '都放进去'}}</button></view>
+    </view>
+    <text wx:if="{{pointsDone}}" class="hint saved-hint">放好了</text>
+    <text wx:if="{{error}}" class="form-error">{{error}}</text>
+    <button class="btn" bindtap="goCards">去卡片看看</button>
+    <button wx:if="{{item.restChars}}" class="btn-line" disabled="{{saving}}" bindtap="importRest">还有 {{item.restChars}} 字没导，接着导</button>
+    <button wx:if="{{savedCards.length>=3}}" class="btn-line" bindtap="brainstorm">拿这 {{savedCards.length}} 张头脑风暴</button>
+  </view>
+
+  <block wx:else>
+    <view wx:if="{{item && item.status==='picking'}}" class="split-head">
+      <text class="split-title">从「{{item.fileName || '这段文字'}}」拆出 {{candidates.length}} 张</text>
+    </view>
+
+    <view wx:if="{{item && item.status==='picking' && !candidates.length}}" class="empty-card">
+      <text class="empty-title">这次没拆出卡</text>
+      <text>原文还在，自己挑一句存成卡吧。</text>
+      <button class="btn-line manual-btn" bindtap="startManual">从原文选一句</button>
+    </view>
+
+    <view wx:if="{{crisis}}" class="crisis-notice"><text>有一段内容，可能需要找人说说。</text><text class="link" bindtap="openCrisis">看看能联系谁 ›</text></view>
+    <view class="candidate-list">
+      <view wx:for="{{candidates}}" wx:key="id" class="candidate-wrap">
+        <view class="check {{item.selected?'on':''}} {{item.crisis?'risk':''}}" data-id="{{item.id}}" bindtap="toggleCandidate" aria-role="checkbox" aria-checked="{{item.selected}}" aria-label="选这张">{{item.selected?'✓':''}}</view>
+        <view class="candidate-card {{item.crisis?'crisis-card':''}}" style="{{item.typeStyle}}">
+          <view wx:if="{{item.crisis}}" class="crisis-content">
+            <text class="candidate-title">这一段先不展示</text>
+            <text class="candidate-summary">想找人说说，点上面的“看看能联系谁”。</text>
+          </view>
+          <block wx:else>
+            <view class="candidate-top"><text class="candidate-title"><text wx:if="{{!item.titleEdited}}" class="ai-dot"></text>{{item.title}}</text><text class="edit-link" data-id="{{item.id}}" bindtap="openEdit">改 ›</text></view>
+            <text class="candidate-summary"><text wx:if="{{!item.summaryEdited}}" class="ai-dot"></text>{{item.summary}}</text>
+            <view class="candidate-meta"><text class="kind-chip">{{item.typeName}}</text><text wx:if="{{item.sceneName}}" class="meta-text">{{item.sceneName}}</text><text class="meta-src" data-id="{{item.id}}" bindtap="openSource">{{item.srcLabel}} ›</text></view>
+          </block>
+        </view>
+      </view>
+    </view>
+
+    <task-progress wx:if="{{task}}" steps="{{task.steps}}" job="{{task.job}}" expect-sec="{{90}}" />
+    <text wx:if="{{error}}" class="form-error">{{error}}</text>
+
+    <view wx:if="{{item && item.status==='picking' && candidates.length}}" class="bottom-bar">
+      <button class="btn-text" disabled="{{saving}}" bindtap="toggleAll">{{allSelected?'全不选':'全选'}}</button>
+      <button class="btn" loading="{{saving}}" disabled="{{saving || !selectedCount}}" bindtap="saveCards">存下这 {{selectedCount}} 张</button>
+    </view>
+    <view wx:elif="{{item && item.status!=='picking'}}" class="bottom-bar">
+      <button wx:if="{{waiting}}" class="btn-text" disabled="{{saving}}" bindtap="cancel">不导了</button>
+      <button wx:if="{{waiting}}" class="btn-line" bindtap="leave">先去做别的</button>
+      <button wx:else class="btn-line" disabled="{{saving}}" bindtap="cancel">不导了</button>
+    </view>
+  </block>
+
+  <view wx:if="{{edit}}" class="mask" bindtap="closeEdit">
+    <view class="sheet edit-sheet" catchtap="noop">
+      <view class="sheet-head"><text>改一改</text><text class="close" bindtap="closeEdit" aria-role="button" aria-label="关闭">×</text></view>
+      <scroll-view scroll-y class="edit-body">
+        <text class="field-label">标题</text><input class="field" value="{{edit.title}}" maxlength="16" placeholder="起个标题吧" placeholder-class="placeholder" bindinput="editTitle" />
+        <text class="field-label">摘要</text><textarea class="field area" value="{{edit.summary}}" maxlength="60" auto-height placeholder="一句话说清这张卡" placeholder-class="placeholder" bindinput="editSummary" />
+        <text class="field-label">它更像哪种？</text><view class="choice-row"><button wx:for="{{typeChoices}}" wx:key="id" class="choice {{edit.type===item.id?'on':''}}" data-id="{{item.id}}" bindtap="chooseType">{{item.name}}</button></view>
+        <text class="field-label">这段在聊</text><view class="choice-row"><button wx:for="{{sceneChoices}}" wx:key="id" class="choice {{edit.scene===item.id?'on':''}}" data-id="{{item.id}}" bindtap="chooseScene">{{item.name}}</button></view>
+        <view wx:if="{{edit.moodSuggested && edit.scene!=='mood'}}" class="sheet-row"><text class="grow">读起来像在说心情，存成心情卡？</text><button class="mini" data-id="{{edit.id}}" bindtap="acceptMood">好</button></view>
+        <text class="field-label">标签</text><input class="field" value="{{editTags}}" maxlength="40" placeholder="用逗号分开（最多 3 个）" placeholder-class="placeholder" bindinput="editTags" />
+        <view wx:if="{{edit.pointId && edit.pointConfidence>=0.7}}" class="sheet-row"><text class="grow">{{edit.pointAccepted ? '存的时候放进「' + edit.pointName + '」' : '放进「' + edit.pointName + '」？'}}</text><button class="mini {{edit.pointAccepted?'on':''}}" data-id="{{edit.id}}" bindtap="acceptPoint">{{edit.pointAccepted?'不放了':'好'}}</button></view>
+        <view class="sheet-row" data-id="{{edit.id}}" bindtap="openSource"><text class="grow">{{edit.srcLabel}}</text><text class="link">看原文 ›</text></view>
+        <view class="sheet-row"><text class="grow">原文是我自己写的</text><view class="toggle {{own?'on':''}}" bindtap="toggleOwn"><view class="knob"></view></view></view>
+        <view wx:if="{{own}}" class="sheet-row mine-row"><text class="grow mine-text">{{edit.mine ? '我的话：' + edit.mine : '挑一句当作我的话'}}</text><text class="link" data-id="{{edit.id}}" bindtap="chooseMine">{{edit.mine?'换一句':'挑一句'}} ›</text></view>
+      </scroll-view>
+      <button class="btn" bindtap="saveEdit">好了</button>
+    </view>
+  </view>
+
+  <view wx:if="{{sourceSheet}}" class="mask top" bindtap="closeSource">
+    <view class="sheet source-sheet" catchtap="noop">
+      <view class="sheet-head"><text>{{sourceSheet.title}}</text><text class="close" bindtap="closeSource" aria-role="button" aria-label="关闭">×</text></view>
+      <text wx:if="{{sourceSheet.empty}}" class="sheet-empty">{{sourceSheet.emptyText}}</text>
+      <scroll-view wx:else scroll-y class="source-lines">
+        <view wx:for="{{sourceSheet.lines}}" wx:key="k" class="source-line {{item.hit?'hit':''}}" data-i="{{index}}" data-n="{{item.n}}" bindtap="selectSourceLine"><text class="line-no">{{item.n}}</text><view class="grow"><text class="line-who" wx:if="{{item.who}}">{{item.who==='me'?'我':item.who}}</text><text>{{item.text}}</text></view><text wx:if="{{sourceMode==='mine'||sourceMode==='manual'}}" class="chev">›</text></view>
+      </scroll-view>
+    </view>
+  </view>
+</view>

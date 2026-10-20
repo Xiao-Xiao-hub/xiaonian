@@ -1,0 +1,16 @@
+<view class="ca-att {{removable ? 'ca-tray' : ''}} {{right ? 'ca-right' : ''}}">
+  <view wx:for="{{shown}}" wx:key="key" class="ca-item">
+    <image wx:if="{{item.kind === 'image'}}" class="ca-thumb" src="{{item.path}}" mode="aspectFill" data-key="{{item.key}}" bindtap="open" />
+    <view wx:else class="ca-file" hover-class="pressed" data-key="{{item.key}}" bindtap="open">
+      <text class="ca-badge">{{item.badge}}</text>
+      <view class="ca-copy">
+        <text class="ca-name">{{item.name}}</text>
+        <text class="ca-size {{item.status === 'failed' ? 'ca-bad' : ''}}">{{item.status === 'up' ? '在读…' : item.status === 'failed' ? '没传上，点一下再试' : item.readText || item.sizeText}}</text>
+      </view>
+    </view>
+    <view wx:if="{{item.status === 'up' && item.kind === 'image'}}" class="ca-veil">在传…</view>
+    <view wx:if="{{item.status === 'failed' && item.kind === 'image'}}" class="ca-veil" data-key="{{item.key}}" catchtap="open">再试</view>
+    <view wx:if="{{removable}}" class="ca-x" data-key="{{item.key}}" catchtap="remove" aria-role="button" aria-label="移除附件">×</view>
+    <text wx:if="{{!removable && item.more && item.path}}" class="ca-more" data-key="{{item.key}}" bindtap="more">接着读后面 ›</text>
+  </view>
+</view>

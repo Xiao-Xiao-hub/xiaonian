@@ -1,0 +1,28 @@
+/* 01-welcome.html 协议查看页（样张 px × 2 = rpx） */
+page { background: #ffffff; }
+.lseg { position: sticky; top: 0; z-index: 2; padding: 8rpx 32rpx 20rpx; background: #ffffff; }
+.doc { padding: 12rpx 40rpx calc(64rpx + env(safe-area-inset-bottom)); }
+.state { display: flex; flex-direction: column; align-items: flex-start; gap: 20rpx; padding-top: 40rpx; }
+.state.faint { display: block; color: var(--faint); font-size: 28rpx; }
+.err { color: var(--red-ink); font-size: 28rpx; line-height: 1.6; }
+.dt { display: block; color: var(--ink); font-size: 44rpx; font-weight: 800; }
+.dv { display: block; margin-top: 12rpx; color: var(--faint); font-size: 24rpx; }
+.dsum { margin-top: 32rpx; padding: 24rpx 28rpx 8rpx; border-radius: 28rpx; background: #f4f7fd; }
+.dh { display: flex; align-items: baseline; gap: 16rpx; color: var(--ink); font-size: 32rpx; font-weight: 700; }
+.dh .small { color: var(--faint); font-size: 24rpx; font-weight: 400; }
+.dsum .dh { margin-bottom: 8rpx; }
+.toc-h { margin-top: 40rpx; }
+.toc { margin-top: 8rpx; }
+.toc-i { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; padding: 20rpx 0; border-bottom: 1rpx solid var(--rule); }
+.toc-t { color: var(--body); font-size: 27rpx; }
+.chev { flex: none; width: 14rpx; height: 14rpx; border-top: 3rpx solid #c3c7cf; border-right: 3rpx solid #c3c7cf; transform: rotate(45deg); }
+.lead { margin-top: 32rpx; }
+.sec { padding-top: 40rpx; }
+.sec-t { display: block; margin-bottom: 12rpx; color: var(--ink); font-size: 32rpx; font-weight: 700; }
+/* 摘要照样张：13px、行高 1.65、正文色、灰色小圆点，粗体用墨色；正文按 14px 阅读。 */
+.dsum .rich { font-size: 26rpx; line-height: 1.65; color: var(--body); }
+.dsum .r-li { gap: 8rpx; margin-top: 16rpx; }
+.dsum .r-n { min-width: 16rpx; color: var(--faint); font-weight: 400; }
+.dsum .r-b { color: var(--ink); }
+.lead .rich, .sec .rich { font-size: 28rpx; line-height: 1.8; color: var(--body); }
+.lead .r-b, .sec .r-b { color: var(--ink); }

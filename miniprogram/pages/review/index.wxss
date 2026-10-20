@@ -1,0 +1,14 @@
+.deck-meta { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin-top: 40rpx; }
+/* 一叠卡片：下面露出两张纸边 */
+.deck { position: relative; margin-top: 18rpx; padding-bottom: 16rpx; }
+.deck::before, .deck::after { content: ""; position: absolute; height: 24rpx; background: var(--card); border: 2rpx solid var(--rule); border-top: none; border-radius: 0 0 var(--radius) var(--radius); }
+.deck::before { left: 32rpx; right: 32rpx; bottom: 0; }
+.deck::after { left: 16rpx; right: 16rpx; bottom: 8rpx; }
+.card { position: relative; z-index: 1; margin-top: 0; min-height: 360rpx; }
+.card-title { display: block; font-size: 32rpx; font-weight: 700; line-height: 64rpx; }
+.card .lined { margin-top: 4rpx; }
+.recall { display: flex; gap: 16rpx; margin-top: 24rpx; padding-top: 20rpx; border-top: 2rpx dashed var(--rule-2); }
+.recall-k { flex: none; font-size: 24rpx; line-height: 1.9; color: var(--pencil); }
+.recall-v { flex: 1; min-width: 0; font-size: 28rpx; line-height: 1.75; color: var(--body); }
+.empty .link { margin-top: 20rpx; }
+.when { width: 104rpx; flex: none; align-self: flex-start; font-size: 26rpx; font-weight: 600; line-height: 1.7; }

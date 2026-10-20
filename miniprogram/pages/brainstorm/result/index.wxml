@@ -1,0 +1,146 @@
+<view class="page result">
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+  <view wx:if="{{item}}" class="head">
+    <view
+      ><text wx:if="{{item.titleView.ai}}" class="ai-dot">•</text
+      >{{item.titleView.text}}</view
+    >
+    <text>{{item.dateLabel}} · {{item.count}} 张 · 存好了 {{item.savedCount}} 张</text>
+  </view>
+
+  <scroll-view
+    wx:if="{{item}}"
+    class="graph"
+    scroll-x
+    enhanced
+    show-scrollbar="{{false}}"
+    style="height:{{item.graph.height}}rpx"
+  >
+    <view
+      class="graph-inner"
+      style="width:{{item.graph.width}}rpx;height:{{item.graph.height}}rpx"
+    >
+      <view class="trunk" style="{{item.graph.trunkStyle}}"></view>
+      <block wx:for="{{item.graph.groups}}" wx:key="id">
+        <view class="group-name" style="{{item.graphStyle}}"
+          ><text wx:if="{{item.nameView.ai}}" class="ai-dot">•</text
+          >{{item.nameView.text}}</view
+        >
+        <view class="stem" style="{{item.stemStyle}}"></view>
+        <view
+          wx:for="{{item.cards}}"
+          wx:for-item="card"
+          wx:key="ref"
+          class="graph-card {{card.typeClass}}"
+          style="{{card.typeStyle}};{{card.graphStyle}}"
+          data-id="{{card.id}}"
+          bindtap="openSource"
+        >
+          <image src="{{card.typeIcon}}" mode="aspectFit" />
+          <text>{{card.titleView.text || card.title}}</text>
+        </view>
+      </block>
+      <block wx:for="{{item.graph.ties}}" wx:key="id">
+        <view class="tie tie-v" style="{{item.aStyle}}"></view>
+        <view class="tie tie-v" style="{{item.bStyle}}"></view>
+        <view class="tie tie-h" style="{{item.baseStyle}}"></view>
+      </block>
+      <view
+        wx:if="{{item.conclusion}}"
+        class="end"
+        style="{{item.graph.endStyle}}"
+      >
+        <text class="end-label">✎ 我的结论</text>
+        <text>{{item.conclusion}}</text>
+      </view>
+    </view>
+  </scroll-view>
+  <text wx:if="{{item&&item.graph.scrolls}}" class="graph-hint">左右滑动看全部</text>
+
+  <view wx:if="{{item&&item.tensions.length}}" class="tensions">
+    <view wx:for="{{item.tensions}}" wx:key="id"
+      ><text data-id="{{item.aCard.id}}" bindtap="openSource">「{{item.aCard.titleView.text || item.aCard.title}}」</text
+      >⇄<text data-id="{{item.bCard.id}}" bindtap="openSource">「{{item.bCard.titleView.text ||
+      item.bCard.title}}」</text
+      >{{item.stanceName ? '：' + item.stanceName : ''}}</view
+    >
+  </view>
+
+  <view wx:if="{{conclusionCard}}" class="section">你的结论</view>
+  <view
+    wx:if="{{conclusionCard}}"
+    class="conclusion-card {{conclusionCard.typeClass}}"
+    style="{{conclusionCard.typeStyle}}"
+    bindtap="openConclusion"
+  >
+    <image
+      class="conclusion-watermark"
+      src="{{conclusionCard.typeIcon}}"
+      mode="aspectFit"
+    />
+    <view class="card-head">
+      <image src="{{conclusionCard.typeIcon}}" mode="aspectFit" />
+      <text>{{conclusionCard.typeName}}</text>
+    </view>
+    <view class="conclusion-title"
+      ><text wx:if="{{conclusionCard.titleView.ai}}" class="ai-dot">•</text
+      >{{conclusionCard.titleView.text}}</view
+    >
+    <view wx:if="{{conclusionCard.mine}}" class="detail-row"
+      ><text class="detail-key">我的话</text
+      ><text>「{{conclusionCard.mine}}」</text></view
+    >
+    <view wx:for="{{conclusionCard.slotViews}}" wx:key="key" class="detail-row"
+      ><text
+        ><text wx:if="{{item.ai}}" class="ai-dot">•</text>{{item.text}}</text
+      ></view
+    >
+    <view wx:for="{{conclusionCard.openViews}}" wx:key="key" class="detail-row"
+      ><text class="detail-key">{{item.label}}</text
+      ><text
+        ><text wx:if="{{item.ai}}" class="ai-dot">•</text>{{item.text}}</text
+      ></view
+    >
+    <view wx:if="{{conclusionCard.tags.length}}" class="card-tags"
+      ><text wx:for="{{conclusionCard.tags}}" wx:key="id" style="{{item.style}}"
+        >{{item.name}}</text
+      ></view
+    >
+  </view>
+
+  <view wx:if="{{report||reportTask||reportError}}" class="section">AI 的分析</view>
+  <task-progress
+    wx:if="{{reportTask}}"
+    steps="{{reportSteps}}"
+    job="{{reportTask.job}}"
+    error="{{reportError}}"
+    busy="{{reportLoading}}"
+    expect-sec="{{40}}"
+    bind:retry="retryReport"
+  />
+  <view wx:elif="{{reportError}}" class="report-line"
+    ><text>{{reportError}}</text
+    ><button class="btn-text" bindtap="retryReport">再试一次</button></view
+  >
+  <view wx:if="{{report&&reportStale&&!reportTask}}" class="report-line"
+    ><text>分组改过了，这份分析是改之前的</text
+    ><button class="btn-text" disabled="{{reportLoading}}" bindtap="refreshReport">重新看看</button></view
+  >
+  <brainstorm-report report="{{report}}" />
+
+  <view wx:if="{{newCards.length}}" class="section">顺手多记的几张</view>
+  <view wx:if="{{newCards.length}}" class="wall">
+    <card-tile
+      wx:for="{{newCards}}"
+      wx:key="id"
+      card="{{item}}"
+      bind:tap="openCard"
+    />
+  </view>
+  <text wx:if="{{loading}}" class="empty">打开中…</text>
+  <text wx:if="{{error}}" class="alert">{{error}}</text>
+  <view class="bottom-bar"
+    ><button wx:if="{{!isExample&&cards.length}}" class="btn-text" bindtap="chat">带去对话 ›</button
+    ><button class="btn" bindtap="goHome">回卡片</button></view
+  >
+</view>

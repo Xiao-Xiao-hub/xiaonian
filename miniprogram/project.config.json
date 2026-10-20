@@ -1,0 +1,24 @@
+{
+  "description": "晓念：AI 学习小程序（资料／笔记与题目／错题）",
+  "packOptions": {
+    "ignore": [
+      {
+        "type": "file",
+        "value": "assets/xiaoli/hi.webp"
+      }
+    ]
+  },
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "compileHotReLoad": true
+  },
+  "compileType": "miniprogram",
+  "libVersion": "3.8.6",
+  "appid": "",
+  "projectname": "晓念",
+  "condition": {}
+}

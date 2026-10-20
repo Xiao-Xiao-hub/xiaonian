@@ -1,0 +1,15 @@
+<view class="page card-pick">
+  <text class="pick-hint">{{hint}}</text>
+  <view class="search-row"><input class="search" value="{{query}}" placeholder="搜一搜卡片" confirm-type="search" bindinput="search" bindconfirm="submitSearch" /><button class="filter-btn {{filterCount?'on':''}}" bindtap="toggleFilter">筛选{{filterCount?' '+filterCount:''}}</button></view>
+  <view wx:if="{{filterOpen}}" class="filter-panel">
+    <text class="filter-label">种类</text><view class="chips"><button wx:for="{{types}}" wx:key="id" class="chip {{item.selected?'on':''}}" data-key="type" data-value="{{item.id}}" bindtap="filter">{{item.name}}</button></view>
+    <block wx:if="{{tagChoices.length}}"><text class="filter-label">标签</text><view class="chips"><button wx:for="{{tagChoices}}" wx:key="id" class="chip {{item.selected?'on':''}}" data-key="tag" data-value="{{item.id}}" bindtap="filter">#{{item.name}}</button></view></block>
+    <text class="filter-label">记的是</text><view class="chips"><button wx:for="{{scenes}}" wx:key="id" class="chip {{item.selected?'on':''}}" data-key="scene" data-value="{{item.id}}" bindtap="filter">{{item.name}}</button></view>
+    <view class="filter-foot"><button wx:if="{{filterCount}}" class="btn-text" bindtap="clearFilters">清空筛选</button><button class="btn-text" bindtap="toggleFilter">收起</button></view>
+  </view>
+  <text wx:if="{{tagError}}" class="hint">{{tagError}}</text>
+  <view wx:if="{{mode==='brainstorm'}}" class="select-row"><text>选了 {{selected.length}} 张 · 这里有 {{total}} 张</text><view class="select-actions"><button wx:if="{{selected.length}}" bindtap="clearSelected">清空</button><button loading="{{selectingAll}}" bindtap="selectAll">全选这些</button></view></view>
+  <view class="wall"><card-tile wx:for="{{cards}}" wx:key="id" card="{{item}}" selected="{{item.selected}}" picking="{{true}}" bind:tap="toggle" /></view>
+  <text wx:if="{{!loading&&!cards.length&&!error}}" class="empty">{{query||filterCount?'没找到，换个词或筛选试试':'还没有卡，先去随心记写一句吧'}}</text><text wx:if="{{loading&&!cards.length}}" class="empty">打开中…</text><button wx:if="{{cursor}}" class="btn-text more" loading="{{loading}}" bindtap="more">再看一些</button><text wx:if="{{error}}" class="alert">{{error}}</text>
+  <view class="pick-bar"><button class="btn" disabled="{{mode==='link'&&!selected.length}}" bindtap="done">{{doneText}}</button></view>
+</view>

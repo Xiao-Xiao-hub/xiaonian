@@ -1,0 +1,221 @@
+/* 聊一聊 (V4.2 G5): the chat itself under the page head; the input stays at
+   the bottom, above the tab bar, with the latest chats as chips over it. */
+.grow {
+  flex: 1;
+}
+/* All chats: left of the capsule (page-head keeps the capsule's room). */
+.hist {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+}
+.hist-icon {
+  width: 36rpx;
+  height: 36rpx;
+}
+/* While a reply is still coming, the history waits for it. */
+.hist.off {
+  opacity: 0.4;
+}
+.talk .head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 72rpx;
+  margin: 0 -32rpx;
+  padding: 0 96rpx;
+}
+.talk .head .ai-line {
+  margin: 0;
+}
+.more {
+  position: absolute;
+  top: 0;
+  right: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  color: var(--body);
+  font-size: 34rpx;
+  line-height: 1;
+}
+.start {
+  padding: 40rpx 0 16rpx;
+}
+.start-title {
+  display: block;
+  color: var(--ink);
+  font-size: 40rpx;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.start-lede {
+  display: block;
+  margin-top: 12rpx;
+  color: var(--body);
+  font-size: 28rpx;
+  line-height: 1.7;
+}
+/* The last unfinished chat, to go on with or not. */
+.replay {
+  padding: 28rpx;
+  border-radius: 24rpx;
+  background: var(--card);
+}
+.replay-label {
+  display: block;
+  color: var(--faint);
+  font-size: 24rpx;
+}
+.replay-title {
+  display: block;
+  margin: 6rpx 0 16rpx;
+  color: var(--ink);
+  font-size: 32rpx;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.replay-line {
+  margin-top: 10rpx;
+  padding: 12rpx 18rpx;
+  border-radius: 16rpx;
+  background: var(--fill);
+  color: var(--body);
+  font-size: 26rpx;
+  line-height: 1.6;
+}
+.replay-line.mine {
+  margin-left: 64rpx;
+  background: var(--primary-wash);
+}
+.replay-acts {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  margin-top: 24rpx;
+}
+.working {
+  margin-top: 20rpx;
+}
+.notice,
+.error {
+  display: block;
+  margin-top: 20rpx;
+  font-size: 26rpx;
+  line-height: 1.6;
+}
+.notice {
+  color: var(--body);
+}
+.error {
+  color: var(--red-ink);
+}
+.wrap-ready {
+  margin-top: 20rpx;
+  padding: 18rpx 24rpx;
+  border-radius: 20rpx;
+  background: var(--fill);
+  color: var(--body);
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+.wrap-ready .go {
+  margin-left: 12rpx;
+  color: var(--primary-ink);
+}
+.composer {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 8;
+  padding: 14rpx 24rpx 18rpx;
+  border-top: 2rpx solid var(--rule);
+  background: var(--card);
+}
+.recent {
+  display: flex;
+  width: 100%;
+  margin-bottom: 14rpx;
+  white-space: nowrap;
+}
+.recent .chip {
+  flex: none;
+  margin-right: 14rpx;
+  min-height: 56rpx;
+  font-size: 24rpx;
+}
+.row {
+  display: flex;
+  align-items: flex-end;
+  gap: 14rpx;
+}
+.tray {
+  display: block;
+  padding: 14rpx 4rpx 20rpx;
+}
+.tray-room {
+  height: 160rpx;
+}
+.input {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  min-height: 80rpx;
+  max-height: 260rpx;
+  box-sizing: border-box;
+  padding: 18rpx 26rpx;
+  border-radius: 40rpx;
+  background: var(--fill);
+  color: var(--ink);
+  font-size: 30rpx;
+  line-height: 44rpx;
+}
+.input.placeholder {
+  color: var(--faint);
+}
+.plus,
+.send {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+}
+.plus {
+  background: var(--fill);
+}
+.plus-icon {
+  width: 36rpx;
+  height: 36rpx;
+}
+.send {
+  background: var(--disabled);
+}
+.send.on {
+  background: var(--primary-fill);
+  box-shadow: var(--btn-shadow);
+}
+/* The arrow points up, as on the chat page. */
+.send .icon {
+  width: 38rpx;
+  height: 38rpx;
+  transform: rotate(-90deg);
+}
+/* V4.2 G9: the recent chips take taps over 44px; the strip leaves room above and below so it does not clip them. */
+.recent {
+  box-sizing: border-box;
+  padding: 16rpx 0;
+  margin: -16rpx 0 -2rpx;
+}

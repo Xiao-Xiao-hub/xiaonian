@@ -1,0 +1,84 @@
+/* 我的（v4 样张 60-me.html） */
+.page { padding-top: 8rpx; padding-bottom: calc(120rpx + env(safe-area-inset-bottom)); }
+.page > view + view { margin-top: 24rpx; }
+.who { display: flex; align-items: center; gap: 24rpx; padding: 8rpx 8rpx 0; }
+.who-l { flex: 1; min-width: 0; }
+.who-name { display: block; font-size: 52rpx; font-weight: 800; line-height: 1.3; color: var(--ink); }
+.who-tags { display: flex; gap: 12rpx; margin-top: 12rpx; }
+.who-tags text { display: inline-flex; align-items: center; height: 44rpx; padding: 0 16rpx; border-radius: 22rpx; background: rgba(255, 255, 255, .72); color: var(--body); font-size: 24rpx; }
+.who-tags .lv { background: #2f6bf6; color: #fff; font-weight: 600; }
+.me-av { display: flex; flex: none; align-items: center; justify-content: center; width: 128rpx; height: 128rpx; border: 6rpx solid #fff; border-radius: 50%; background: linear-gradient(135deg, #cfe0ff, #eef3ff); box-shadow: 0 8rpx 28rpx rgba(47, 80, 160, .16); color: #3a4a7a; font-size: 52rpx; font-weight: 700; }
+.retry { color: var(--primary); width: auto !important; display: inline-block; padding: 8rpx; }
+
+.study { padding: 28rpx 28rpx 24rpx; border-radius: 40rpx; background: var(--card); box-shadow: var(--shadow); }
+.st-hd { display: flex; align-items: center; justify-content: space-between; }
+.st-t { font-size: 32rpx; font-weight: 700; color: var(--ink); }
+.st-more { font-size: 24rpx; color: var(--faint); }
+.nums { display: flex; margin-top: 24rpx; }
+.num { flex: 1; min-width: 0; padding: 0 8rpx; }
+.num + .num { border-left: 2rpx solid var(--line); padding-left: 14rpx; }
+.num-v { font-size: 38rpx; font-weight: 800; line-height: 1.2; color: var(--ink); white-space: nowrap; }
+.num-u { margin-left: 2rpx; font-size: 24rpx; font-weight: 500; color: var(--sub); }
+.num-k { display: block; margin-top: 4rpx; font-size: 24rpx; line-height: 1.3; color: var(--sub); white-space: nowrap; }
+.heat { margin-top: 28rpx; }
+.mo { display: flex; gap: 6rpx; margin-left: 40rpx; height: 30rpx; font-size: 22rpx; line-height: 30rpx; color: var(--faint); }
+.mo-i { flex: 1; min-width: 0; overflow: visible; white-space: nowrap; }
+.heat-b { display: flex; gap: 12rpx; margin-top: 8rpx; }
+.wd { display: flex; flex-direction: column; gap: 6rpx; width: 28rpx; flex: none; font-size: 22rpx; color: var(--faint); }
+.wd text { height: 26rpx; line-height: 26rpx; }
+.cols { display: flex; flex: 1; gap: 6rpx; }
+.col { display: flex; flex: 1; flex-direction: column; gap: 6rpx; }
+.hc { height: 26rpx; border-radius: 6rpx; }
+.hc.fu { background: transparent; }
+.l0 { background: #ebedf1; } .l1 { background: #cddcff; } .l2 { background: #93b4ff; } .l3 { background: #5288f8; } .l4 { background: #1f56d8; }
+.hc.td { box-shadow: 0 0 0 3rpx #fff, 0 0 0 6rpx var(--gold, #f5b100); }
+.hc.pk { box-shadow: 0 0 0 3rpx #fff, 0 0 0 6rpx var(--primary); }
+.hfoot { display: flex; align-items: center; gap: 8rpx; margin-top: 20rpx; font-size: 24rpx; color: var(--faint); }
+.hf-today { color: var(--body); }
+.hf-b { font-weight: 700; color: var(--primary-ink); }
+.grow { flex: 1; }
+.hk { width: 22rpx; height: 22rpx; border-radius: 6rpx; }
+.st-note { margin-top: 20rpx; padding-top: 16rpx; border-top: 2rpx dashed var(--rule-2); font-size: 24rpx; color: var(--faint); text-align: center; }
+
+.stats { display: flex; padding: 28rpx 12rpx 20rpx; border-radius: 40rpx; background: var(--card); box-shadow: var(--shadow); }
+.sc { display: flex; flex: 1; align-items: center; justify-content: center; gap: 16rpx; min-width: 0; }
+.sc + .sc { border-left: 2rpx solid var(--line); }
+.sc-ic { width: 68rpx; height: 68rpx; }
+.sc-v { display: block; font-size: 40rpx; font-weight: 800; line-height: 1.2; color: var(--ink); }
+.sc-k { display: block; font-size: 24rpx; line-height: 1.3; color: var(--sub); white-space: nowrap; }
+
+.tiles2 { display: flex; gap: 20rpx; }
+.tiles2 .ftile { flex: 1; min-height: 160rpx; box-shadow: none; }
+.tiles2 .ftile .ic3d { width: 92rpx; height: 92rpx; }
+.ftile.yellow { background: linear-gradient(135deg, #fff5dc, #fffaee); }
+
+.icons { display: flex; justify-content: space-around; padding: 28rpx 12rpx 24rpx; border-radius: 36rpx; background: var(--card); box-shadow: var(--shadow); }
+.ic { display: flex; flex-direction: column; align-items: center; gap: 12rpx; width: 128rpx; font-size: 24rpx; line-height: 1.2; color: var(--body); }
+.ic-i { width: 64rpx; height: 64rpx; }
+
+.menu { padding: 0 28rpx; border-radius: 36rpx; background: var(--card); box-shadow: var(--shadow); }
+.li { display: flex; align-items: center; gap: 16rpx; min-height: 104rpx; border-bottom: 2rpx solid var(--rule); font-size: 30rpx; color: var(--ink); }
+.li:last-child { border: 0; }
+.li-l { flex: 1; min-width: 0; }
+.li-l .hint { display: block; }
+.li-v { font-size: 26rpx; color: var(--sub); }
+.li switch { transform: scale(.86); transform-origin: right center; margin-right: -8rpx; }
+.danger { color: var(--red-ink); }
+.chev { display: inline-block; color: var(--faint); }
+.chev.turned { transform: rotate(90deg); }
+.meta { color: var(--sub); font-size: 24rpx; }
+.usage { display: flex; flex-wrap: wrap; padding: 0 0 16rpx; border-bottom: 2rpx solid var(--rule); }
+.usage-cell { width: 50%; padding: 18rpx 16rpx 8rpx 0; box-sizing: border-box; }
+.usage-k { color: var(--sub); font-size: 24rpx; }
+.usage-v { font-size: 24rpx; color: var(--sub); margin: 10rpx 0; }
+.usage-v text { font-size: 34rpx; font-weight: 700; color: var(--ink); }
+.meter { height: 8rpx; border-radius: 4rpx; background: var(--rule); overflow: hidden; }
+.fill { height: 100%; background: var(--primary); }
+.usage-r { display: block; margin-top: 8rpx; font-size: 22rpx; color: var(--sub); }
+.bye { padding: 8rpx 0 4rpx; font-size: 26rpx; color: var(--faint); text-align: center; }
+/* V4.2 G9: "近 18 周" names the grid, not 累计学习 (which counts every day ever), so it sits over the grid.
+   A day cell takes taps across the gaps around it (no visual change); 注销账号 gets a 44px row. */
+.heat-t { display: block; margin-bottom: 12rpx; }
+.hc { position: relative; }
+.hc::before { content: ""; position: absolute; top: -3rpx; right: -3rpx; bottom: -3rpx; left: -3rpx; }
+.bye { padding: 24rpx 0; }

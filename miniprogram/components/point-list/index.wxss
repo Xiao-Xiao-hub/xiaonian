@@ -1,0 +1,23 @@
+/* 题库列表: a white card per chapter, a row per point (v4 .list rows). */
+.pl-chapter { margin-top:32rpx; }
+.pl-head { display:flex; align-items:baseline; gap:12rpx; padding:0 8rpx 16rpx; }
+.pl-book { color:var(--faint); font-size:24rpx; }
+.pl-name { color:var(--ink); font-size:32rpx; font-weight:700; }
+.pl-count { margin-left:auto; color:var(--sub); font-size:24rpx; }
+.pl-list { overflow:hidden; border-radius:28rpx; background:var(--card); box-shadow:var(--shadow); }
+.pl-row { display:flex; align-items:center; gap:16rpx; min-height:112rpx; padding:20rpx 28rpx; }
+.pl-row + .pl-row, .pl-items + .pl-row { border-top:2rpx solid var(--rule); }
+.pl-main { flex:1; min-width:0; }
+.pl-title { display:block; overflow:hidden; color:var(--ink); font-size:30rpx; font-weight:600; line-height:1.4; white-space:nowrap; text-overflow:ellipsis; }
+.pl-mark { margin-right:6rpx; color:var(--gold); }
+.pl-meta { display:flex; align-items:center; gap:14rpx; margin-top:8rpx; color:var(--sub); font-size:24rpx; line-height:1.4; }
+.pl-meta .tier-tag { padding:0 12rpx; font-size:22rpx; }
+.pl-prog { flex:none; color:var(--faint); font-size:24rpx; }
+.pl-prog.ok { color:var(--green-ink); font-weight:600; }
+.pl-prog.tried { color:var(--amber-ink); }
+.pl-chev { flex:none; color:var(--ghost); font-size:34rpx; }
+.pl-row.wait .pl-title, .pl-row.wait .pl-n { color:var(--faint); }
+.pl-items { display:flex; flex-wrap:wrap; gap:12rpx; margin-top:-8rpx; padding:0 28rpx 20rpx; }
+.pl-item { min-width:52rpx; height:52rpx; padding:0 8rpx; border:2rpx solid var(--rule-2); border-radius:12rpx; color:var(--sub); font-size:24rpx; line-height:48rpx; text-align:center; }
+.pl-item.ok { border-color:var(--green-soft); color:var(--green-ink); }
+.pl-item.tried { border-color:var(--amber-soft); color:var(--amber-ink); }

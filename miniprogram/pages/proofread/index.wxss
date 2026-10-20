@@ -1,0 +1,5 @@
+.source { margin-top: 32rpx; }
+.doubts { margin-top: 32rpx; padding: 20rpx 24rpx 22rpx; background: var(--amber-wash); border-left: 6rpx solid var(--amber); border-radius: var(--radius-s); }
+.doubts-title { display: block; font-size: 24rpx; color: var(--amber-ink); }
+.doubt { display: block; margin-top: 10rpx; font-size: 28rpx; line-height: 1.7; }
+.fold-row { margin-top: 20rpx; }

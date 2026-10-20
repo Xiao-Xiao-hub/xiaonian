@@ -1,0 +1,92 @@
+<page-head title="学习" tint="yellow">
+  <view class="map-entry" hover-class="pressed" bindtap="openMap" aria-role="button"><text>知识地图</text><text class="map-entry-go">›</text></view>
+</page-head>
+<view class="page ph-body" capture-bind:touchstart="studyTouch">
+  <guest-bar />
+
+  <view wx:if="{{error}}" class="alert">{{error}}<text class="link" bindtap="load">再试一次</text></view>
+  <view wx:if="{{loading&&!card&&!guest}}" class="working"><text class="h3">打开中…</text><view class="bar" /></view>
+
+  <view wx:if="{{guest}}" class="hero">
+    <view class="hero-cons"><view class="c c1" /><view class="c c2" /><view class="c c3" /><view class="c c4" /></view>
+    <view class="hero-top"><text class="hero-label">先看看</text></view>
+    <text class="hero-name">知识地图</text>
+    <text class="hero-sub">高数上册的知识点和先学关系</text>
+    <view class="hero-pb"><view class="grow" /><button class="btn hero-go" bindtap="openMap">看看地图</button></view>
+  </view>
+  <view wx:elif="{{card}}" class="hero">
+    <view class="hero-cons"><view class="c c1" /><view class="c c2" /><view class="c c3" /><view class="c c4" /></view>
+    <view class="hero-top"><text class="hero-label">{{card.hero.label}}</text><text wx:if="{{card.hero.id}}" class="hero-map" bindtap="openMap" aria-role="button">打开地图 ›</text></view>
+    <text class="hero-name">{{card.hero.name}}</text>
+    <text wx:if="{{card.heroSub}}" class="hero-sub">{{card.heroSub}}</text>
+    <view class="hero-pb"><view wx:if="{{card.map}}" class="hero-bar"><view style="width:{{card.map.progress}}%" /></view><text wx:if="{{card.map}}" class="hero-count">核心点做对 {{card.map.correct}} / {{card.map.total}}</text><view wx:else class="grow" /><button class="btn hero-go" bindtap="startNext">{{card.hero.id?(card.hero.learn?'先看讲解':'开始'):'打开地图'}}</button></view>
+    <view wx:if="{{card.hero.resume}}" class="hero-resume" hover-class="pressed" bindtap="continueLearning" aria-role="button"><text class="hero-resume-name">继续上次：{{card.hero.resume.name}}</text><text>›</text></view>
+  </view>
+
+  <!-- V4.2 G9: 今天 right under the main card, before the tools (report B). -->
+  <block wx:if="{{card&&!guest}}">
+    <view wx:if="{{card.todayDue.length||card.todayNew||card.todayDone}}" class="block">
+      <view class="sh"><text class="sh-t">今天</text><text wx:if="{{card.todaySide}}" class="sh-s">{{card.todaySide}}</text></view>
+      <view wx:if="{{card.todayDue.length||card.todayNew}}" class="today-card">
+        <block wx:for="{{card.todayDue}}" wx:key="id">
+          <view wx:if="{{todayOpen||index<3}}" class="today-row" data-id="{{item.id}}" data-learn="{{item.learn}}" bindtap="openPoint" hover-class="pressed" aria-role="button">
+            <view class="star {{item.star}}" />
+            <view class="today-copy"><text class="today-name">{{item.name}}</text><text class="today-meta">{{item.meta}}</text></view>
+            <text class="today-act">{{item.act}}</text>
+          </view>
+        </block>
+        <view wx:if="{{card.todayDue.length>3}}" class="fold-row today-more {{todayOpen?'open':''}}" bindtap="toggleToday" aria-role="button">{{todayOpen?'收起':'还有 '+(card.todayDue.length-3)+' 个'}}</view>
+        <view wx:if="{{card.todayNew}}" class="today-row" data-id="{{card.todayNew.id}}" data-learn="{{card.todayNew.learn}}" bindtap="openPoint" hover-class="pressed" aria-role="button">
+          <view class="star next" />
+          <view class="today-copy"><text class="today-name">{{card.todayNew.name}}</text><text class="today-meta">新的 · {{card.todayNew.meta}}</text></view>
+          <text class="today-act blue">学</text>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 解题 (D112), V4.1 G5: the study tools, each with its own page and one
+       line (拍一道题 takes typing too); 错题本 and 练一题 sit beside them.
+       V4.2 G7: one 批改 (草稿 and 整页 merged); shown at once, not after the map. -->
+  <block>
+    <view class="tiles">
+      <view class="ftile big" bindtap="askPhoto" hover-class="pressed" aria-role="button"><text class="t">拍一道题</text><text class="s">拍照或打字，一步步带你做</text><text class="tile-go">GO →</text><image wx:if="{{!broken.camera}}" class="ic3d" src="{{icons.camera}}" webp="{{true}}" mode="aspectFit" data-name="camera" binderror="iconBroken" /></view>
+      <view class="tile-col">
+        <view class="ftile small pink" bindtap="openMistakes" hover-class="pressed" aria-role="button"><text class="t">错题本</text><text wx:if="{{card.mistakes}}" class="s"><text class="red">{{card.mistakes}}</text> 道没弄懂</text><text wx:else class="s">收进来的错题</text><image wx:if="{{!broken.ledger}}" class="ic3d" src="{{icons.ledger}}" webp="{{true}}" mode="aspectFit" data-name="ledger" binderror="iconBroken" /></view>
+        <view class="ftile small green" bindtap="openPractice" hover-class="pressed" aria-role="button"><text class="t">练一题</text><text class="s">按知识点刷题</text><image wx:if="{{!broken.bullseye}}" class="ic3d" src="{{icons.bullseye}}" webp="{{true}}" mode="aspectFit" data-name="bullseye" binderror="iconBroken" /></view>
+      </view>
+    </view>
+    <view class="grid2">
+      <view class="ftile" bindtap="askGrade" hover-class="pressed" aria-role="button"><text class="t">批改</text><text class="s">一道或一页，找出哪步错</text><image wx:if="{{!broken.memo}}" class="ic3d" src="{{icons.memo}}" webp="{{true}}" mode="aspectFit" data-name="memo" binderror="iconBroken" /></view>
+      <view class="ftile" bindtap="askTeach" hover-class="pressed" aria-role="button"><text class="t">讲一遍</text><text class="s">讲给小狸听，看漏了哪条要点</text><image wx:if="{{!broken.teach}}" class="ic3d" src="{{icons.teach}}" webp="{{true}}" mode="aspectFit" data-name="teach" binderror="iconBroken" /></view>
+    </view>
+  </block>
+
+
+  <!-- Moved from 我的 (D112), shown open: 段位贴纸, 我的资料, 学习记录. -->
+  <view wx:if="{{card&&!guest}}" class="block">
+    <view class="sh"><text class="sh-t">段位贴纸</text></view>
+    <view class="sticker-grid"><view wx:for="{{card.stickers}}" wx:key="id" class="chapter-sticker {{item.earned?'earned':''}}" hover-class="pressed" data-id="{{item.id}}" bindtap="openChapter"><image src="/assets/stickers/chapter-{{item.id}}-sky.png"/><text>{{item.name}}</text><text class="meta">{{item.rank}}</text></view></view>
+  </view>
+  <view class="block">
+    <view class="sh"><text class="sh-t">我的资料</text></view>
+    <view class="menu">
+      <view class="li" hover-class="pressed" bindtap="openLibrary"><text class="li-l">全部资料</text><text class="chev">›</text></view>
+      <view class="li" hover-class="pressed" bindtap="startNote"><text class="li-l">学一份资料</text><text class="chev">›</text></view>
+      <view class="li" hover-class="pressed" bindtap="startProblem"><text class="li-l">放一道题</text><text class="chev">›</text></view>
+    </view>
+  </view>
+  <view wx:if="{{guest||card}}" class="block">
+    <view class="sh"><text class="sh-t">学习记录</text></view>
+    <view wx:if="{{card&&!guest}}" class="nums">
+      <view class="num"><text class="num-v">Lv {{card.level}}</text><text class="num-k">等级</text></view>
+      <view class="num"><text class="num-v">{{card.correct}}</text><text class="num-k">个知识点做对</text></view>
+      <view class="num"><text class="num-v">{{card.xp}}</text><text class="num-k">经验</text></view>
+    </view>
+    <view class="menu">
+      <view wx:if="{{card.retest}}" class="li"><view class="li-l"><text>以为会 / 真会</text><text class="hint">你觉得会做的 {{card.retest.predicted}} 次里，真做对了 {{card.retest.actual}} 次</text></view></view>
+      <view class="li" hover-class="pressed" bindtap="openReview"><text class="li-l">资料复习</text><text class="chev">›</text></view>
+      <view class="li" hover-class="pressed" bindtap="openRanks"><text class="li-l">我的进度</text><text class="chev">›</text></view>
+    </view>
+  </view>
+</view>

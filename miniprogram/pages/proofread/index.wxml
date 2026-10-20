@@ -1,0 +1,64 @@
+<view class="page">
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+  <view class="head">
+    <text class="h2">{{heading}}</text>
+    <text class="lede">{{confirmed ? '改好后，旧的讲解会标出来，可以按新内容重讲。' : hasImage ? '对照原图看一遍，数字、单位和条件最容易认错。' : '再看一遍，数字、单位和条件有没有写错。'}}</text>
+  </view>
+  <view wx:if="{{loadFailed}}" class="alert">{{error}}<text class="link" bindtap="load">再试一次</text></view>
+
+  <view wx:if="{{hasImage}}" class="rows source">
+    <view class="item" hover-class="pressed" bindtap="showImage">
+      <image class="lead" src="/assets/icons/image-ink.png" />
+      <view class="copy">
+        <text class="title">原图</text>
+        <view class="meta"><text>点开对照着看</text></view>
+      </view>
+      <image class="chevron" src="/assets/icons/chevron-faint.png" />
+    </view>
+  </view>
+
+  <view wx:if="{{recognizing}}" class="working">
+    <text class="h3">正在认图里的字…</text>
+    <text class="small">几秒钟，可以先看看原图</text>
+    <view class="bar" />
+  </view>
+  <view wx:elif="{{hasImage && !version && ocr && !loading}}" class="sheet">
+    <text class="h3">这张图没认出来</text>
+    <text class="lede">换一张，或者直接在下面打字。</text>
+    <button class="btn-line" hover-class="btn-press" bindtap="retryOcr">再认一次</button>
+  </view>
+
+  <view wx:if="{{doubts.length}}" class="doubts">
+    <text class="doubts-title">这几行没认太准，重点看看</text>
+    <text wx:for="{{doubts}}" wx:key="index" class="doubt">{{item.text}}</text>
+  </view>
+
+  <block wx:if="{{!recognizing && !loading && !loadFailed}}">
+    <view class="label">
+      <text>{{kind === 'problem' ? '题目' : '原文'}}</text>
+      <text wx:if="{{!confirmed && doubts.length}}" class="tag amber">有 {{doubts.length}} 处没认清</text>
+    </view>
+    <textarea class="field tall" placeholder-class="placeholder" maxlength="-1" auto-height placeholder="{{hasImage ? '认出的字会出现在这里，也可以直接打字' : '在这里改'}}" value="{{text}}" bindinput="onText" />
+    <view wx:if="{{chars > limit * 0.8}}" class="field-meta">
+      <text></text>
+      <text class="tnum {{chars > limit ? 'over' : ''}}">{{chars}} / {{limit}}</text>
+    </view>
+    <view class="fold-row {{extraOpen ? 'open' : ''}}" bindtap="toggleExtra" aria-role="button">{{kind === 'problem' ? '标题、参考答案（可不填）' : '标题（可不填）'}}</view>
+    <block wx:if="{{extraOpen}}">
+      <view class="label">标题<text class="opt">不填就用第一行</text></view>
+      <input class="field short" placeholder-class="placeholder" maxlength="40" placeholder="{{kind === 'problem' ? '例如：求 sin x / x 的极限' : '例如：洛必达法则'}}" value="{{title}}" bindinput="onTitle" />
+      <block wx:if="{{kind === 'problem'}}">
+        <view class="label">参考答案<text class="opt">有就填，按它来对</text></view>
+        <input class="field short" placeholder-class="placeholder" maxlength="500" placeholder="没有可以不填" value="{{answer}}" bindinput="onAnswer" />
+      </block>
+    </block>
+  </block>
+
+  <view wx:if="{{error && !loadFailed}}" class="alert">{{error}}</view>
+  <block wx:if="{{!recognizing && !loading && !loadFailed}}">
+    <button class="btn" hover-class="btn-press" disabled="{{busy || !chars}}" bindtap="confirm">
+      <text>{{busy ? '正在存…' : confirmed ? '存下' : kind === 'problem' ? '没问题，开始练' : '没问题，开始学'}}</text>
+      <image wx:if="{{!busy}}" class="icon" src="/assets/icons/arrow-white.png" />
+    </button>
+  </block>
+</view>

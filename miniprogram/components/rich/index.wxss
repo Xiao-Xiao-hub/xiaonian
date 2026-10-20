@@ -1,0 +1,42 @@
+/* 内容块。公式图片按 em 定尺寸，跟着这里的字号缩放 */
+.rich { font-size: 30rpx; line-height: 1.85; color: var(--ink); word-break: break-word; }
+.r-p, .r-h, .r-list, .r-quote, .r-display, .r-pre, .r-table { margin-top: 18rpx; }
+.r-p:first-child, .r-h:first-child, .r-list:first-child, .r-quote:first-child, .r-display:first-child, .r-pre:first-child, .r-table:first-child { margin-top: 0; }
+.r-hover { background: var(--marker-wash); border-radius: 8rpx; }
+.r-b { font-weight: 700; }
+.r-i { font-style: italic; }
+.r-del { text-decoration: line-through; color: var(--pencil); }
+.r-code { padding: 2rpx 8rpx; border-radius: 6rpx; background: var(--chip); font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 0.9em; }
+/* 比一行还宽的行内公式按比例缩到一行内（widthFix 按实际宽度算高度） */
+.r-math { display: inline-block; max-width: 100%; }
+.r-math-d { display: block; margin: 10rpx auto; }
+/* 公式和紧跟的标点（，。；）不分到两行。用 inline 而不是 inline-block：
+   下面的 100% 才按整段宽度算；按这个盒子自己的宽度算，短公式会被缩小甚至缩没 */
+.r-glue { display: inline; white-space: nowrap; }
+/* 比一行还宽的公式给后面的标点让出一个字，不伸出去 */
+.r-glue .r-math { max-width: calc(100% - 1em); }
+/* 图片加载失败时显示的 TeX 源码照常折行（末尾仍和标点连着），不撑出横向滚动 */
+.r-glue .r-tex { white-space: normal; }
+.r-tex { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 0.9em; color: var(--body); word-break: break-all; }
+.r-h { font-size: 32rpx; font-weight: 700; }
+/* A chat bubble puts display formulas in a grey block (components/chat-panel). */
+.r-display { white-space: nowrap; text-align: center; padding: var(--display-pad, 6rpx 0); border-radius: 16rpx; background: var(--display-bg, transparent); }
+.r-display-img { display: inline-block; }
+.r-li { display: flex; gap: 12rpx; margin-top: 8rpx; }
+.r-li:first-child { margin-top: 0; }
+.r-n { flex: none; min-width: 32rpx; color: var(--primary); font-weight: 600; }
+.r-lc { flex: 1; min-width: 0; }
+.r-quote { padding: 6rpx 0 6rpx 20rpx; border-left: 6rpx solid var(--rule-2); color: var(--body); }
+.r-pre { padding: 18rpx 20rpx; border-radius: 12rpx; background: var(--chip); white-space: pre; }
+.r-pre-text { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 24rpx; line-height: 1.6; }
+.r-hr { height: 2rpx; margin: 24rpx 0; background: var(--rule); }
+.r-table { white-space: nowrap; }
+.r-tr { display: flex; width: max-content; min-width: 100%; border-bottom: 2rpx solid var(--rule); }
+.r-th { font-weight: 600; background: var(--chip); }
+.r-td { flex: 1 0 180rpx; max-width: 420rpx; padding: 12rpx 16rpx; white-space: normal; font-size: 26rpx; line-height: 1.7; }
+.r-tail { color: var(--body); white-space: pre-wrap; }
+.r-caret { display: inline-block; width: 4rpx; height: 1.1em; margin-left: 4rpx; vertical-align: -0.15em; background: var(--primary); animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* A formula image on a coloured background (my chat bubble) gets a white chip. */
+.r-math, .r-display-img { background: var(--math-bg, transparent); border-radius: 8rpx; }

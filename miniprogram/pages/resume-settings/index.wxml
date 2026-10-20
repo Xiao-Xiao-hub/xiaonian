@@ -1,0 +1,10 @@
+<view class="page">
+  <text class="lead">该回顾、该问进展的事，到时在随心记里问你一句。</text>
+  <view wx:if="{{settings}}" class="panel">
+    <view class="modes"><button wx:for="{{modes}}" wx:key="id" class="choice {{settings.mode===item.id?'selected':''}}" data-id="{{item.id}}" bindtap="mode" disabled="{{busy}}">{{settings.mode===item.id?'●':'○'}} {{item.name}}</button></view>
+    <block wx:if="{{settings.mode==='time'}}"><picker mode="time" value="{{settings.at}}" bindchange="time" disabled="{{busy}}"><view class="row">几点问你<text>{{settings.at}} ›</text></view></picker><view class="days"><button wx:for="{{days}}" wx:key="id" class="choice {{item.selected?'selected':''}}" data-id="{{item.id}}" bindtap="day" disabled="{{busy}}">{{item.name}}</button></view></block>
+    <view class="row" wx:for="{{types}}" wx:key="id"><text>{{item.name}}</text><switch checked="{{settings.types[item.id]}}" data-id="{{item.id}}" bindchange="type" disabled="{{busy}}" color="#2459d8"/></view>
+  </view>
+  <view class="panel"><view class="row" data-state="waiting" bindtap="list">回顾和提醒 <text>›</text></view><view class="row" data-state="never" bindtap="list">不再提醒的 <text>›</text></view></view>
+  <text wx:if="{{error}}" class="error">{{error}}</text>
+</view>

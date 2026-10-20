@@ -1,0 +1,12 @@
+<view class="page tags-page">
+  <text wx:if="{{error}}" class="alert">{{error}}</text>
+  <view wx:if="{{favorites!==null}}" class="tag-row fav-row" bindtap="openFavorites"><view class="tag-copy"><view class="tag-main"><text class="tag-chip fav-chip">★ 收藏</text><text class="tag-meta">{{favorites}} 张卡</text></view><text class="chevron">›</text></view></view>
+  <view wx:if="{{loaded&&!tags.length&&!error}}" class="empty">还没有标签</view>
+  <view wx:for="{{tags}}" wx:key="id" class="tag-row">
+    <block wx:if="{{editingId===item.id}}"><input class="field edit-name" value="{{editName}}" maxlength="6" bindinput="editInput"/><view class="palette"><button wx:for="{{colors}}" wx:for-item="tone" wx:key="index" class="swatch {{editColor===tone.index?'on':''}}" style="{{tone.style}}" data-color="{{tone.index}}" bindtap="editColor">{{tone.name}}</button></view><view class="row-actions"><button class="btn-text danger" disabled="{{busyId===item.id}}" data-tag="{{item}}" bindtap="remove">删掉这个标签</button><view class="grow"/><button class="btn-text" bindtap="cancelEdit">算了</button><button class="btn save-btn" loading="{{busyId===item.id}}" bindtap="saveEdit">存下</button></view></block>
+    <view wx:else class="tag-copy"><view class="tag-main" data-tag="{{item}}" bindtap="openTag"><text class="tag-chip" style="{{item.style}}">#{{item.name}}</text><text class="tag-meta">{{item.count}} 张卡 · {{item.by==='ai'?'AI 加的':'我加的'}}</text></view><button class="btn-text" data-tag="{{item}}" bindtap="startEdit">改</button></view>
+  </view>
+  <view wx:if="{{creating}}" class="tag-create"><input class="field" value="{{name}}" maxlength="6" focus bindinput="input" placeholder="新标签，最多 6 个字"/><view class="palette"><button wx:for="{{colors}}" wx:key="index" class="swatch {{color===item.index?'on':''}}" style="{{item.style}}" data-color="{{item.index}}" bindtap="color">{{item.name}}</button></view><view class="row-actions"><button class="btn-text" bindtap="cancelCreate">算了</button><button class="btn save-btn" loading="{{busy}}" disabled="{{busy}}" bindtap="create">建好</button></view></view>
+  <button wx:elif="{{tags.length<50}}" class="btn" bindtap="startCreate">＋ 新标签</button>
+  <text wx:if="{{tags.length>=45}}" class="limit-line">{{tags.length<50?'还能加 '+(50-tags.length)+' 个':'标签满 50 个了，删掉一些才能再加'}}</text>
+</view>

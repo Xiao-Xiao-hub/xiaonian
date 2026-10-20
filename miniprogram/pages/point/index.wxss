@@ -1,0 +1,809 @@
+/* 知识点页（Point、Lit、RankUp 三块画板），颜色只用 app.wxss 的令牌 */
+.head {
+  padding-top: 24rpx;
+}
+.head-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8rpx 16rpx;
+  font-size: 24rpx;
+  line-height: 1.5;
+  color: var(--map-muted);
+}
+.point-name {
+  margin-top: 8rpx;
+}
+.head-more {
+  margin-left: auto;
+}
+.head-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+}
+.head-row .point-name {
+  flex: 1;
+  min-width: 0;
+}
+.point-state {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: var(--map-muted);
+}
+.review-note {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  line-height: 1.6;
+  color: var(--map-next);
+}
+/* 节号和章名：点开章节页，上下留出点击区凑够 88rpx */
+.head-link {
+  display: inline-block;
+  margin: -26rpx 0;
+  padding: 26rpx 24rpx 26rpx 0;
+  color: var(--map-muted);
+}
+/* 错误条里的“再试一次”：点击区四边都不小于 88rpx */
+.alert .link {
+  display: inline-block;
+  padding: 22rpx 24rpx;
+  margin: -22rpx -24rpx -22rpx 0;
+}
+
+.card {
+  margin-top: 24rpx;
+  padding: 28rpx 32rpx;
+  background: var(--card);
+  border: 2rpx solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* 先弄懂：一行，点开再列 */
+.prereqs {
+  margin-top: 16rpx;
+}
+.prereq-fold {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.prereq-list {
+  padding: 0 28rpx;
+  background: var(--card);
+  border: 2rpx solid var(--line);
+  border-radius: var(--radius);
+}
+.prereq {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  min-height: 88rpx;
+  font-size: 28rpx;
+}
+.prereq + .prereq {
+  border-top: 2rpx solid var(--rule);
+}
+.prereq .map-cell {
+  width: 28rpx;
+  height: 28rpx;
+  border-radius: 8rpx;
+}
+.prereq-name {
+  flex: 1;
+  min-width: 0;
+  color: var(--ink);
+}
+.prereq-state {
+  flex: none;
+  font-size: 24rpx;
+  color: var(--map-muted);
+}
+
+/* 试一题 */
+.quiz-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8rpx 16rpx;
+}
+.quiz-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+.quiz-side {
+  font-size: 24rpx;
+  color: var(--map-muted);
+}
+.ai-drafted {
+  margin-top: 12rpx;
+}
+.problem-box {
+  margin-top: 20rpx;
+  padding: 24rpx;
+  border-radius: var(--radius-s);
+  background: var(--bg);
+  font-size: 30rpx;
+  line-height: 1.8;
+  color: var(--ink);
+}
+/* Formulas in the problem drawn about 1.4 times the text size (Point board); images are sized in em. */
+.problem-box .r-math {
+  font-size: 42rpx;
+  margin: 6rpx 0;
+}
+.answer-k {
+  display: block;
+  margin-top: 24rpx;
+  font-size: 26rpx;
+  color: var(--body);
+}
+.answer {
+  margin-top: 12rpx;
+  font-family: "Times New Roman", Times, "PingFang SC", serif;
+  font-size: 34rpx;
+}
+.answer.is-good {
+  border-color: var(--green);
+}
+.answer.is-bad {
+  border-color: var(--red-ink);
+}
+.answer.is-unsure {
+  border-color: var(--amber-ink);
+}
+.answer-hint {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  line-height: 1.6;
+  color: var(--map-muted);
+}
+.submit {
+  margin-top: 24rpx;
+}
+.quiz .alert {
+  margin: 20rpx 0 0;
+}
+.empty-line {
+  display: block;
+  padding: 32rpx 0 8rpx;
+  font-size: 28rpx;
+  color: var(--map-muted);
+}
+
+/* 判题结果：做对绿、做错红、拿不准琥珀 */
+.result {
+  margin-top: 24rpx;
+  padding: 24rpx;
+  border-radius: var(--radius-s);
+  background: var(--bg);
+}
+.result.bad {
+  background: var(--red-wash);
+}
+.result.unsure {
+  background: var(--amber-wash);
+}
+.level-up {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4rpx 20rpx;
+  margin-bottom: 20rpx;
+  padding: 18rpx 24rpx;
+  border-radius: var(--radius-s);
+  background: var(--map-done);
+  color: var(--stamp-on);
+}
+.level-up-k {
+  font-size: 32rpx;
+  font-weight: 700;
+}
+.level-up-v {
+  font-size: 24rpx;
+}
+.verdict-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8rpx 20rpx;
+}
+.verdict-text {
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 1.6;
+}
+.result.good .verdict-text {
+  color: var(--green-ink);
+}
+.result.bad .verdict-text {
+  color: var(--red-ink);
+}
+.result.unsure .verdict-text {
+  font-size: 28rpx;
+  color: var(--amber-ink);
+}
+.verdict-std,
+.read {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4rpx 12rpx;
+  font-size: 26rpx;
+  color: var(--body);
+}
+.read {
+  margin-top: 12rpx;
+}
+.inline-rich {
+  display: inline-block;
+  font-size: 30rpx;
+  color: var(--ink);
+}
+.inline-rich .rich {
+  margin: 0;
+}
+.progress {
+  margin-top: 20rpx;
+  padding: 20rpx 24rpx;
+  border-radius: var(--radius-s);
+  background: var(--card);
+}
+.progress-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8rpx 16rpx;
+  font-size: 24rpx;
+  color: var(--body);
+}
+.progress-label {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8rpx 16rpx;
+}
+.progress-cells {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+.map-cell.big {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 12rpx;
+}
+/* 刚点亮的一格：外面一圈主色，亮起约 0.3 秒 */
+.map-cell.fresh {
+  box-shadow:
+    0 0 0 6rpx var(--card),
+    0 0 0 10rpx var(--primary);
+}
+.xp-badge {
+  padding: 2rpx 16rpx;
+  border-radius: 20rpx;
+  background: var(--ink);
+  color: var(--card);
+  font-size: 26rpx;
+  font-weight: 700;
+  line-height: 1.6;
+}
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  min-height: 104rpx;
+  margin-top: 20rpx;
+  padding: 16rpx 24rpx;
+  border-radius: var(--radius-s);
+  background: var(--primary-wash);
+}
+.rank-row-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--ink);
+}
+.rank-row-more {
+  flex: none;
+  font-size: 26rpx;
+  color: var(--map-next);
+}
+.done-line {
+  display: block;
+  margin-top: 24rpx;
+  padding-top: 16rpx;
+  border-top: 2rpx solid var(--rule);
+  font-size: 26rpx;
+  color: var(--body);
+}
+
+/* 章升段卡：平涂，没有渐变和彩带 */
+.rank-sheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24rpx;
+  padding-top: 20rpx;
+}
+.sheet-close {
+  position: absolute;
+  top: 0;
+  right: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 88rpx;
+  height: 88rpx;
+  padding: 0 16rpx;
+  font-size: 40rpx;
+  line-height: 1;
+  color: var(--body);
+}
+.sheet-grip {
+  width: 72rpx;
+  height: 8rpx;
+  border-radius: 4rpx;
+  background: var(--rule-2);
+}
+.stamp.big {
+  height: auto;
+  margin-top: 12rpx;
+  padding: 12rpx 36rpx;
+  border-width: 6rpx;
+  border-radius: 20rpx;
+  font-size: 60rpx;
+  letter-spacing: 8rpx;
+  line-height: 1.2;
+}
+.sheet-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--ink);
+}
+.sheet-line {
+  margin-top: -12rpx;
+  font-size: 28rpx;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--body);
+}
+.sheet-jump {
+  font-size: 26rpx;
+  color: var(--map-next);
+}
+.sheet-next {
+  align-self: stretch;
+  padding: 24rpx 28rpx;
+  border-radius: var(--radius-s);
+  background: var(--bg);
+}
+.sheet-next-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12rpx 16rpx;
+}
+.sheet-k {
+  font-size: 26rpx;
+  color: var(--body);
+}
+.sheet-gap {
+  flex: 1;
+  text-align: right;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+.sheet-next-cells {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+.sheet-next-cells .cells {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+.sheet-count {
+  flex: 1;
+  text-align: right;
+  font-size: 24rpx;
+  color: var(--body);
+}
+.sheet-actions {
+  align-self: stretch;
+  margin-top: 8rpx;
+}
+.rank-sheet .btn {
+  background: var(--map-done);
+  box-shadow: none;
+}
+.sheet-note {
+  align-self: stretch;
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  line-height: 1.6;
+  color: var(--map-next);
+}
+
+/* 全书升段卡：同一张卡铺满全屏，印章盖下约 0.4 秒 */
+.book-mask {
+  align-items: stretch;
+}
+.book-card {
+  max-height: none;
+  height: 100%;
+  justify-content: center;
+  border-radius: 0;
+  padding-top: calc(40rpx + env(safe-area-inset-top));
+}
+/* 作业本皮肤的 .pop 带上圆角，全屏卡要压回 0 */
+.notebook .book-card {
+  border-radius: 0;
+}
+.stamp.big.book-stamp {
+  font-size: 72rpx;
+}
+.book-chapters {
+  align-self: stretch;
+  padding: 8rpx 28rpx;
+  border-radius: var(--radius-s);
+  background: var(--bg);
+}
+.book-chapter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  min-height: 88rpx;
+  font-size: 28rpx;
+  color: var(--ink);
+}
+.book-chapter + .book-chapter {
+  border-top: 2rpx solid var(--rule);
+}
+.book-chapter-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.answer-part,
+.choice-question {
+  margin-top: 28rpx;
+}
+.part-label {
+  display: block;
+  margin-bottom: 12rpx;
+  font-size: 28rpx;
+  line-height: 1.6;
+  font-weight: 600;
+  color: var(--ink);
+}
+.choice-rule {
+  margin-top: 20rpx;
+  padding: 18rpx;
+  background: var(--bg);
+  border-radius: var(--radius-s);
+}
+.choice-option {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 22rpx 20rpx;
+  box-sizing: border-box;
+  min-height: 88rpx;
+  margin-top: 14rpx;
+  border: 2rpx solid var(--rule-2);
+  border-radius: var(--radius-s);
+  background: var(--card);
+}
+.choice-option.selected {
+  border: 3rpx solid var(--link);
+  padding: 21rpx 19rpx;
+  background: var(--primary-wash);
+}
+.option-id {
+  flex: none;
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: var(--bg);
+  text-align: center;
+  line-height: 48rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--body);
+}
+.selected .option-id {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.option-content {
+  flex: 1;
+  min-width: 0;
+}
+.practice-notice {
+  display: block;
+  margin-top: 24rpx;
+  padding: 20rpx;
+  background: var(--primary-wash);
+  color: var(--link);
+  font-size: 26rpx;
+  line-height: 1.7;
+  border-radius: var(--radius-s);
+}
+.part-result {
+  margin-top: 24rpx;
+  padding-top: 20rpx;
+  border-top: 2rpx solid var(--rule);
+}
+.part-result-head {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  font-size: 26rpx;
+  line-height: 1.7;
+  color: var(--body);
+}
+.part-result-head > text:first-child {
+  font-weight: 600;
+  color: var(--ink);
+}
+.part-result.good .part-result-head > text:last-child {
+  color: var(--green);
+}
+.part-result.bad .part-result-head > text:last-child {
+  color: var(--red-ink);
+}
+.part-reading {
+  margin-top: 14rpx;
+  color: var(--pencil);
+  font-size: 24rpx;
+}
+.help-card {
+  margin-top: 24rpx;
+  padding: 24rpx;
+  background: var(--bg);
+  border-radius: var(--radius-s);
+}
+.tool-red {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+  padding: 8rpx 8rpx 8rpx 20rpx;
+  margin-top: 22rpx;
+  background: var(--red-wash);
+  color: var(--red-ink);
+  border-radius: var(--radius-s);
+  font-size: 26rpx;
+}
+.tool-red .btn-text {
+  flex: none;
+  margin: 0;
+  color: var(--red-ink);
+  background: transparent;
+}
+.tool-red-title {
+  font-weight: 600;
+}
+
+/* v2 复测：先预测，再答题；结果与帮助沿用上面的验证题组件。 */
+.ai-line {
+  display: block;
+  margin-bottom: 18rpx;
+  color: var(--pencil);
+  font-size: 24rpx;
+  line-height: 44rpx;
+  text-align: center;
+}
+.retest-head {
+  padding: 10rpx 8rpx 0;
+}
+.retest-head .point-name {
+  margin-top: 0;
+}
+.retest-copy {
+  display: block;
+  margin-top: 4rpx;
+  color: var(--body);
+  font-size: 29rpx;
+  line-height: 1.65;
+}
+.prediction-card {
+  margin-top: 24rpx;
+  padding: 24rpx;
+  border: 2rpx solid var(--rule);
+  border-radius: var(--radius-s);
+  background: var(--card);
+}
+.prediction-title {
+  display: block;
+  color: var(--ink);
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.prediction-options {
+  display: flex;
+  gap: 18rpx;
+  margin-top: 20rpx;
+}
+.prediction {
+  flex: 1;
+  width: auto !important;
+  min-height: 84rpx;
+  margin: 0;
+  padding: 0 8rpx;
+  border: 2rpx solid var(--rule-2);
+  border-radius: 44rpx;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 28rpx;
+  line-height: 80rpx;
+}
+.prediction.on {
+  border: 4rpx solid var(--primary);
+  padding: 0 6rpx;
+  background: var(--primary-wash);
+  color: var(--primary);
+  font-weight: 700;
+  line-height: 76rpx;
+}
+.prediction-note {
+  display: block;
+  margin-top: 16rpx;
+  color: var(--body);
+  font-size: 24rpx;
+}
+.prediction-result {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 18rpx;
+  color: var(--body);
+  font-size: 27rpx;
+}
+.retest-pass {
+  color: var(--green-ink);
+  font-weight: 700;
+}
+.wrong-note {
+  margin-top: 24rpx;
+  padding-top: 22rpx;
+  border-top: 2rpx solid var(--rule);
+}
+.wrong-note textarea {
+  min-height: 120rpx;
+  box-sizing: border-box;
+  width: 100%;
+}
+.wrong-note button {
+  margin-top: 16rpx;
+}
+
+.learning-card {
+  display: flex;
+  gap: 20rpx;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20rpx;
+  padding: 20rpx 0;
+  border-top: 1rpx solid var(--line);
+  font-size: 24rpx;
+}
+.learning-card .link {
+  flex-shrink: 0;
+}
+.retest-quiz { padding:0; background:transparent; box-shadow:none; border:0; }
+.retest-quiz .question-section, .retest-quiz .answer-section, .retest-quiz .prediction-card { padding:28rpx; border:0; border-radius:var(--radius); background:var(--card); box-shadow:var(--shadow); }
+.retest-quiz .answer-section { margin-top:24rpx; }
+/* 卡住了？ and 回学习首页: centered text buttons */
+.stuck-row,
+.leave-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 16rpx;
+}
+
+/* v4 练一题 (docs/design/v4-final-ui/preview/pages/30-learn.html #try, px × 2):
+   the dark kp card, the question card, the options as full-width rows and the
+   bottom bar. Blocks are 12px apart like the preview's .body. */
+.page { padding-bottom:calc(160rpx + env(safe-area-inset-bottom)); }
+.kp { display:flex; align-items:center; gap:20rpx; margin-top:16rpx; padding:20rpx 24rpx; border-radius:28rpx; background:#10204f; color:#dfe8ff; }
+.kp-star { position:relative; flex:none; width:52rpx; height:52rpx; border-radius:50%; background:rgba(255,255,255,.08); }
+.kp-star::after { content:""; position:absolute; left:50%; top:50%; width:20rpx; height:20rpx; margin:-10rpx 0 0 -10rpx; box-sizing:border-box; border-radius:50%; }
+.kp-star.ok::after { background:radial-gradient(circle,#fffbe8 0 30%,#ffd86b 60%,#ffb800 100%); box-shadow:0 0 16rpx 4rpx rgba(255,200,70,.6); }
+.kp-star.pend::after { border:4rpx solid #ffc04d; }
+.kp-star.due::after { border:4rpx solid #ffb84d; background:#ffc85a; }
+.kp-star.practice::after { border:4rpx solid #8ccaff; }
+.kp-star.stuck::after { background:#ff6b6b; box-shadow:0 0 16rpx 4rpx rgba(255,107,107,.5); }
+.kp-star.next::after { background:radial-gradient(circle,#fff 0 28%,#8ccaff 62%,#3d9bff 100%); box-shadow:0 0 16rpx 4rpx rgba(110,185,255,.7); }
+.kp-copy { flex:1; min-width:0; }
+.kp-name { display:block; font-size:28rpx; font-weight:700; line-height:1.4; color:#fff; }
+/* One line of the first formula, drawn in the dark tone: light text, no chip. */
+.kp-fx { display:block; max-width:100%; margin-top:2rpx; overflow:hidden; font-size:24rpx; line-height:1.5; color:#a9b8de; white-space:nowrap; text-overflow:ellipsis; }
+.kp-fx .rich { font-size:24rpx; line-height:1.5; color:#a9b8de; }
+.kp-fx .r-p { margin:0; }
+.kp-chev { flex:none; font-size:36rpx; line-height:1; color:#7d8bb3; transition:transform .2s; }
+.kp-chev.open { transform:rotate(90deg); }
+.kp-more { margin-top:16rpx; padding:20rpx 24rpx 8rpx; border-radius:28rpx; background:var(--card); box-shadow:var(--shadow-sm, var(--shadow)); }
+.kp-more-h { display:block; margin-top:8rpx; font-size:26rpx; font-weight:700; color:var(--ink); }
+.kp-more-h:first-child { margin-top:0; }
+.kp-key { padding:4rpx 0; }
+.kp-key .rich { font-size:28rpx; line-height:1.6; color:var(--body); }
+.kp-key .r-p { margin:0; }
+.kp-more .review-note { font-size:24rpx; }
+.kp-more .prereq { min-height:80rpx; }
+.kp-more-foot { display:flex; align-items:center; justify-content:space-between; gap:16rpx; margin-top:8rpx; border-top:2rpx solid var(--rule); font-size:24rpx; }
+.kp-more-foot .head-link { flex:1; min-width:0; margin:0; padding:22rpx 0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.kp-more-btn { flex:none; padding:22rpx 0 22rpx 24rpx; color:var(--sub); }
+.retest-head { margin-top:16rpx; padding-top:0; }
+.qcard { margin-top:24rpx; padding:32rpx; border-radius:36rpx; background:var(--card); box-shadow:var(--shadow-sm, var(--shadow)); }
+.q-tags { display:flex; flex-wrap:wrap; gap:12rpx; }
+.qcard .tag { height:40rpx; padding:0 12rpx; border-radius:10rpx; font-size:24rpx; }
+.qt { margin-top:20rpx; font-size:34rpx; line-height:2; color:var(--ink); }
+.qt .rich { font-size:34rpx; line-height:2; color:var(--ink); }
+.qt .r-math { font-size:1.4em; }
+.answer-section { margin-top:4rpx; }
+.answer-section > .field.answer { margin-top:20rpx; }
+.choice-prompt { margin-top:20rpx; }
+.choice-option { gap:24rpx; min-height:108rpx; padding:16rpx 28rpx; margin-top:20rpx; border:3rpx solid transparent; border-radius:28rpx; background:var(--card); box-shadow:var(--shadow-sm, var(--shadow)); font-size:34rpx; color:var(--ink); }
+.choice-option.selected { padding:16rpx 28rpx; border:3rpx solid var(--primary); background:var(--primary-wash); }
+.option-id { width:56rpx; height:56rpx; line-height:56rpx; background:var(--fill); color:var(--sub); font-size:28rpx; }
+.selected .option-id { background:var(--primary); color:#fff; }
+/* Bottom bar: 卡住了 · 看提示 on the left, 提交 on the right. */
+.tbot { position:fixed; z-index:20; left:0; right:0; bottom:0; display:flex; align-items:center; gap:28rpx; padding:20rpx 32rpx calc(20rpx + env(safe-area-inset-bottom)); background:var(--card); box-shadow:0 -2rpx 0 var(--line); }
+.tbot .tb-link { min-height:80rpx; margin:0; padding:0; color:var(--sub); font-size:28rpx; font-weight:400; }
+.tbot .tb-main { flex:1; width:auto !important; min-height:92rpx; margin:0; }
+/* V4.1 G4 (D113): 看讲解 on the dark card, the problem's place in the bank,
+   right / wrong options after the answer, the solution under the verdict,
+   and the card when the bank has gone round once. */
+.kp-learn { flex:none; padding:8rpx 20rpx; border-radius:24rpx; background:rgba(140,180,255,.18); color:#cfe0ff; font-size:24rpx; font-weight:600; }
+.q-no { margin-left:auto; color:var(--faint); font-size:24rpx; line-height:40rpx; }
+.choice-option.right { border:3rpx solid var(--green); background:var(--green-wash); }
+.choice-option.right .option-id { background:var(--green); color:#fff; }
+.choice-option.wrong { border:3rpx solid var(--red); background:var(--red-wash); }
+.choice-option.wrong .option-id { background:var(--red); color:#fff; }
+.pad-wrap { margin-top:24rpx; }
+.solution { margin-top:20rpx; padding-top:16rpx; border-top:2rpx solid var(--rule); }
+.sol-answer { display:flex; align-items:center; gap:16rpx; }
+.sol-answer .tag { flex:none; }
+.sol-answer-c { flex:1; min-width:0; }
+.sol-answer-c .rich { font-size:30rpx; line-height:1.8; color:var(--ink); }
+.sol-answer-c .r-p { margin:0; }
+.sol-explain { margin-top:16rpx; }
+.sol-explain .rich { font-size:28rpx; line-height:1.85; color:var(--body); }
+.bank-done { margin-top:24rpx; padding:32rpx; border-radius:36rpx; background:var(--card); box-shadow:var(--shadow-sm, var(--shadow)); text-align:center; }
+.bank-done-t { display:block; color:var(--ink); font-size:32rpx; font-weight:700; }
+.bank-done .bd-main { width:100% !important; margin-top:28rpx; }
+.bank-done .pair { margin-top:20rpx; }
+.ai-after { margin-top:24rpx; }
+
+/* V4.2: the words under each choice question after 提交 */
+.choice-verdict { display:block; margin-top:12rpx; font-size:26rpx; font-weight:600; }
+.choice-verdict.ok { color:var(--green-ink); }
+.choice-verdict.no { color:var(--red-ink); }
+.ai-count { display: block; margin-top: 12rpx; text-align: center; }
+.ai-wait { margin-top: 24rpx; }

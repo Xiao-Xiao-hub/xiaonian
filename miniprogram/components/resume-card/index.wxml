@@ -1,0 +1,30 @@
+<view wx:if="{{item && !collapsed}}" class="rs">
+  <view class="who"><view class="xl-av"><image wx:if="{{face && !faceFail}}" src="{{face}}" webp="{{true}}" mode="aspectFill" binderror="faceError"/></view><text class="kick">{{item.kicker}}</text><view wx:if="{{!receipt}}" class="x tap-area" bindtap="closeMenu" aria-role="button" aria-label="关闭">×</view></view>
+  <block wx:if="{{receipt}}">
+    <view class="head"><text class="ok">✓</text><text class="receipt-title">{{receipt.title}}</text><text wx:if="{{undoVisible}}" class="link" bindtap="undo">撤销</text></view>
+    <block wx:if="{{receipt.ask==='when'}}"><view class="ask">打算什么时候做？</view><view class="opts"><button class="chip" data-when="week" bindtap="when" disabled="{{busy}}">这周</button><button class="chip" data-when="next_week" bindtap="when" disabled="{{busy}}">下周</button><button class="chip" bindtap="remindOpen">到时提醒我</button></view></block>
+    <block wx:elif="{{receipt.ask==='close'}}"><view class="ask">写一句结论，把这张卡收好？</view><view class="write"><input value="{{text}}" bindinput="input" maxlength="300" placeholder="想明白了什么"/><button class="chip" bindtap="saveMine" disabled="{{busy}}">收好</button></view></block>
+    <block wx:elif="{{receipt.ask==='mine'}}"><view class="ask">把这句存成「我的话」？</view><view class="opts"><button class="chip" bindtap="saveMine" disabled="{{busy}}">存下</button></view></block>
+    <block wx:elif="{{receipt.ask==='feedback'}}"><view class="ask">这样回头问你，有用吗？</view><view class="opts"><button class="chip" data-value="useful" bindtap="feedback">有用</button><button class="chip" data-value="ok" bindtap="feedback">一般</button><button class="chip" data-value="bother" bindtap="feedback">有点打扰</button></view></block>
+    <view class="foot"><text wx:if="{{receipt.action==='answer' && item.card && !aiUnavailable}}" class="link" bindtap="tidy">让 AI 再理一遍</text><view class="end tap-area" bindtap="fold">收起</view></view>
+    <text wx:if="{{aiUnavailable}}" class="hint">你的话记下了。额度用完了，恢复后再理一遍</text>
+  </block>
+  <block wx:else>
+    <view class="what {{item.typeClass ? 't-' + item.typeClass : ''}}"><text wx:if="{{item.typeName}}" class="tl">{{item.typeName}}</text><text class="title">{{item.title}}</text></view>
+    <view wx:if="{{item.said}}" class="quote"><text wx:if="{{item.quoteBy==='ai'}}" class="ai-dot">● </text>{{item.quoteBy==='ai' ? item.said : '“' + item.said + '”'}}</view>
+    <view class="ask q">{{item.question}}</view><view class="opts"><button wx:for="{{item.choices}}" wx:key="*this" class="chip" data-text="{{item}}" bindtap="choose" disabled="{{busy}}">{{item}}</button><view wx:if="{{item.later}}" class="later tap-area" bindtap="skip">稍后</view></view>
+    <view wx:if="{{writing}}" class="write"><textarea value="{{text}}" maxlength="300" bindinput="input" auto-height placeholder="想到哪写到哪"/><button class="chip" bindtap="submit" disabled="{{busy || !text}}">存下</button></view>
+  </block>
+  <view wx:if="{{remind}}" class="opts"><picker mode="date" value="{{remindDate}}" bindchange="remindDate"><view class="chip">{{remindDate}}</view></picker><picker mode="time" value="{{remindTime}}" bindchange="remindTime"><view class="chip">{{remindTime}}</view></picker><button class="chip" bindtap="remindSave" disabled="{{busy}}">确定</button></view>
+  <text wx:if="{{error}}" class="error">{{error}}</text>
+</view>
+<view wx:elif="{{item && collapsed}}" class="fold"><text bindtap="expand">{{receipt ? '✓ ' + receipt.title + ' · ' + item.title : item.state==='done' ? '✓ ' + item.title : '「' + item.title + '」' + item.question}}</text><text class="link" bindtap="unfinished">回顾和提醒 ›</text></view>
+<view wx:elif="{{known && tidy}}" class="rs tidy">
+  <view class="who"><view class="xl-av"><image wx:if="{{face && !faceFail}}" src="{{face}}" webp="{{true}}" mode="aspectFill" binderror="faceError"/></view><text class="kick">接着整理</text></view>
+  <view class="what {{tidy.typeClass ? 't-' + tidy.typeClass : ''}}"><text wx:if="{{tidy.typeName}}" class="tl">{{tidy.typeName}}</text><text class="title">{{tidy.title}}</text></view>
+  <view class="ask q">这张还没理完，接着理一理？</view>
+  <view class="opts"><button class="chip primary" bindtap="tidyOpen">整理一下</button><view class="later tap-area" bindtap="tidyLater">稍后</view></view>
+</view>
+<view wx:elif="{{prompt && prompt.kind==='first'}}" class="rs nudge"><view class="ask">想到什么，记一句就好</view><view class="opts"><button class="chip primary" bindtap="compose">说一句</button></view></view>
+<view wx:elif="{{prompt}}" class="rs nudge"><view class="ask">上次聊到「{{prompt.title}}」</view><view wx:if="{{prompt.quote}}" class="quote">“{{prompt.quote}}”</view><view class="opts"><button class="chip primary" bindtap="continueChat">接着聊</button><button class="chip" bindtap="wrapChat">整理成卡</button></view></view>
+<view wx:elif="{{!quiet && result && result.text}}" class="fold {{result.url ? 'link' : ''}}" bindtap="openReflection">{{result.text}}</view>

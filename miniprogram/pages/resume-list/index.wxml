@@ -1,0 +1,4 @@
+<view class="page"><view class="ai-line">AI 生成可能有误，注意核实</view>
+  <view wx:for="{{items}}" wx:key="id" class="row"><view class="content" data-id="{{item.id}}" bindtap="open"><view class="title"><text wx:if="{{item.card.titleBy==='ai'}}" class="ai-dot">● </text>{{item.title}}</view><text class="question">{{item.question}}</text><view wx:if="{{item.meta}}" class="meta">{{item.meta}}</view></view><button wx:if="{{state==='never'}}" class="link" data-id="{{item.id}}" bindtap="restore" disabled="{{busy}}">恢复</button><button wx:else class="btn-icon dots" data-id="{{item.id}}" bindtap="rowMenu" disabled="{{busy}}" aria-label="更多">⋯</button></view>
+  <text wx:if="{{loading}}" class="empty">打开中…</text><text wx:elif="{{!items.length && !error}}" class="empty">{{state==='never'?'没有不再提醒的':'现在没有要回顾或提醒的'}}</text><text wx:if="{{error}}" class="error">{{error}}</text>
+</view>

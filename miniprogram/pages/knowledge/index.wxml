@@ -1,0 +1,123 @@
+<view class="page kn-page" capture-bind:touchstart="studyTouch">
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+  <guest-bar />
+  <view wx:if="{{error}}" class="alert">{{error}}<text wx:if="{{canRetry}}" class="link" bindtap="load">再试一次</text></view>
+  <view wx:if="{{fail}}" class="alert">{{fail}}</view>
+  <view wx:if="{{loading&&!point}}" class="working"><text class="h3">打开中…</text><view class="bar" /></view>
+
+  <block wx:if="{{point}}">
+    <!-- 1 名称、节号、档位、状态 -->
+    <view class="kn-head">
+      <view class="kn-title"><text wx:if="{{point.mark}}" class="kn-mark {{point.markCls}}">{{point.mark}}</text><text class="kn-name">{{point.name}}</text></view>
+      <view class="kn-meta"><text class="tnum">{{point.section}}</text><text>{{point.chapter}}</text><text class="tier-tag {{point.tierCls}}">{{point.tier}}</text><text class="kn-look {{point.look}}">{{point.lookText}}</text></view>
+      <text wx:if="{{point.stateLine}}" class="kn-state-line">{{point.stateLine}}</text>
+      <!-- The map sheet's actions -->
+      <view class="kn-acts">
+        <block wx:if="{{point.stuck}}">
+          <button class="btn-soft" disabled="{{busy}}" bindtap="openStuck">接着解决卡点</button>
+          <button class="btn-soft" disabled="{{busy}}" bindtap="understood">现在懂了</button>
+        </block>
+        <button wx:else class="btn-soft" disabled="{{busy}}" bindtap="openStuck">卡住了，问问小狸</button>
+        <button wx:if="{{!point.stuck&&(point.canSelf||point.self)}}" class="btn-soft" disabled="{{busy}}" bindtap="toggleSelf">{{point.self?'其实还没会':'我会了'}}</button>
+        <button class="btn-soft" disabled="{{busy}}" bindtap="collectCard">记一张卡</button>
+      </view>
+    </view>
+
+    <!-- 2 为什么要学 -->
+    <view wx:if="{{point.why}}" class="kn-sec">
+      <text class="kn-h">为什么要学</text>
+      <text class="kn-why">{{point.why}}</text>
+    </view>
+    <!-- 3 讲解 -->
+    <view wx:if="{{point.intro.length}}" class="kn-sec">
+      <text class="kn-h">讲解</text>
+      <view class="kn-body"><rich blocks="{{point.intro}}" /></view>
+    </view>
+    <!-- 4 公式和说明 -->
+    <view wx:if="{{point.formulas.length}}" class="kn-sec">
+      <text class="kn-h">公式</text>
+      <view wx:for="{{point.formulas}}" wx:key="key" class="kn-fx">
+        <view class="kn-fx-img"><rich wx:if="{{item.blocks}}" blocks="{{item.blocks}}" /><text wx:else class="mono">{{item.tex}}</text></view>
+        <view wx:if="{{item.note}}" class="kn-fx-note"><rich blocks="{{item.note}}" /></view>
+      </view>
+    </view>
+    <!-- 5 三条要点 -->
+    <view wx:if="{{point.keys.length}}" class="kn-sec">
+      <text class="kn-h">要点</text>
+      <view wx:for="{{point.keys}}" wx:key="key" class="kn-key {{item.cls}}"><text class="kn-key-no">{{index+1}}</text><view class="kn-key-text"><rich blocks="{{item.blocks}}" /></view></view>
+    </view>
+    <!-- 6 例题，解法默认收起 -->
+    <view wx:if="{{point.example}}" class="kn-sec">
+      <text class="kn-h">讲解中的例题</text>
+      <text wx:if="{{point.example.bankNo}}" class="kn-small kn-ex-note">练一题的第 {{point.example.bankNo}} 题就是它；看过解法，今天做对只算练习。</text>
+      <view class="kn-q"><rich blocks="{{point.example.blocks}}" /></view>
+      <block wx:if="{{point.example.choice}}">
+        <view wx:for="{{point.example.questions}}" wx:for-item="q" wx:key="key">
+          <view wx:if="{{q.blocks.length}}" class="kn-q"><rich blocks="{{q.blocks}}" /></view>
+          <view wx:for="{{q.options}}" wx:for-item="o" wx:key="id" class="kn-opt {{solutionOpen&&o.right?'right':''}}"><text class="kn-opt-id">{{o.id}}</text><view class="kn-opt-c"><rich blocks="{{o.blocks}}" /></view></view>
+        </view>
+      </block>
+      <view wx:if="{{point.example.blanks.length}}" class="kn-blanks"><text wx:for="{{point.example.blanks}}" wx:key="label" class="tag">{{item.label}}</text></view>
+      <view class="fold-row kn-fold {{solutionOpen?'open':''}}" bindtap="toggleSolution" aria-role="button">{{solutionOpen?'收起解法':'看解法'}}</view>
+      <view wx:if="{{solutionOpen}}" class="kn-sol">
+        <view class="kn-ans"><text class="tag green">答案</text><view class="kn-ans-c"><rich blocks="{{point.example.answer}}" /></view></view>
+        <view wx:if="{{point.example.explanation}}" class="kn-body"><rich blocks="{{point.example.explanation}}" /></view>
+      </view>
+    </view>
+    <!-- 7 前置和后续 -->
+    <view wx:if="{{point.prereqs.length||point.followers.length}}" class="kn-sec">
+      <text class="kn-h">先学</text>
+      <view class="kn-links"><text wx:for="{{point.prereqs}}" wx:key="id" class="kn-link {{item.done?'ok':''}}" hover-class="pressed" data-id="{{item.id}}" bindtap="openLinked" aria-role="button">{{item.name}}</text><text wx:if="{{!point.prereqs.length}}" class="kn-none">没有，直接学</text></view>
+      <text class="kn-h kn-h2">后续</text>
+      <view class="kn-links"><text wx:for="{{point.followers}}" wx:key="id" class="kn-link {{item.done?'ok':''}}" hover-class="pressed" data-id="{{item.id}}" bindtap="openLinked" aria-role="button">{{item.name}}</text><text wx:if="{{!point.followers.length}}" class="kn-none">没有了</text></view>
+    </view>
+    <!-- 我的卡、相关错题、状态细节（原地图面板的 ⋯ 看详情） -->
+    <view wx:if="{{!guest}}" class="kn-sec kn-mine">
+      <view wx:if="{{point.cardCount}}" class="kn-cards"><text class="kn-h kn-h-link" bindtap="openCards" aria-role="button">我的卡 {{point.cardCount}} ›</text><view class="kn-card-row"><text wx:for="{{point.cardItems}}" wx:key="id" class="cd t-{{item.type}}" data-id="{{item.id}}" bindtap="openCard"><text class="cd-t">{{item.typeName}}</text>{{item.title}}</text></view></view>
+      <view wx:if="{{point.mistakeCount}}" class="kn-li" hover-class="pressed" bindtap="openMistakes"><text>相关错题 {{point.mistakeCount}} 道</text><text class="chev">›</text></view>
+      <view class="kn-tags"><text>{{point.lineText}}</text><text wx:if="{{point.difficulty}}">难度 {{point.difficulty}}</text><text class="tnum">{{point.section}}</text><text wx:if="{{point.bankText}}">{{point.bankText}}</text></view>
+      <text wx:if="{{point.exam}}" class="kn-small">考点：{{point.exam}}</text>
+      <text wx:if="{{point.missing}}" class="kn-small">先学的还有 {{point.missing}} 个没做对</text>
+      <text wx:if="{{!point.taught}}" class="kn-small">老师还没讲到</text>
+      <text wx:if="{{point.retestText}}" class="kn-small">再试一次：{{point.retestText}}</text>
+    </view>
+    <view wx:else class="kn-sec kn-mine">
+      <view class="kn-tags"><text>{{point.lineText}}</text><text wx:if="{{point.difficulty}}">难度 {{point.difficulty}}</text><text class="tnum">{{point.section}}</text><text wx:if="{{point.bankText}}">{{point.bankText}}</text></view>
+      <text wx:if="{{point.exam}}" class="kn-small">考点：{{point.exam}}</text>
+    </view>
+
+    <!-- 底部：问一问 · 讲一遍，练一题 -->
+    <view class="kn-bot">
+      <button class="btn-text kn-bl" disabled="{{busy}}" bindtap="askAI">问一问</button>
+      <button class="btn-text kn-bl" disabled="{{busy}}" bindtap="teachAI">讲一遍</button>
+      <button class="btn kn-main" hover-class="btn-press" disabled="{{!guest&&!point.ready}}" bindtap="practise">{{guest||point.ready?(point.retestDue?'换一道再试试':'练一题'):'题还在出，稍等'}}</button>
+    </view>
+  </block>
+
+  <!-- 卡点: closing keeps the reply (it is not 懂了); the help is kept on the
+       server, so leaving while 小狸 thinks is fine (V4.2). -->
+  <view wx:if="{{stuckOpen}}" class="scrim kn-scrim" catchtouchmove="hold"><view class="pop stuck-sheet" catchtap="hold">
+    <view class="pop-top"><text class="h3">卡在「{{point.name}}」了？</text><text class="close" bindtap="closeStuck">关闭</text></view>
+    <block wx:if="{{stuckBusy}}">
+      <text class="ai-ask">小狸在想… {{stuckWait}} 秒</text>
+      <view class="bar" />
+      <text wx:if="{{stuckWait >= 15}}" class="hint">有点慢。可以先关掉，回来点「接着解决卡点」就能看到。</text>
+    </block>
+    <block wx:elif="{{!stuckReply}}">
+      <text class="hint">说说卡在哪？发出去就记下你卡在这了</text>
+      <view wx:if="{{stuckLost}}" class="alert">这次没想出来，你写的还在，再发一次试试</view>
+      <view wx:elif="{{stuckFallback}}" class="alert">这次没想好，再点一次</view>
+      <view class="chips stuck-options"><button wx:for="{{stuckOptions}}" wx:key="*this" class="chip {{stuckChoice===item?'on':''}}" data-text="{{item}}" bindtap="chooseStuck">{{item}}</button></view>
+      <textarea class="field" maxlength="300" value="{{stuckText}}" bindinput="stuckInput" placeholder="自己说也行…"/>
+      <view class="pair"><button class="btn-line" bindtap="closeStuck">先不说</button><button class="btn" disabled="{{!stuckText}}" bindtap="sendStuck">发送</button></view>
+    </block>
+    <block wx:else>
+      <text wx:if="{{stuckReply.hint}}" class="stuck-hint">{{stuckReply.hint}}</text>
+      <text class="ai-ask">{{stuckReply.ask}}</text>
+      <view class="chips stuck-options"><button wx:for="{{stuckReply.options}}" wx:key="*this" class="chip" disabled="{{busy}}" data-text="{{item}}" bindtap="stuckOption">{{item}}</button></view>
+      <text wx:if="{{stuckReply.suggest}}" class="link" bindtap="stuckSuggest">要不先回去看看{{stuckSuggestName?'「'+stuckSuggestName+'」':'前面那步'}} ›</text>
+      <view class="pair"><button class="btn-line" disabled="{{busy}}" bindtap="continueStuck">接着聊</button><button class="btn-line" bindtap="collectStuck">把这个问题记下来</button></view>
+      <view wx:if="{{point.stuck}}" class="links"><text class="link" bindtap="understood">现在懂了</text></view>
+    </block>
+  </view></view>
+</view>

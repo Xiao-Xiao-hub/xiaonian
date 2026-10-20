@@ -1,0 +1,73 @@
+/* 随心记（v4 样张 10-notes + 会议纪要第 1 节，D112）：输入、示例、最近三块，其余留白。
+   .tl、.btn、.ico、.xl-av 是 app.wxss 的公共类。 */
+.page { padding: 0 32rpx 64rpx; }
+
+/* 第一次的问候卡：便利贴 */
+.sticky { position: relative; margin: 16rpx 0 24rpx; padding: 28rpx 28rpx 24rpx; border-radius: 8rpx 8rpx 32rpx 32rpx; background: #fff7d6; box-shadow: 0 12rpx 32rpx rgba(170, 130, 20, 0.1); }
+.sticky::before { content: ""; position: absolute; top: -16rpx; left: 50%; width: 144rpx; height: 36rpx; margin-left: -72rpx; border-radius: 4rpx; background: rgba(196, 214, 255, 0.78); transform: rotate(-3deg); }
+.hi { display: flex; align-items: center; gap: 16rpx; padding: 20rpx 56rpx 20rpx 8rpx; }
+.hi .xl { flex: none; width: 164rpx; height: 164rpx; margin: -12rpx 0 -20rpx; }
+.hi .tx { flex: 1; min-width: 0; }
+.hi .b { display: block; font-size: 34rpx; font-weight: 700; color: var(--ink); }
+.hi .s { display: block; margin-top: 6rpx; font-size: 26rpx; line-height: 1.6; color: #6f5a22; }
+.hi .close { position: absolute; top: 12rpx; right: 16rpx; padding: 8rpx; font-size: 34rpx; line-height: 1; color: #b9a46a; }
+
+/* 写一句的大框 */
+.compose { padding: 28rpx 28rpx 24rpx; border-radius: 36rpx; background: var(--card); box-shadow: var(--shadow-lg); }
+.compose textarea { box-sizing: border-box; width: 100%; height: 180rpx; font-size: 34rpx; line-height: 1.6; color: var(--ink); }
+.compose-ph { color: var(--faint); }
+.acts { display: flex; align-items: center; gap: 16rpx; margin-top: 8rpx; }
+.acts button { margin: 0; }
+.ibtn { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 72rpx !important; height: 72rpx; padding: 0 !important; border-radius: 50%; background: var(--fill); }
+.ibtn image { width: 40rpx; height: 40rpx; }
+.ibtn .ico { width: 40rpx; height: 40rpx; }
+.acts .btn-text { flex: none; margin-right: 8rpx; padding: 0 12rpx; }
+.acts .btn { flex: none; width: auto !important; }
+.grow { flex: 1; }
+.context { display: flex; justify-content: space-between; gap: 16rpx; margin-bottom: 12rpx; font-size: 26rpx; color: var(--sub); }
+.error { display: block; margin-top: 12rpx; color: var(--red-ink); font-size: 26rpx; }
+.receipt { display: flex; justify-content: space-between; padding: 16rpx 4rpx; font-size: 26rpx; color: var(--sub); }
+.first-hint { display: block; margin: 12rpx 4rpx; color: var(--sub); font-size: 26rpx; }
+
+/* 示例、最近 */
+.sec-head { display: flex; align-items: center; justify-content: space-between; margin: 48rpx 0 16rpx; }
+.sec-head .h { font-size: 32rpx; font-weight: 700; color: var(--ink); }
+.sec-head .all { padding: 8rpx 0 8rpx 16rpx; color: var(--sub); font-size: 26rpx; }
+.tries { display: flex; flex-direction: column; gap: 16rpx; }
+.try { display: flex; align-items: center; gap: 20rpx; padding: 24rpx 28rpx; border-radius: 28rpx; background: var(--card); box-shadow: var(--shadow); font-size: 30rpx; color: var(--ink); }
+.try .tl { flex: none; width: 112rpx; }
+.try .tl-ic { width: 26rpx; height: 26rpx; }
+.try .tt { flex: 1; min-width: 0; }
+.try .chev { color: var(--ghost); font-size: 34rpx; }
+.recent { display: flex; flex-direction: column; gap: 16rpx; }
+/* V4.2 (G5): the unfinished 聊一聊 chat, one line. */
+.chat-back {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin: 16rpx 0;
+  padding: 20rpx 24rpx;
+  border-radius: 20rpx;
+  background: var(--card);
+  font-size: 26rpx;
+  line-height: 1.4;
+}
+.chat-back .cb-label {
+  flex: none;
+  color: var(--faint);
+}
+.chat-back .cb-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.chat-back .cb-go {
+  flex: none;
+  color: var(--primary-ink);
+}
+/* V4.2 G9: the sticky's × reads on the yellow (about 4.9:1) and takes taps over 44px; a shorter empty box lets 最近 come up. */
+.hi .close { color: #7d6a2e; }
+.compose textarea { height: 152rpx; }

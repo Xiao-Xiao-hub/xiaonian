@@ -1,0 +1,262 @@
+<view class="page brainstorm">
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+  <view wx:if="{{item}}" class="head"
+    ><view class="title"
+      ><text wx:if="{{item.titleView.ai}}" class="ai-dot">•</text
+      >{{item.titleView.text || '这次头脑风暴'}}</view
+    ><text class="count">{{item.count}} 张</text
+    ><button class="btn-icon menu" bindtap="openMenu">⋯</button></view
+  >
+  <task-progress
+    wx:if="{{task&&!ready}}"
+    steps="{{steps}}"
+    job="{{task.job}}"
+    busy="{{saving}}"
+    expect-sec="{{120}}"
+    bind:retry="retryRun"
+  />
+  <text wx:if="{{loading&&!item}}" class="empty">打开中…</text>
+  <block wx:if="{{item&&ready}}">
+    <task-progress
+      wx:if="{{reportTask}}"
+      steps="{{reportSteps}}"
+      job="{{reportTask.job}}"
+      error="{{reportError}}"
+      busy="{{reportLoading}}"
+      expect-sec="{{40}}"
+      bind:retry="retryReport"
+    />
+    <view wx:elif="{{reportError}}" class="report-fail"
+      ><text>{{reportError}}</text
+      ><button class="btn-text" bindtap="retryReport">再试一次</button></view
+    >
+    <view wx:if="{{report&&reportStale&&!reportTask}}" class="report-fail"
+      ><text>分组改过了，这份分析是改之前的</text
+      ><button class="btn-text" disabled="{{reportLoading}}" bindtap="refreshReport">重新看看</button></view
+    >
+    <brainstorm-report report="{{report}}" />
+    <view
+      wx:if="{{report}}"
+      class="fold-row details-row {{detailsOpen?'open':''}}"
+      bindtap="toggleDetails"
+      ><text>分组和对比</text></view
+    >
+    <block wx:if="{{detailsOpen||!report}}">
+    <view
+      wx:for="{{item.groups}}"
+      wx:for-index="groupIndex"
+      wx:key="id"
+      class="box"
+    >
+      <view class="box-title"
+        ><block wx:if="{{editing[item.id]}}"
+          ><input
+            class="name-input"
+            value="{{item.nameView.text}}"
+            maxlength="8"
+            placeholder="给这组起个名"
+            placeholder-class="placeholder"
+            data-kind="group"
+            data-index="{{groupIndex}}"
+            data-field="name"
+            bindinput="edit"
+        /></block
+        ><view wx:else class="name"
+          ><text wx:if="{{item.nameView.ai&&item.nameView.text}}" class="ai-dot">•</text
+          >{{item.nameView.text || '还没起名的一组'}}</view
+        ><button class="btn-text edit" data-key="{{item.id}}" bindtap="toggleEdit">{{editing[item.id]?'好了':'改'}}</button></view
+      >
+      <view wx:if="{{editing[item.id]}}" class="ai-field"
+        ><input
+          value="{{item.commonView.text}}"
+          maxlength="30"
+          placeholder="这几张的共同点"
+          placeholder-class="placeholder"
+          data-kind="group"
+          data-index="{{groupIndex}}"
+          data-field="common"
+          bindinput="edit"
+      /></view>
+      <view wx:else class="common"
+        ><text wx:if="{{item.commonView.ai}}" class="ai-dot">•</text
+        >{{item.commonView.text}}</view
+      >
+      <view class="group-cards {{canMove?'movable':''}}"
+        ><text
+          wx:for="{{item.cards}}"
+          wx:key="id"
+          data-group="{{groupIndex}}"
+          data-card="{{item.ref}}"
+          bindtap="moveCard"
+          >{{item.titleView.text || item.title}}</text
+        ></view
+      >
+      <text wx:if="{{canMove&&groupIndex===0}}" class="hint">点卡可以挪到别的组</text>
+      <text
+        wx:if="{{editing[item.id]}}"
+        class="link danger remove-link"
+        data-kind="group"
+        data-index="{{groupIndex}}"
+        bindtap="remove"
+        >删掉这组</text
+      >
+    </view>
+    <view wx:if="{{facts.length}}" class="box fold"
+      ><view class="fold-row {{factsOpen?'open':''}}" bindtap="toggleFacts"
+        ><text>从卡里看出的 {{facts.length}} 条</text></view
+      ><view wx:if="{{factsOpen}}" class="facts"
+        ><text wx:for="{{facts}}" wx:key="*this">{{item}}</text></view
+      ></view
+    >
+    <view
+      wx:for="{{item.tensions}}"
+      wx:for-index="tensionIndex"
+      wx:key="id"
+      class="box"
+    >
+      <view class="box-title"
+        ><text class="bold">{{item.kindName}}</text
+        ><button class="btn-text edit" data-key="{{item.id}}" bindtap="toggleEdit">{{editing[item.id]?'好了':'改'}}</button></view
+      >
+      <view class="pair"
+        ><view
+          ><image src="{{item.aCard.typeIcon}}" mode="aspectFit" /><text
+            >{{item.aCard.titleView.text || item.aCard.title}}</text
+          ></view
+        ><text class="pair-link">⇄</text
+        ><view
+          ><image src="{{item.bCard.typeIcon}}" mode="aspectFit" /><text
+            >{{item.bCard.titleView.text || item.bCard.title}}</text
+          ></view
+        ></view
+      >
+      <input
+        wx:if="{{editing[item.id]}}"
+        class="line-input"
+        value="{{item.noteView.text}}"
+        maxlength="30"
+        placeholder="哪里不一样"
+        placeholder-class="placeholder"
+        data-kind="tension"
+        data-index="{{tensionIndex}}"
+        data-field="note"
+        bindinput="edit"
+      />
+      <view wx:else class="note"
+        ><text wx:if="{{item.noteView.ai}}" class="ai-dot">•</text
+        >{{item.noteView.text}}</view
+      >
+      <view wx:if="{{item.stances.length}}" class="chips"
+        ><button
+          wx:for="{{item.stances}}"
+          wx:for-item="choice"
+          wx:key="id"
+          class="{{choice.selected?'on':''}}"
+          data-index="{{tensionIndex}}"
+          data-value="{{choice.id}}"
+          bindtap="stance"
+        >{{choice.name}}</button></view
+      >
+      <text
+        wx:if="{{editing[item.id]}}"
+        class="link danger remove-link"
+        data-kind="tension"
+        data-index="{{tensionIndex}}"
+        bindtap="remove"
+        >删掉这条</text
+      >
+    </view>
+    <view wx:if="{{item.more.length}}" class="box"
+      ><view class="box-title"
+        ><text class="bold">还可以想想</text
+        ><button class="btn-text edit" data-key="more" bindtap="toggleEdit">{{editing.more?'好了':'改'}}</button></view
+      ><text class="hint">勾上的会一起存成卡</text>
+      <view wx:for="{{item.more}}" wx:key="id" class="more-row"
+        ><text
+          class="check {{item.selected?'on':''}}"
+          data-index="{{index}}"
+          bindtap="toggleMore"
+          aria-role="checkbox"
+          aria-checked="{{item.selected}}"
+          aria-label="存成卡"
+          >{{item.selected?'✓':''}}</text
+        ><image
+          class="more-icon"
+          src="{{item.cardView.typeIcon}}"
+          mode="aspectFit"
+        /><block wx:if="{{editing.more}}"
+          ><input
+            value="{{item.titleView.text}}"
+            maxlength="16"
+            placeholder="还想想什么"
+            placeholder-class="placeholder"
+            data-kind="more"
+            data-index="{{index}}"
+            data-field="title"
+            bindinput="edit"
+          /><text class="remove" data-kind="more" data-index="{{index}}" bindtap="remove" aria-role="button" aria-label="删掉这条"
+            >×</text
+          ></block
+        ><text wx:else class="more-title" data-index="{{index}}" bindtap="toggleMore"
+          ><text class="ai-dot" wx:if="{{item.titleView.ai}}">•</text
+          >{{item.titleView.text}}</text
+        ></view
+      >
+    </view>
+    <view wx:if="{{askOpen&&item.ask}}" class="box"
+      ><view class="box-title"
+        ><text class="bold">再问自己一句</text
+        ><button class="btn-text edit" bindtap="closeAsk">收起</button></view
+      ><view class="ai-field"
+        ><text wx:if="{{item.ask.qView.ai}}" class="ai-dot">•</text
+        ><input
+          value="{{item.ask.qView.text}}"
+          maxlength="40"
+          placeholder="问自己什么"
+          placeholder-class="placeholder"
+          data-field="q"
+          bindinput="editAsk" /></view
+      ><view class="ask-options"
+        ><input
+          wx:for="{{item.ask.options}}"
+          wx:key="index"
+          value="{{item}}"
+          maxlength="12"
+          placeholder="一个答案"
+          placeholder-class="placeholder"
+          data-field="option"
+          data-index="{{index}}"
+          bindinput="editAsk" /></view
+      ><text class="link danger remove-link" bindtap="removeAsk">删掉这句</text></view
+    >
+    </block>
+  </block>
+  <text wx:if="{{error}}" class="alert">{{error}}</text>
+  <view class="bottom"
+    ><button
+      wx:if="{{failed}}"
+      class="btn-line"
+      bindtap="cancel"
+    >
+      这次不想了
+    </button
+    ><block wx:else
+      ><button
+        wx:if="{{!isExample}}"
+        class="btn-line"
+        disabled="{{!ready}}"
+        bindtap="chat"
+      >
+        和 AI 聊聊
+      </button
+      ><button
+        class="btn"
+        loading="{{saving}}"
+        disabled="{{!ready||saving}}"
+        bindtap="next"
+      >
+        写结论
+      </button></block
+    ></view
+  >
+</view>

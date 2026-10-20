@@ -1,0 +1,17 @@
+.page { padding: 8rpx 32rpx 64rpx; }
+.sec-k { display: block; margin-top: 32rpx; padding-left: 8rpx; color: var(--sub); font-size: 26rpx; }
+.gap { margin-top: 40rpx; }
+.item .title { font-weight: 500; }
+.chev { flex: none; width: 14rpx; height: 14rpx; margin-right: 6rpx; border-top: 3rpx solid #c3c7cf; border-right: 3rpx solid #c3c7cf; transform: rotate(45deg); }
+.chev.down { margin-bottom: 8rpx; transform: rotate(135deg); }
+.chev.up { margin-top: 8rpx; transform: rotate(-45deg); }
+.body { padding: 4rpx 0 28rpx; border-bottom: 1rpx solid var(--rule); }
+.body:last-child { border-bottom: none; }
+.para { display: block; font-size: 28rpx; line-height: 1.8; color: var(--body); white-space: pre-wrap; }
+.step { display: flex; align-items: center; gap: 20rpx; min-height: 76rpx; }
+.step-n { display: flex; align-items: center; justify-content: center; flex: none; width: 44rpx; height: 44rpx; border-radius: 50%; background: var(--primary-wash); color: var(--primary); font-size: 24rpx; font-weight: 700; line-height: 1; }
+.step-text { flex: 1; min-width: 0; font-size: 28rpx; line-height: 1.5; color: var(--ink); }
+.fb { position: relative; }
+/* WeChat's feedback page needs a real button: a clear one over the whole row. */
+.fb-btn { position: absolute; left: 0; top: 0; width: 100% !important; height: 100%; margin: 0; padding: 0; border: 0; background: transparent; opacity: 0; }
+.fb-btn::after { border: 0; }

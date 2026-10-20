@@ -1,0 +1,108 @@
+<view class="page" capture-bind:touchstart="studyTouch">
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+  <view wx:if="{{loadFailed}}" class="alert">{{error}}<text wx:if="{{canRetry}}" class="link" bindtap="reload">再试一次</text><text wx:else class="link" bindtap="openLibrary">回我的资料</text></view>
+  <view wx:elif="{{error}}" class="alert">{{error}}</view>
+  <block wx:if="{{material}}">
+    <view class="head">
+      <view class="head-row">
+        <view class="head-copy">
+          <text class="kicker">资料</text>
+          <text class="h2">{{material.title || '未命名资料'}}</text>
+        </view>
+        <view class="btn-icon" hover-class="pressed" bindtap="openMore" aria-role="button" aria-label="更多">⋯</view>
+      </view>
+      <text wx:if="{{explain && explain.data.summary}}" class="lede">{{explain.data.summary}}</text>
+    </view>
+
+    <view class="paper source">
+      <text class="gutter">原文</text>
+      <view class="source-head" bindtap="toggleText">
+        <text class="source-label">共 {{paragraphs.length}} 段</text>
+        <text class="source-toggle">{{showText ? '收起' : '展开全文'}}</text>
+      </view>
+      <view wx:if="{{showText}}">
+        <view wx:for="{{paragraphs}}" wx:key="index" class="para">
+          <text class="para-no tnum">{{index + 1}}</text>
+          <text class="lined">{{item}}</text>
+        </view>
+      </view>
+      <text wx:else class="peek" bindtap="toggleText">{{paragraphs[0]}}</text>
+    </view>
+
+    <view wx:if="{{explain && explain.stale}}" class="notice">原文改过了，要按新的重讲一遍吗？<text class="link" bindtap="regenerate">重讲</text></view>
+
+    <view class="section"><text class="h3">讲解</text></view>
+    <view wx:if="{{waiting.explain}}" class="working">
+      <text class="h3">正在读…</text>
+      <text class="small">{{waitLine.explain ? waitLine.explain + '。' : ''}}可以先离开，回来接着看</text>
+      <view class="bar" />
+    </view>
+    <view wx:elif="{{errors.explain}}" class="alert">{{errors.explain}}<text wx:if="{{slow.explain}}" class="link" bindtap="reload">看看进展</text><text wx:else class="link" bindtap="retryExplain">再试一次</text></view>
+
+    <block wx:if="{{explain}}">
+      <view wx:if="{{explain.data.insufficient}}" class="sheet">
+        <text class="h3">内容有点少</text>
+        <text class="lede">{{explain.data.limits || '还讲不出要点，多贴一点？'}}</text>
+        <button class="btn" hover-class="btn-press" bindtap="edit">补充原文</button>
+      </view>
+      <view class="notes">
+        <block wx:for="{{points}}" wx:key="index">
+          <view wx:if="{{allPoints || index < 3}}" class="note-block">
+            <text class="n">{{index + 1}}</text>
+            <text class="title">{{item.title}}</text>
+            <text class="text">{{item.explanation}}</text>
+            <view class="note-foot">
+              <text wx:if="{{item.cite}}" class="cite" data-cites="{{item.citations}}" data-version="{{explain.version}}" bindtap="openSource">出自{{item.cite}}</text>
+              <text wx:if="{{item.extension}}" class="toggle" data-key="p{{index}}" bindtap="toggleExtension">{{opened['p' + index] ? '收起' : '原文里没有，顺带补充'}}</text>
+            </view>
+            <text wx:if="{{item.extension && opened['p' + index]}}" class="aside">{{item.extension}}</text>
+          </view>
+        </block>
+      </view>
+      <view wx:if="{{!allPoints && points.length > 3}}" class="fold-row" bindtap="showAllPoints" aria-role="button">还有 {{points.length - 3}} 条</view>
+      <text wx:if="{{explain.data.limits && !explain.data.insufficient}}" class="hint limits">原文没讲到：{{explain.data.limits}}</text>
+    </block>
+
+    <button wx:if="{{explain && !explain.data.insufficient && !waiting.explain}}" class="btn quiz" hover-class="btn-press" bindtap="practice"><text>考考我</text><image class="icon" src="/assets/icons/arrow-white.png" /></button>
+    <view wx:if="{{review}}" class="review-state">
+      <text>{{reviewText}}</text>
+      <text class="link" bindtap="removeReview">不用提醒了</text>
+    </view>
+
+    <view class="section"><text class="h3">哪里没看懂</text></view>
+    <view class="ask">
+      <input class="ask-input" placeholder-class="placeholder" maxlength="200" placeholder="问问这份资料" value="{{question}}" bindinput="onQuestion" bindconfirm="ask" confirm-type="send" />
+      <button class="ask-send" hover-class="btn-press" disabled="{{waiting.ask || !question}}" bindtap="ask" aria-label="发送"><image class="icon" src="/assets/icons/send-white.png" /></button>
+    </view>
+    <view wx:if="{{waiting.ask}}" class="working">
+      <text class="h3">正在想…</text>
+      <text wx:if="{{waitLine.ask}}" class="small">{{waitLine.ask}}</text>
+      <view class="bar" />
+    </view>
+    <view wx:if="{{errors.ask}}" class="alert">{{errors.ask}}<text wx:if="{{slow.ask}}" class="link" bindtap="reload">看看进展</text><text wx:elif="{{question}}" class="link" bindtap="ask">再问一次</text></view>
+    <view class="notes">
+      <view wx:for="{{answers}}" wx:key="id" class="note-block">
+        <text class="n word">问</text>
+        <text class="q">{{item.data.question}}</text>
+        <text wx:if="{{item.data.insufficient}}" class="tag">原文里没说</text>
+        <text class="text">{{item.data.answer}}</text>
+        <text wx:if="{{item.cite}}" class="cite" data-cites="{{item.data.citations}}" data-version="{{item.version}}" bindtap="openSource">出自{{item.cite}}</text>
+        <text wx:if="{{item.data.extension}}" class="aside">顺带补充：{{item.data.extension}}</text>
+      </view>
+    </view>
+  </block>
+  <view wx:elif="{{loading}}" class="empty">打开中…</view>
+
+  <view wx:if="{{sheet}}" class="mask" catchtap="closeSheet">
+    <view class="pop" catchtap="noop">
+      <view class="pop-top">
+        <text class="h3">{{sheet.title}}</text>
+        <text class="close" catchtap="closeSheet">关闭</text>
+      </view>
+      <view wx:for="{{sheet.lines}}" wx:key="no" class="line {{item.hit ? 'hit' : ''}}">
+        <text class="no">{{item.no}}</text>
+        <text class="line-text">{{item.text}}</text>
+      </view>
+    </view>
+  </view>
+</view>

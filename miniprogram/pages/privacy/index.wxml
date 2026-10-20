@@ -1,0 +1,46 @@
+<view class="page">
+  <view wx:if="{{error}}" class="alert">{{error}}</view>
+  <text class="sec-k">三份文件</text>
+  <view class="rows">
+    <view wx:for="{{docs}}" wx:key="key" class="item" hover-class="pressed" data-doc="{{item.key}}" bindtap="openDoc">
+      <text class="copy title">{{item.name}}</text>
+      <view class="chev" />
+    </view>
+    <view class="item" hover-class="pressed" bindtap="openPlatform">
+      <text class="copy title">微信官方隐私指引</text>
+      <view class="chev" />
+    </view>
+  </view>
+  <block wx:if="{{signedIn}}">
+    <text class="sec-k">我的数据</text>
+    <view class="rows">
+      <view class="item" hover-class="pressed" bindtap="exportData">
+        <view class="copy"><text class="title">导出我的数据</text><text class="snippet">{{exporting ? '准备中…' : 'JSON 文件，不含原图'}}</text></view>
+        <view class="chev" />
+      </view>
+      <view wx:if="{{age === 'child'}}" class="item" hover-class="pressed" bindtap="toAdult">
+        <view class="copy"><text class="title">年龄段：未满 14 周岁</text><text class="snippet">满 14 周岁了，可以改</text></view>
+        <view class="chev" />
+      </view>
+      <view wx:elif="{{age === 'adult'}}" class="item" hover-class="pressed" bindtap="toChild">
+        <view class="copy"><text class="title">年龄段：已满 14 周岁</text><text class="snippet">选错了，可以改</text></view>
+        <view class="chev" />
+      </view>
+      <view wx:else class="item" hover-class="pressed" bindtap="deleteAccount">
+        <view class="copy"><text class="title">注销账号</text><text class="snippet">删除全部数据，找不回来</text></view>
+        <view class="chev" />
+      </view>
+    </view>
+  </block>
+  <button wx:if="{{canRevoke}}" class="btn-line danger gap-top" hover-class="btn-press" disabled="{{busy}}" bindtap="revoke">撤回授权并退出登录</button>
+  <text wx:if="{{canRevoke && age === 'child'}}" class="hint center">未满 14 周岁的账号撤回同意，就是注销账号</text>
+  <text class="hint center version">文件版本：{{version}}</text>
+</view>
+
+<view wx:if="{{guardian}}" class="scrim" bindtap="closeGuardian">
+  <view class="pop" catchtap="noop">
+    <view class="pop-top"><text class="h3">监护人同意</text><text class="close" bindtap="closeGuardian">关闭</text></view>
+    <view class="gp">未满 14 周岁的，请告知家长共同阅读晓念<text class="lk" data-doc="privacy-policy" bindtap="openDoc">《隐私政策》</text>和<text class="lk" data-doc="children-privacy" bindtap="openDoc">《儿童隐私政策》</text>。点击“监护人同意”即表示你和你的家长同意并接受全部条款。</view>
+    <button class="btn" hover-class="btn-press" disabled="{{busy}}" bindtap="guardianAgree">{{busy ? '稍等…' : '监护人同意'}}</button>
+  </view>
+</view>

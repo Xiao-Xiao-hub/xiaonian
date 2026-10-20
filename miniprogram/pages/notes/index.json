@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "随心记",
+  "navigationStyle": "custom",
+  "enablePullDownRefresh": true,
+  "usingComponents": { "page-head": "/components/page-head/index", "card-tile": "/components/card-tile/index", "resume-card": "/components/resume-card/index", "guest-bar": "/components/guest-bar/index", "task-strip": "/components/task-strip/index" }
+}

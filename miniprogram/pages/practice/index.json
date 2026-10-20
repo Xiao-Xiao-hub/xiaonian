@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "作答",
+  "usingComponents": {
+    "rich": "/components/rich/index"
+  }
+}

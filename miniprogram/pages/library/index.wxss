@@ -1,0 +1,11 @@
+.head-row { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; }
+.search { display: flex; align-items: center; gap: 14rpx; height: 84rpx; margin-top: 28rpx; padding: 0 24rpx; background: var(--card); border: 2rpx solid var(--rule-2); border-radius: var(--radius-btn); }
+.search .icon { width: 32rpx; height: 32rpx; }
+.search-input { flex: 1; height: 84rpx; font-size: 28rpx; }
+.clear { flex: none; padding: 8rpx 0 8rpx 16rpx; font-size: 24rpx; color: var(--pencil); }
+.tabs { margin-bottom: 0; }
+.list { margin-top: 28rpx; }
+.notebook .list { border-top: none; }
+.foot-hint { margin-top: 24rpx; }
+.empty .btn-text { display: flex; width: 100% !important; margin-top: 12rpx; }
+.more { display: flex; align-items: center; justify-content: center; min-height: 88rpx; margin-top: 16rpx; font-size: 26rpx; color: var(--sub); }

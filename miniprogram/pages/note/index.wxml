@@ -1,0 +1,61 @@
+<view class="page">
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+  <view wx:if="{{error}}" class="alert">{{error}}<text wx:if="{{!note}}" class="link" bindtap="load">再试一次</text></view>
+  <view wx:if="{{conflict}}" class="alert">别处改过这张卡，你写的还在。<text class="link" bindtap="loadLatest">打开最新的</text></view>
+  <text wx:if="{{notice}}" class="notice">{{notice}}</text>
+  <text wx:if="{{loading && !note}}" class="foot">打开中…</text>
+  <block wx:if="{{note}}">
+    <view class="head head-row">
+      <view class="head-copy"><text class="kicker">{{when}}</text><text class="h2 note-heading">{{note.title}}</text></view>
+      <view class="btn-icon" hover-class="pressed" bindtap="openMore" aria-role="button" aria-label="更多">⋯</view>
+    </view>
+    <view wx:if="{{editing}}" class="sheet title-editor">
+      <text class="h3">给它换个标题</text>
+      <input class="title-input" value="{{title}}" bindinput="onTitle" maxlength="80" disabled="{{busy}}" placeholder="80 字以内" />
+      <text wx:if="{{editError}}" class="form-error">{{editError}}</text>
+      <view class="actions"><button class="btn-line" disabled="{{busy}}" bindtap="cancelEdit">取消</button><button class="btn" loading="{{busy}}" disabled="{{busy}}" bindtap="saveTitle">存下</button></view>
+    </view>
+    <view class="sheet original"><text class="original-label">你当时写的</text><text class="original-text" selectable>{{note.text}}</text></view>
+    <view wx:if="{{note.supplements.length}}" class="supplements">
+      <view wx:for="{{note.supplements}}" wx:key="id" class="supplement-entry"><text class="small-label">后来补充 · {{index + 1}}</text><text class="plain-text" selectable>{{item.text}}</text></view>
+    </view>
+
+    <text wx:if="{{readOnly}}" class="hint read-only">这是旧版随心记，现在只能看和删。</text>
+    <view class="section"><text class="h3">把想法理一理</text></view>
+    <view wx:if="{{jobText && !readOnly}}" class="job-note"><text>{{jobText}}</text><button wx:if="{{organizing}}" class="text-action" disabled="{{busy || loading}}" bindtap="load">看看进展</button><button wx:else class="text-action" disabled="{{busy || loading}}" bindtap="retryOrganize">再试一次</button></view>
+    <view wx:if="{{note.resultStale}}" class="stale-note">新补充的还没理进去。</view>
+    <view wx:if="{{!note.result}}" class="organize-empty"><text class="h3 block">原话存好了</text></view>
+    <view wx:if="{{!note.result && !readOnly}}" class="organize-actions">
+      <button class="btn" disabled="{{busy || loading || organizing || conflict}}" loading="{{busy}}" bindtap="organize">让 AI 理一理</button>
+      <text wx:if="{{usageLow}}" class="hint center usage-line">{{usageLow}}</text>
+    </view>
+    <block wx:if="{{note.result}}">
+      <block wx:for="{{groups}}" wx:key="id" wx:for-item="group">
+      <view wx:if="{{group.items.length}}" class="outline-group {{group.id}}">
+        <view class="group-head"><text class="group-name">{{group.name}}</text></view>
+        <text class="group-hint">{{group.hint}}</text>
+        <view wx:for="{{group.items}}" wx:key="id" class="outline-item" hover-class="pressed" data-id="{{item.id}}" bindtap="itemMenu">
+          <text class="plain-text">{{item.text}}</text><text wx:if="{{item.edited}}" class="edited-mark">改过</text>
+          <view wx:if="{{itemEditor && itemEditor.id === item.id}}" class="item-editor" catchtap="noop">
+            <picker range="{{groupNames}}" value="{{itemEditor.groupIndex}}" disabled="{{busy}}" bindchange="onItemGroup"><view class="group-picker">放在：{{groupNames[itemEditor.groupIndex]}} <text>换一组</text></view></picker>
+            <textarea class="field item-input" value="{{itemEditor.text}}" bindinput="onItemText" maxlength="300" auto-height disabled="{{busy}}" />
+            <text wx:if="{{itemError}}" class="form-error">{{itemError}}</text>
+            <view class="actions"><button class="btn-line" disabled="{{busy}}" bindtap="cancelItem">取消</button><button class="btn" disabled="{{busy || conflict}}" loading="{{busy}}" bindtap="saveItem">存下</button></view>
+          </view>
+        </view>
+      </view>
+      </block>
+      <view wx:if="{{followUp}}" class="question-note"><text class="small-label">先想清楚这一个问题</text><text class="question-text">{{note.result.question.prompt}}</text><button wx:for="{{note.result.question.options}}" wx:key="id" class="answer-option" data-id="{{item.id}}" disabled="{{busy || loading || readOnly}}" bindtap="chooseAnswer">{{item.text}}</button></view>
+    </block>
+
+    <view wx:if="{{!readOnly}}" class="sheet supplement-compose"><text class="h3">再补充一点</text><textarea class="field supplement-input" value="{{supplement}}" bindinput="onSupplement" maxlength="500" auto-height disabled="{{busy}}" placeholder="想到新的细节，或写下你对问题的回答…" /><view class="supplement-foot"><text wx:if="{{supplement.length > 400}}" class="small-label">{{supplement.length}} / 500</text><button class="btn-line" disabled="{{busy || loading || conflict}}" loading="{{busy}}" bindtap="saveSupplement">存下</button></view><text wx:if="{{supplementError}}" class="form-error">{{supplementError}}</text></view>
+    <view wx:if="{{note.result && note.resultStale && !readOnly}}" class="organize-actions">
+      <button class="btn" disabled="{{busy || loading || organizing || conflict}}" loading="{{busy}}" bindtap="organize">一起再理一理</button>
+      <text wx:if="{{usageLow}}" class="hint center usage-line">{{usageLow}}</text>
+    </view>
+
+    <view wx:if="{{note.result && followUp}}" class="next-step"><text class="small-label">下一步可以</text><text class="plain-text">{{note.result.nextStep.text}}</text></view>
+    <view wx:if="{{suggestedPoint && !readOnly}}" class="point-link"><text class="small-label">{{context ? '刚才的卡点' : '可能有关'}}</text><text class="point-name">{{suggestedPoint.name}}</text><view class="item-actions"><button class="text-action" disabled="{{busy || loading}}" bindtap="linkPoint">放进去</button><button wx:if="{{context}}" class="text-action" disabled="{{busy}}" bindtap="dismissContext">不用</button></view></view>
+    <view wx:if="{{linkedPoint}}" class="point-link linked"><text class="small-label">放在这个知识点里了</text><text class="point-name">{{linkedPoint.name}}</text><view class="item-actions"><button class="text-action" bindtap="openPoint">去看看</button><button wx:if="{{!readOnly}}" class="text-action" disabled="{{busy || loading}}" bindtap="unlinkPoint">不放了</button></view></view>
+  </block>
+</view>

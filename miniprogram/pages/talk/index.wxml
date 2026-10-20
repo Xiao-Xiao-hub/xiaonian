@@ -1,0 +1,70 @@
+<page-head title="聊一聊" tint="mint">
+  <view class="grow" />
+  <view class="hist tap-area {{sending ? 'off' : ''}}" hover-class="pressed" bindtap="openHistory" aria-role="button" aria-label="全部对话"><image class="hist-icon" src="/assets/icons/clock-ink.png" mode="aspectFit" /></view>
+</page-head>
+<view class="page ph-body talk" style="padding-bottom:calc({{!guest && !thread && recent.length ? 300 : 220}}rpx + {{kb}}px)" capture-bind:touchstart="studyTouch">
+  <guest-bar />
+  <view class="head">
+    <text class="ai-line">AI 生成可能有误，注意核实</text>
+    <view wx:if="{{consent && !loading && (thread || !sending)}}" class="more tap-area" hover-class="pressed" bindtap="more" aria-role="button" aria-label="更多">⋯</view>
+  </view>
+  <view wx:if="{{listError && !thread && !messages.length}}" class="alert">{{listError}}<text class="link" bindtap="loadRecent">重试</text></view>
+  <chat-panel wx:if="{{thread}}" part="header" thread="{{thread}}" messages="{{messages}}" scene-candidate="{{sceneCandidate}}" break-reminder="{{breakReminder}}" bindremovecard="removecard" bindmoodaccept="moodaccept" bindmooddecline="mooddecline" />
+  <view wx:if="{{!messages.length}}" class="start">
+    <text wx:if="{{loading}}" class="hint">打开中…</text>
+    <view wx:elif="{{replay && !thread}}" class="replay">
+      <text class="replay-label">上次聊到这儿</text>
+      <text class="replay-title">{{replay.title}}</text>
+      <view wx:for="{{replay.lines}}" wx:key="id" class="replay-line {{item.mine ? 'mine' : ''}}"><text>{{item.text}}</text></view>
+      <view class="replay-acts">
+        <view class="btn sm" hover-class="btn-press" bindtap="replayGo">接着聊</view>
+        <view class="btn-text" hover-class="pressed" bindtap="replayNew">开新话题</view>
+      </view>
+    </view>
+    <block wx:else>
+      <text class="start-title">{{thread && thread.mode === 'teach' ? '想讲讲什么？' : '想聊点什么？'}}</text>
+      <text class="start-lede">{{thread && thread.mode === 'teach' ? '用你自己的话讲一遍。' : thread && thread.currentCards.length ? '卡带上了，直接打字就行。' : '随便说说就好，慢慢来。'}}</text>
+    </block>
+  </view>
+  <chat-panel part="messages" compact="{{true}}" thread="{{thread}}" messages="{{messages}}" bindcollect="collect" bindmistake="mistake" bindspot="spot" bindteachsave="teachsave" bindteachchange="teachchange" bindteachpick="teachpick" bindattachmore="attachmore" />
+  <chat-panel wx:if="{{suggestions.length}}" part="related" thread="{{thread}}" suggestions="{{suggestions}}" bindsuggestadd="suggestadd" bindsuggestdismiss="suggestdismiss" />
+  <chat-panel part="actions" thread="{{thread}}" actions="{{actions}}" sending="{{sending || busy !== ''}}" bindaction="panelAction" />
+  <view wx:if="{{thread && thread.wrapReady && !busy && !sending}}" class="wrap-ready" hover-class="pressed" bindtap="openWrap">理好的卡还没存<text class="go">去看看 ›</text></view>
+  <text wx:if="{{busy === 'wrap'}}" class="hint working">在帮你理一理，理好了就能存成卡…{{wrapWait >= 10 ? '已等 ' + wrapWait + ' 秒，聊得多会慢一点' : ''}}</text>
+  <text wx:if="{{notice}}" class="notice">{{notice}}</text>
+  <text wx:if="{{error}}" class="error">{{error}}</text>
+  <view wx:if="{{pending.length}}" class="tray-room" />
+</view>
+<view class="composer {{kb ? 'kb-up' : ''}}" style="bottom:{{kb}}px">
+  <scroll-view wx:if="{{!guest && !thread && !sending && recent.length}}" class="recent" scroll-x enable-flex>
+    <view wx:for="{{recent}}" wx:key="id" class="chip" hover-class="pressed" data-id="{{item.id}}" bindtap="openRecent">{{item.title}}</view>
+  </scroll-view>
+  <chat-attach wx:if="{{pending.length}}" class="tray" items="{{pending}}" removable="{{true}}" bindremove="unpend" bindretry="retryattach" />
+  <view class="row">
+    <view wx:if="{{guest}}" class="plus tap-area" hover-class="pressed" bindtap="guestTap" aria-role="button" aria-label="添加图片或文件"><image class="plus-icon" src="/assets/icons/plus-ink.png" /></view>
+    <view wx:else class="plus tap-area" hover-class="pressed" bindtap="plus" aria-role="button" aria-label="添加图片或文件"><image class="plus-icon" src="/assets/icons/plus-ink.png" /></view>
+    <view wx:if="{{guest}}" class="input placeholder" bindtap="guestTap">想聊什么都可以</view>
+    <textarea
+      wx:else
+      class="input"
+      fixed
+      auto-height
+      disable-default-padding
+      maxlength="2000"
+      cursor-spacing="28"
+      adjust-position="{{false}}"
+      show-confirm-bar="{{false}}"
+      confirm-type="send"
+      placeholder="{{thread && thread.mode === 'teach' ? '讲讲你的理解' : messages.length ? '接着说…' : '想聊什么都可以'}}"
+      placeholder-class="placeholder"
+      value="{{draft}}"
+      focus="{{focus}}"
+      bindinput="input"
+      bindblur="blur"
+      bindkeyboardheightchange="keyboardHeight"
+      bindconfirm="submit"
+    />
+    <view wx:if="{{guest}}" class="send tap-area" hover-class="btn-press" bindtap="guestTap" aria-role="button" aria-label="发送"><image class="icon" src="/assets/icons/send-white.png" /></view>
+    <view wx:else class="send tap-area {{(draft || pending.length) && !sending ? 'on' : ''}}" hover-class="btn-press" bindtap="submit" aria-role="button" aria-label="发送"><image class="icon" src="/assets/icons/send-white.png" /></view>
+  </view>
+</view>

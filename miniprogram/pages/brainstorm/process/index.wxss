@@ -1,0 +1,360 @@
+.brainstorm {
+  padding-bottom: 150rpx;
+}
+.ai-line {
+  margin: -10rpx 0 16rpx;
+  color: var(--pencil);
+  font-size: 24rpx;
+  text-align: center;
+}
+.head {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  margin-bottom: 18rpx;
+  color: var(--ink);
+}
+.head .title {
+  flex: 1;
+  min-width: 0;
+  font-size: 34rpx;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.head .count {
+  flex: none;
+  color: var(--pencil);
+  font-size: 24rpx;
+}
+.head .menu {
+  width: 64rpx;
+  height: 64rpx;
+}
+.ai-dot {
+  margin-right: 6rpx;
+  color: var(--violet-ink);
+}
+.box {
+  margin-bottom: 20rpx;
+  padding: 20rpx 28rpx 24rpx;
+  border-radius: 26rpx;
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+.box.fold {
+  padding-top: 4rpx;
+  padding-bottom: 4rpx;
+}
+.box-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+  color: var(--pencil);
+  font-size: 26rpx;
+  font-weight: 700;
+}
+.box-title .name {
+  flex: 1;
+  min-width: 0;
+  color: var(--ink);
+  font-size: 30rpx;
+}
+.box-title .name-input {
+  flex: 1;
+  height: 64rpx;
+  padding: 0 14rpx;
+  border: 2rpx solid var(--rule-2);
+  border-radius: 14rpx;
+  color: var(--ink);
+  font-size: 28rpx;
+}
+.btn-text.edit {
+  flex: none;
+  min-height: 56rpx;
+  padding: 0 4rpx 0 16rpx;
+  font-size: 26rpx;
+  font-weight: 500;
+}
+.common,
+.note {
+  margin-top: 10rpx;
+  color: var(--body);
+  font-size: 27rpx;
+  line-height: 1.6;
+}
+.ai-field {
+  display: flex;
+  align-items: center;
+  margin-top: 14rpx;
+}
+.ai-field input {
+  flex: 1;
+  height: 64rpx;
+  padding: 0 14rpx;
+  border: 2rpx solid var(--rule-2);
+  border-radius: 14rpx;
+  color: var(--ink);
+  font-size: 28rpx;
+}
+.group-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 14rpx;
+}
+.group-cards text {
+  padding: 6rpx 14rpx;
+  border-radius: 12rpx;
+  background: var(--chip);
+  color: var(--ink);
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+.group-cards.movable text {
+  border: 2rpx dashed var(--rule-2);
+  background: var(--card);
+}
+.hint {
+  margin-top: 10rpx;
+}
+.remove-link {
+  display: inline-block;
+  margin-top: 16rpx;
+}
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  padding-bottom: 18rpx;
+  color: var(--body);
+  font-size: 26rpx;
+  line-height: 1.6;
+}
+.pair {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+.pair > view {
+  display: flex;
+  align-items: flex-start;
+  gap: 8rpx;
+  padding: 14rpx 12rpx;
+  border: 2rpx solid var(--rule-2);
+  border-radius: 16rpx;
+  color: var(--ink);
+  font-size: 26rpx;
+  font-weight: 700;
+}
+.pair > view image {
+  flex: none;
+  width: 28rpx;
+  height: 28rpx;
+  margin-top: 4rpx;
+}
+.pair .pair-link {
+  color: var(--pencil);
+  font-weight: 700;
+}
+.line-input {
+  height: 64rpx;
+  margin-top: 12rpx;
+  padding: 0 14rpx;
+  border: 2rpx solid var(--rule-2);
+  border-radius: 14rpx;
+  color: var(--ink);
+  font-size: 26rpx;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 14rpx;
+}
+.chips button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18rpx;
+  border: 2rpx solid var(--rule-2);
+  border-radius: 999rpx;
+  color: var(--ink);
+  font-size: 24rpx;
+  line-height: 58rpx;
+}
+.chips button.on {
+  border-color: var(--primary);
+  background: var(--primary-wash);
+  color: var(--primary);
+  font-weight: 700;
+}
+.more-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  min-height: 80rpx;
+}
+.more-row + .more-row {
+  border-top: 2rpx solid var(--rule);
+}
+.more-title {
+  flex: 1;
+  min-width: 0;
+  color: var(--ink);
+  font-size: 28rpx;
+}
+.more-row input {
+  flex: 1;
+  height: 60rpx;
+  padding: 0 14rpx;
+  border: 2rpx solid var(--rule-2);
+  border-radius: 14rpx;
+  color: var(--ink);
+  font-size: 27rpx;
+}
+.more-row .remove {
+  flex: none;
+  padding-left: 12rpx;
+  color: var(--faint);
+  font-size: 34rpx;
+}
+.more-icon {
+  flex: none;
+  width: 30rpx;
+  height: 30rpx;
+}
+.check {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 40rpx;
+  height: 40rpx;
+  margin: 0;
+  border: 3rpx solid var(--rule-2);
+  border-radius: 50%;
+  color: var(--on-primary);
+  font-size: 24rpx;
+}
+.check.on {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+.ask-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 14rpx;
+}
+.ask-options input {
+  box-sizing: border-box;
+  width: calc(50% - 5rpx);
+  height: 60rpx;
+  padding: 0 14rpx;
+  border: 2rpx solid var(--rule-2);
+  border-radius: 14rpx;
+  color: var(--ink);
+  font-size: 24rpx;
+}
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  margin-top: 30rpx;
+  padding: 22rpx;
+  border-radius: 20rpx;
+  background: var(--primary-wash);
+  color: var(--ink);
+}
+.spinner {
+  flex: none;
+  width: 28rpx;
+  height: 28rpx;
+  border: 4rpx solid var(--rule-2);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+.muted {
+  display: block;
+  margin-top: 4rpx;
+  color: var(--pencil);
+  font-size: 24rpx;
+}
+.empty,
+.alert {
+  display: block;
+  padding: 40rpx 0;
+  text-align: center;
+}
+.alert {
+  color: var(--red-ink);
+}
+.bottom {
+  position: fixed;
+  z-index: 8;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  gap: 18rpx;
+  padding: 16rpx 32rpx calc(16rpx + env(safe-area-inset-bottom));
+  border-top: 2rpx solid var(--rule);
+  background: var(--card);
+}
+.bottom .btn,
+.bottom .btn-line {
+  flex: 1;
+  min-width: 0;
+  width: auto !important;
+  margin: 0;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.bold {
+  font-weight: 600;
+}
+.report-wait {
+  margin: 0 0 20rpx;
+}
+.report-fail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+  color: var(--pencil);
+  font-size: 26rpx;
+}
+.details-row {
+  margin-bottom: 12rpx;
+  padding: 0 8rpx;
+}
+/* V4.2 G9: the check, × and 删掉这组/这条 take taps over 44px; a delete link keeps clear of what is above it. */
+.check,
+.more-row .remove,
+.remove-link {
+  position: relative;
+}
+.check::before,
+.more-row .remove::before,
+.remove-link::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 100%;
+  min-width: var(--hit);
+  min-height: var(--hit);
+  transform: translate(-50%, -50%);
+}
+.remove-link {
+  margin-top: var(--gap-danger);
+}

@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "错题本",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "rich": "/components/rich/index",
+    "guest-bar": "/components/guest-bar/index"
+  }
+}

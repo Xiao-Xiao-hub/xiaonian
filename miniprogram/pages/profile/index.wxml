@@ -1,0 +1,71 @@
+<page-head tint="slate" />
+<view class="page ph-body">
+  <guest-bar />
+  <view class="who">
+    <view class="who-l">
+      <text class="who-name">{{guest ? '游客' : (name || '你好')}}</text>
+      <view wx:if="{{learn}}" class="who-tags"><text class="lv">Lv {{learn.level}}</text><text wx:if="{{learn.rank}}">{{learn.rank}}</text><text>高数上</text></view>
+    </view>
+    <view class="me-av">{{initial || '我'}}</view>
+  </view>
+  <view wx:if="{{error}}" class="alert">{{error}}<button wx:if="{{!guest}}" class="retry tap-area" disabled="{{loading || busy}}" bindtap="load">重试</button></view>
+  <block wx:if="{{!guest}}">
+    <view wx:if="{{lowUsage}}" class="notice" bindtap="openUsage">{{lowUsage}} ›</view>
+    <view wx:if="{{study}}" class="study">
+      <view class="st-hd"><text class="st-t">学习时间</text></view>
+      <view class="nums">
+        <view class="num"><view class="num-v">{{study.total}}<text class="num-u">天</text></view><text class="num-k">累计学习</text></view>
+        <view class="num"><view class="num-v">{{study.current}}<text class="num-u">天</text></view><text class="num-k">当前连续</text></view>
+        <view class="num"><view class="num-v">{{study.best}}<text class="num-u">天</text></view><text class="num-k">最高连续</text></view>
+      </view>
+      <view class="heat">
+        <text class="st-more heat-t">近 18 周</text>
+        <view class="mo"><text wx:for="{{study.months}}" wx:key="index" class="mo-i">{{item}}</text></view>
+        <view class="heat-b">
+          <view class="wd"><text>一</text><text></text><text>三</text><text></text><text>五</text><text></text><text>日</text></view>
+          <view class="cols">
+            <view wx:for="{{study.columns}}" wx:for-item="col" wx:for-index="w" wx:key="key" class="col">
+              <view wx:for="{{col.cells}}" wx:for-item="c" wx:for-index="i" wx:key="day" class="hc {{c.fu ? 'fu' : 'l' + c.lv}} {{c.td ? 'td' : ''}} {{picked.day === c.day ? 'pk' : ''}}" data-w="{{w}}" data-i="{{i}}" bindtap="pickDay" />
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="hfoot">
+        <text wx:if="{{picked}}" class="hf-today">{{picked.label}} <text class="hf-b">{{picked.min}}</text> 分钟</text>
+        <text wx:else class="hf-today">今天 <text class="hf-b">{{study.todayMin}}</text> 分钟</text>
+        <view class="grow" />
+        <text>少</text><view class="hk l0" /><view class="hk l1" /><view class="hk l2" /><view class="hk l3" /><view class="hk l4" /><text>多</text>
+      </view>
+      <view class="st-note">{{study.enabled ? '只给自己看，不排行，不和别人比。' : '学习时长统计关着，不记新的时长。'}}</view>
+    </view>
+    <view class="stats">
+      <view class="sc" bindtap="openCards"><image wx:if="{{!broken.cards}}" class="ic3d sc-ic" src="{{icons.cards}}" webp="{{true}}" mode="aspectFit" data-k="cards" binderror="iconError" /><view><text class="sc-v">{{stats ? stats.total : '—'}}</text><text class="sc-k">张卡片</text></view></view>
+      <view class="sc"><image wx:if="{{!broken.star}}" class="ic3d sc-ic" src="{{icons.star}}" webp="{{true}}" mode="aspectFit" data-k="star" binderror="iconError" /><view><text class="sc-v">{{learn ? learn.correct : '—'}}</text><text class="sc-k">个知识点做对</text></view></view>
+      <view class="sc"><image wx:if="{{!broken.medal}}" class="ic3d sc-ic" src="{{icons.medal}}" webp="{{true}}" mode="aspectFit" data-k="medal" binderror="iconError" /><view><text class="sc-v">{{learn ? learn.xp : '—'}}</text><text class="sc-k">经验</text></view></view>
+    </view>
+    <view class="tiles2">
+      <view class="ftile yellow" bindtap="openMoodLog"><text class="t">心情记录</text><text class="s">只给自己看</text><image wx:if="{{!broken.mood}}" class="ic3d" src="{{icons.mood}}" webp="{{true}}" mode="aspectFit" data-k="mood" binderror="iconError" /></view>
+    </view>
+    <view class="icons">
+      <view class="ic" bindtap="openTags"><view class="ic-bg"><image wx:if="{{!broken.tags}}" class="ic3d ic-i" src="{{icons.tags}}" webp="{{true}}" mode="aspectFit" data-k="tags" binderror="iconError" /></view><text>标签</text></view>
+      <view class="ic" bindtap="openResume"><view class="ic-bg"><image wx:if="{{!broken.resume}}" class="ic3d ic-i" src="{{icons.resume}}" webp="{{true}}" mode="aspectFit" data-k="resume" binderror="iconError" /></view><text>提醒</text></view>
+      <view class="ic" bindtap="exportData"><view class="ic-bg"><image wx:if="{{!broken.export}}" class="ic3d ic-i" src="{{icons.export}}" webp="{{true}}" mode="aspectFit" data-k="export" binderror="iconError" /></view><text>{{exporting ? '准备中…' : '导出'}}</text></view>
+      <view class="ic" bindtap="openHelp"><view class="ic-bg"><image wx:if="{{!broken.help}}" class="ic3d ic-i" src="{{icons.help}}" webp="{{true}}" mode="aspectFit" data-k="help" binderror="iconError" /></view><text>帮助</text></view>
+    </view>
+    <view class="menu list">
+      <view class="li"><text class="li-l">聊天时推荐相关的卡</text><switch checked="{{suggestCards}}" disabled="{{prefBusy || loading}}" bindchange="toggleSuggest" color="#2459d8"/></view>
+      <view class="li"><text class="li-l">卡片里显示心情卡</text><switch checked="{{showMood}}" bindchange="toggleMood" color="#2459d8"/></view>
+      <view wx:if="{{prefs}}" class="li"><text class="li-l">个性化学习推荐</text><switch checked="{{personalized}}" disabled="{{prefBusy || loading}}" data-k="personalized" bindchange="togglePref" color="#2459d8"/></view>
+      <view wx:if="{{prefs}}" class="li"><text class="li-l">学习时长统计</text><switch checked="{{studyTime}}" disabled="{{prefBusy || loading}}" data-k="studyTime" bindchange="togglePref" color="#2459d8"/></view>
+      <view class="li" bindtap="toggleUsage"><text class="li-l">{{budget ? '额度' : '今天还能用'}}</text><text wx:if="{{budget}}" class="li-v">{{budget}}</text><text wx:elif="{{left !== null}}" class="li-v">还剩 {{left}} 次</text><text class="chev {{usageOpen?'turned':''}}">›</text></view>
+      <view wx:if="{{usageOpen}}" class="usage"><view wx:for="{{usage}}" wx:key="k" class="usage-cell"><text class="usage-k">{{item.k}}</text><view wx:if="{{budget}}" class="usage-v">已用 <text>{{item.pct}}</text>%</view><view wx:else class="usage-v">还能用 <text>{{item.left}}</text> 次</view><view class="meter"><view class="fill" style="width:{{item.share}}%"/></view><text wx:if="{{item.reset}}" class="usage-r">{{item.reset}}</text></view></view>
+      <view class="li" bindtap="openPrivacy"><text class="li-l">隐私政策</text><text class="chev">›</text></view>
+      <view wx:if="{{study}}" class="li" bindtap="deleteStudyTime"><text class="li-l danger">删除学习时长记录</text><text class="chev">›</text></view>
+    </view>
+    <view class="bye" bindtap="deleteAccount">注销账号</view>
+  </block>
+  <view wx:else class="menu list">
+    <view class="li" bindtap="openHelp"><text class="li-l">帮助</text><text class="chev">›</text></view>
+    <view class="li" bindtap="openPrivacy"><text class="li-l">隐私政策</text><text class="chev">›</text></view>
+  </view>
+</view>

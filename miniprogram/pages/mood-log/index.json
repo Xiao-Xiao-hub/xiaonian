@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "心情记录",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "guest-bar": "/components/guest-bar/index"
+  }
+}

@@ -1,0 +1,155 @@
+/* 聊一聊: the AI notice and the one ⋯ stay on top, the input stays at the bottom. */
+.chat-page {
+  padding-bottom: 220rpx;
+}
+.head {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 72rpx;
+  margin: 0 -32rpx;
+  padding: 0 96rpx;
+  background: var(--bg);
+}
+.head .ai-line {
+  margin: 0;
+}
+.more {
+  position: absolute;
+  top: 0;
+  right: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  color: var(--body);
+  font-size: 34rpx;
+  line-height: 1;
+}
+.start {
+  padding: 56rpx 0 16rpx;
+}
+.start-title {
+  display: block;
+  color: var(--ink);
+  font-size: 40rpx;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.start-lede {
+  display: block;
+  margin-top: 12rpx;
+  color: var(--body);
+  font-size: 28rpx;
+  line-height: 1.7;
+}
+.working {
+  margin-top: 20rpx;
+}
+.notice,
+.error {
+  display: block;
+  margin-top: 20rpx;
+  font-size: 26rpx;
+  line-height: 1.6;
+}
+.notice {
+  color: var(--body);
+}
+.error {
+  color: var(--red-ink);
+}
+.composer {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 8;
+  padding: 14rpx 24rpx calc(18rpx + env(safe-area-inset-bottom));
+  border-top: 2rpx solid var(--rule);
+  background: var(--card);
+}
+/* Over the keyboard (V4.1): no home-bar room between the input and the keys. */
+.composer.kb-up {
+  padding-bottom: 18rpx;
+}
+.input {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  min-height: 80rpx;
+  max-height: 260rpx;
+  padding: 18rpx 26rpx;
+  border-radius: 40rpx;
+  background: var(--fill);
+  color: var(--ink);
+  font-size: 30rpx;
+  line-height: 44rpx;
+}
+.send {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: var(--disabled);
+}
+.send.on {
+  background: var(--primary-fill);
+  box-shadow: var(--btn-shadow);
+}
+/* The arrow points up, as in 20-chat. */
+.send .icon {
+  width: 38rpx;
+  height: 38rpx;
+  transform: rotate(-90deg);
+}
+/* ＋ and the attachments waiting to be sent (D113). */
+.row {
+  display: flex;
+  align-items: flex-end;
+  gap: 14rpx;
+}
+.tray {
+  display: block;
+  padding: 14rpx 4rpx 20rpx;
+}
+.plus {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: var(--fill);
+}
+.plus-icon {
+  width: 36rpx;
+  height: 36rpx;
+}
+/* The page keeps room for the tray too, so the newest message stays above it. */
+.tray-room {
+  height: 160rpx;
+}
+/* V4.2 (G5): cards drafted by 存成卡 and not stored yet. */
+.wrap-ready {
+  margin-top: 20rpx;
+  padding: 18rpx 24rpx;
+  border-radius: 20rpx;
+  background: var(--fill);
+  color: var(--body);
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+.wrap-ready .go {
+  margin-left: 12rpx;
+  color: var(--primary-ink);
+}

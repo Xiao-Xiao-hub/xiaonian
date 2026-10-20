@@ -1,0 +1,8 @@
+.ts { margin: 8rpx 0 24rpx; padding: 16rpx 28rpx 4rpx; border-radius: 28rpx; background: var(--card); box-shadow: var(--shadow); }
+.ts-head { display: block; padding: 4rpx 0 4rpx; color: var(--ink); font-size: 28rpx; font-weight: 700; }
+.ts-row { display: flex; align-items: center; gap: 16rpx; min-height: 88rpx; border-top: 2rpx solid var(--rule); }
+.ts-head + .ts-row { border-top: 0; }
+.ts-title { flex: 1; min-width: 0; overflow: hidden; color: var(--ink); font-size: 28rpx; text-overflow: ellipsis; white-space: nowrap; }
+.ts-state { flex: none; color: var(--pencil); font-size: 24rpx; }
+.ts-state.retry { color: var(--amber-ink); }
+.ts-chev { flex: none; color: var(--faint); font-size: 32rpx; }

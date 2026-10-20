@@ -1,0 +1,178 @@
+<view class="page {{skin}}">
+  <view wx:if="{{!consent}}">
+    <view class="head">
+      <text class="kicker">{{today}}</text>
+      <text class="h1">{{greeting}}</text>
+    </view>
+  </view>
+
+  <block wx:else>
+    <!-- 今天：连续天数、最近 7 天、今日数据 -->
+    <view class="hero">
+      <view class="hero-top">
+        <view class="hero-hello">
+          <text class="hero-date">{{today}}</text>
+          <text class="hero-greet">{{greeting}}{{name ? '，' + name : ''}}</text>
+        </view>
+        <view wx:if="{{streak}}" class="streak {{streak.n ? 'lit' : ''}}">
+          <image class="streak-icon" src="/assets/icons/flame-{{skin ? 'red' : 'orange'}}.png" />
+          <text class="streak-n tnum">{{streak.n}}</text>
+          <text class="streak-u">天</text>
+        </view>
+      </view>
+      <text wx:if="{{streak}}" class="hero-title">{{streak.title}}</text>
+      <text wx:if="{{streak}}" class="hero-sub">{{streak.sub}}</text>
+      <view wx:if="{{week.length}}" class="week">
+        <view wx:for="{{week}}" wx:key="date" class="day {{item.active ? 'on' : ''}} {{item.today ? 'now' : ''}}">
+          <text class="day-label">{{item.today ? '今' : item.label}}</text>
+          <view class="day-dot" />
+        </view>
+      </view>
+      <view wx:if="{{home}}" class="stats">
+        <view class="stat"><text class="stat-n tnum">{{home.todayStats.asked}}</text><text class="stat-k">今天提问</text></view>
+        <view class="stat"><text class="stat-n tnum">{{home.todayStats.answered}}</text><text class="stat-k">作答</text></view>
+        <view class="stat"><text class="stat-n tnum">{{home.todayStats.correct}}</text><text class="stat-k">做对</text></view>
+      </view>
+    </view>
+
+    <view wx:if="{{error}}" class="alert">{{error}}</view>
+
+    <!-- 高数学习地图（D041）：段位、经验和全书地图 -->
+    <view class="learn-entry" hover-class="pressed" bindtap="openLearn">
+      <view class="tile"><image class="icon" src="/assets/icons/map-{{skin ? 'ink' : 'blue'}}.png" /></view>
+      <view class="learn-copy">
+        <text class="learn-title">高数学习地图</text>
+        <text class="learn-sub">段位、经验和 89 个知识点</text>
+      </view>
+      <image class="chevron" src="/assets/icons/chevron-faint.png" />
+    </view>
+
+    <!-- 三种问法 -->
+    <view class="ask-main" hover-class="btn-press" bindtap="askPhoto">
+      <view class="ask-main-icon"><image class="icon" src="/assets/icons/camera-white.png" /></view>
+      <view class="ask-main-copy">
+        <text class="ask-main-title">拍题问 AI</text>
+        <text class="ask-main-sub">作业、卷子、课本上的题，先给提示</text>
+      </view>
+      <image class="icon" src="/assets/icons/arrow-white.png" />
+    </view>
+    <view class="ask-pair">
+      <view class="ask-side" hover-class="pressed" bindtap="askDraft">
+        <view class="tile violet"><image class="icon" src="/assets/icons/pen-{{skin ? 'ink' : 'violet'}}.png" /></view>
+        <text class="ask-side-title">拍草稿批改</text>
+        <text class="ask-side-sub">找出第一步错在哪</text>
+      </view>
+      <view class="ask-side" hover-class="pressed" bindtap="askText">
+        <view class="tile"><image class="icon" src="/assets/icons/spark-{{skin ? 'ink' : 'blue'}}.png" /></view>
+        <text class="ask-side-title">打字问</text>
+        <text class="ask-side-sub">概念、定理、方法</text>
+      </view>
+    </view>
+
+    <!-- 今日任务 -->
+    <block wx:if="{{home}}">
+      <view class="section"><text class="h3">今日任务</text></view>
+      <view wx:if="{{tasks.length}}" class="rows">
+        <view wx:for="{{tasks}}" wx:key="key" class="item" hover-class="pressed" data-index="{{index}}" bindtap="openTask">
+          <view class="tile {{item.tone}}"><image class="icon" src="/assets/icons/{{item.icon}}-{{skin ? 'ink' : taskIcon[item.icon]}}.png" /></view>
+          <view class="copy">
+            <text class="title">{{item.title}}</text>
+            <text class="snippet">{{item.sub}}</text>
+          </view>
+          <image class="chevron" src="/assets/icons/chevron-faint.png" />
+        </view>
+      </view>
+      <view wx:else class="sheet starter">
+        <text class="h3">从一道题开始</text>
+        <text class="lede">拍下这周作业里最没把握的一道题。做错的题会自动进错题本，第二天再做一遍。</text>
+      </view>
+
+      <!-- 错题本：还没掌握的题在哪几章 -->
+      <view class="section">
+        <text class="h3">错题本</text>
+        <view class="more" bindtap="openMistakes"><text>打开</text><image class="icon" src="/assets/icons/chevron-faint.png" /></view>
+      </view>
+      <view class="sheet book" hover-class="pressed" bindtap="openMistakes">
+        <view class="book-nums">
+          <view class="book-num"><text class="book-n tnum">{{home.mistakes.open}}</text><text class="book-k">待重做</text></view>
+          <view class="book-num"><text class="book-n tnum due">{{home.mistakes.due}}</text><text class="book-k">今天到期</text></view>
+          <view class="book-num"><text class="book-n tnum good">{{home.mistakes.mastered}}</text><text class="book-k">已掌握</text></view>
+        </view>
+        <block wx:if="{{weak.length}}">
+          <text class="book-head">错得最多的章节</text>
+          <view wx:for="{{weak}}" wx:key="chapter" class="weak">
+            <text class="weak-label">{{item.label}}</text>
+            <view class="weak-track"><view class="weak-bar" style="width: {{item.pct}}%" /></view>
+            <text class="weak-n tnum">{{item.n}}</text>
+            <text wx:if="{{item.practicable}}" class="weak-go" data-chapter="{{item.chapter}}" catchtap="practice">练一题</text>
+          </view>
+        </block>
+        <text wx:else class="book-empty">作答判错、批改发现错误的题会自动收进来，不用手抄。</text>
+      </view>
+
+      <!-- 专项练：选一章，AI 出题，程序核对答案 -->
+      <view class="section">
+        <text class="h3">专项练</text>
+        <text class="side">AI 出题，答案先经程序核对</text>
+      </view>
+      <view class="drills">
+        <view wx:for="{{practice}}" wx:key="key" class="drill" hover-class="pressed" data-chapter="{{item.key}}" bindtap="practice">
+          <text class="drill-title">{{item.label}}</text>
+          <text class="drill-sub">{{item.sub}}</text>
+        </view>
+      </view>
+
+      <!-- 之前问过：最近一段已在今日任务里 -->
+      <block wx:if="{{threads.length}}">
+        <view class="section">
+          <text class="h3">之前问过</text>
+        </view>
+        <view class="rows">
+          <view wx:for="{{threads}}" wx:key="id" class="item" hover-class="pressed" data-id="{{item.id}}" bindtap="openThread">
+            <view class="tile {{item.problem ? '' : 'violet'}}"><image class="icon" src="/assets/icons/{{item.problem ? 'pen' : 'chat'}}-ink.png" /></view>
+            <view class="copy">
+              <text class="title">{{item.title || '对话'}}</text>
+              <view class="meta"><text>{{item.problem ? '题目' : '提问'}} · {{item.when}}</text></view>
+            </view>
+            <image class="chevron" src="/assets/icons/chevron-faint.png" />
+          </view>
+        </view>
+      </block>
+    </block>
+
+    <!-- 资料：笔记、讲义收进来，看讲解、做自测、排复习 -->
+    <view class="section">
+      <text class="h3">学资料</text>
+      <view wx:if="{{recent.length}}" class="more" bindtap="openLibrary"><text>学习库</text><image class="icon" src="/assets/icons/chevron-faint.png" /></view>
+    </view>
+    <view class="entries">
+      <view class="entry" hover-class="pressed" bindtap="startNote">
+        <image class="entry-icon" src="/assets/icons/book-ink.png" />
+        <text class="entry-title">学一份资料</text>
+        <text class="entry-sub">笔记、讲义，讲解加自测</text>
+      </view>
+      <view class="entry" hover-class="pressed" bindtap="startProblem">
+        <image class="entry-icon" src="/assets/icons/plus-ink.png" />
+        <text class="entry-title">收录一道题</text>
+        <text class="entry-sub">分步提示，换数再练</text>
+      </view>
+    </view>
+    <view wx:if="{{review.total}}" class="review-line" hover-class="pressed" bindtap="openReview">
+      <text>{{review.due ? review.due + ' 项复习今天到期' : '复习'}}</text>
+      <text class="quiet">{{review.next}}</text>
+    </view>
+    <view wx:if="{{recent.length}}" class="rows">
+      <view wx:for="{{recent}}" wx:key="id" class="item" hover-class="pressed" data-index="{{index}}" bindtap="openItem">
+        <image class="lead" src="/assets/icons/{{item.icon}}-ink.png" />
+        <view class="copy">
+          <text class="title">{{item.title || '未命名'}}</text>
+          <view class="meta">
+            <text>{{item.meta}}</text>
+            <text wx:if="{{item.tag}}" class="tag {{item.tagTone}}">{{item.tag}}</text>
+          </view>
+        </view>
+        <image class="chevron" src="/assets/icons/chevron-faint.png" />
+      </view>
+    </view>
+  </block>
+</view>

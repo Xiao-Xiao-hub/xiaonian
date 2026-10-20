@@ -1,0 +1,20 @@
+<view class="page history">
+  <view class="search-box"><view class="ico ico-search" /><input class="search" value="{{query}}" bindinput="search" maxlength="40" placeholder="找一段对话" placeholder-class="search-ph" confirm-type="search" /></view>
+  <view wx:if="{{error}}" class="alert">{{error}}<text class="link" bindtap="retry">重试</text></view>
+  <view wx:if="{{threads.length}}" class="rows">
+    <view wx:for="{{threads}}" wx:key="id" class="item" hover-class="pressed" data-id="{{item.id}}" bindtap="open" bindlongpress="remove">
+      <view class="copy">
+        <text class="title">{{item.title}}</text>
+        <text wx:if="{{item.last}}" class="snippet">{{item.last}}</text>
+        <view class="meta"><text>{{item.when}}</text><text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this" class="tag">{{tag}}</text></view>
+      </view>
+    </view>
+  </view>
+  <view wx:elif="{{loaded && !error}}" class="empty">
+    <text class="h3">{{query ? '没找到' : '还没有聊过'}}</text>
+    <text>{{query ? '换几个字试试。' : '回到聊一聊，说一句就开始了。'}}</text>
+  </view>
+  <text wx:if="{{loading}}" class="hint more">在加载…</text>
+  <text wx:elif="{{threads.length && !next}}" class="hint more">没有更早的了</text>
+  <text wx:if="{{threads.length}}" class="hint more">长按一段可以删掉</text>
+</view>

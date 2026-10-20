@@ -1,0 +1,70 @@
+.import-page { min-height: 100vh; padding: 0 28rpx calc(200rpx + env(safe-area-inset-bottom)); }
+.ai-line { margin: 0 -28rpx 24rpx; padding: 12rpx 24rpx; background: transparent; color: var(--pencil); font-size: 24rpx; text-align: center; }
+.source-body { display: flex; flex-direction: column; gap: 22rpx; }
+.paste-card { position: relative; padding: 24rpx 24rpx 44rpx; border: 2rpx solid var(--rule); border-radius: 24rpx; background: var(--card); box-shadow: var(--shadow); }
+.paste { width: 100%; height: 420rpx; color: var(--ink); font-size: 30rpx; line-height: 1.6; }
+.counter { position: absolute; right: 24rpx; bottom: 14rpx; left: 24rpx; color: var(--amber-ink); font-size: 24rpx; text-align: right; }
+.more-source { align-self: center; padding: 12rpx 24rpx 0; color: var(--link); font-size: 28rpx; }
+.source-hint { align-self: center; margin-top: -14rpx; color: var(--pencil); font-size: 24rpx; }
+.file-card, .read-card { padding: 0 24rpx; border-radius: 24rpx; background: var(--card); box-shadow: var(--shadow); }
+.grow { flex: 1; min-width: 0; }
+.source-note, .file-name { display: block; }
+.file-name { color: var(--ink); font-size: 28rpx; font-weight: 650; line-height: 1.5; }
+.source-note { margin-top: 2rpx; color: var(--pencil); font-size: 24rpx; line-height: 1.5; }
+.file-card { padding-top: 20rpx; padding-bottom: 20rpx; }
+.file-row, .read-head { display: flex; align-items: center; gap: 20rpx; }
+.file-row + .file-row { margin-top: 16rpx; padding-top: 16rpx; border-top: 2rpx solid var(--rule); }
+.file-ext { display: flex; align-items: center; justify-content: center; flex: none; width: 72rpx; height: 76rpx; border-radius: 10rpx 20rpx 10rpx 10rpx; background: var(--chip); color: var(--pencil); font-size: 24rpx; font-weight: 800; }
+.remove { padding: 8rpx 8rpx 8rpx 16rpx; color: var(--faint); font-size: 34rpx; line-height: 1; }
+.start-row { display: flex; align-items: center; gap: 12rpx; margin-top: 20rpx; padding-top: 18rpx; border-top: 2rpx solid var(--rule); color: var(--body); font-size: 26rpx; }
+.start-input { width: 80rpx; height: 52rpx; border: 2rpx solid var(--rule-2); border-radius: 12rpx; background: var(--bg); color: var(--ink); text-align: center; }
+.limit { margin-left: auto; color: var(--pencil); font-size: 24rpx; }
+.read-card { padding-top: 22rpx; padding-bottom: 22rpx; }
+.read-toggle { display: flex; align-items: center; justify-content: space-between; margin-top: 22rpx; padding-top: 20rpx; border-top: 2rpx solid var(--rule); color: var(--ink); font-size: 27rpx; font-weight: 650; }
+.link { color: var(--link); font-weight: 500; }
+.segments { display: flex; flex-direction: column; gap: 12rpx; margin-top: 16rpx; }
+.segment { display: flex; align-items: flex-start; gap: 14rpx; padding: 14rpx 12rpx 14rpx 16rpx; border-radius: 16rpx; background: var(--bg); }
+.segment-no { flex: none; color: var(--pencil); font-size: 24rpx; line-height: 1.7; }
+.segment-text { display: -webkit-box; flex: 1; min-width: 0; overflow: hidden; color: var(--body); font-size: 26rpx; line-height: 1.6; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.notice { margin: 0; padding: 16rpx 20rpx; border-radius: 16rpx; background: var(--amber-wash); color: var(--amber-ink); font-size: 24rpx; line-height: 1.55; }
+.progress { display: flex; align-items: center; gap: 18rpx; margin-top: 24rpx; padding: 20rpx 22rpx; border-radius: 20rpx; background: var(--primary-wash); color: var(--ink); font-size: 26rpx; }
+.spinner { flex: none; width: 26rpx; height: 26rpx; border: 4rpx solid var(--rule-2); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+.progress-note { display: block; margin-top: 4rpx; color: var(--pencil); font-size: 24rpx; }
+.form-error { display: block; margin-top: 20rpx; color: var(--red-ink); font-size: 26rpx; line-height: 1.5; }
+.bottom-bar { position: fixed; z-index: 5; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 18rpx; padding: 16rpx 28rpx calc(16rpx + env(safe-area-inset-bottom)); border-top: 2rpx solid var(--rule); background: var(--card); }
+.bottom-bar button { margin: 0; }
+.bottom-bar .btn, .bottom-bar .btn-line { width: auto !important; flex: 1; min-width: 0; margin: 0; white-space: nowrap; }
+.cancel-btn { flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.resume-bar { display: flex; align-items: center; gap: 8rpx; margin-bottom: 22rpx; padding: 6rpx 8rpx 6rpx 26rpx; border-radius: 24rpx; background: var(--primary-wash); }
+.resume-title { display: block; color: var(--ink); font-size: 27rpx; font-weight: 650; line-height: 1.5; }
+.resume-act { flex: none; min-width: 88rpx; padding: 0 16rpx; color: var(--link); font-size: 28rpx; font-weight: 600; line-height: 88rpx; text-align: center; }
+.resume-act.quiet { color: var(--pencil); font-weight: 500; }
+.notice .link { margin-left: 12rpx; }
+.skip-link { display: block; min-height: 88rpx; color: var(--link); font-size: 26rpx; line-height: 88rpx; text-align: center; }
+.pdf-note { margin-top: 10rpx; }
+.segment-edit { flex: none; padding-left: 12rpx; color: var(--link); font-size: 24rpx; line-height: 1.7; }
+.mask { position: fixed; z-index: 20; top: 0; right: 0; bottom: 0; left: 0; display: flex; align-items: flex-end; background: var(--mask); }
+.sheet { box-sizing: border-box; width: 100%; max-height: 86vh; padding: 28rpx 28rpx calc(30rpx + env(safe-area-inset-bottom)); border-radius: 32rpx 32rpx 0 0; background: var(--card); }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16rpx; color: var(--ink); font-size: 32rpx; font-weight: 750; }
+.close { padding: 6rpx 10rpx; color: var(--faint); font-size: 38rpx; line-height: 1; }
+.segment-area { box-sizing: border-box; width: 100%; height: 46vh; padding: 18rpx 20rpx; border: 2rpx solid var(--rule-2); border-radius: 16rpx; background: var(--bg); color: var(--ink); font-size: 28rpx; line-height: 1.6; }
+.sheet-actions { display: flex; align-items: center; gap: 12rpx; margin-top: 20rpx; }
+.sheet-actions button { margin: 0; }
+.sheet-actions .btn-text { flex: none; }
+.sheet-actions .btn { flex: 1; width: auto !important; min-width: 0; }
+/* V4.2 G9 (G2 follow-up): 删掉 reads as a delete and stands apart from 并到上一段; 放弃 stands apart from 继续;
+   × buttons take taps over 44px; one secondary size (28rpx for the row titles). */
+.sheet-actions .drop { color: var(--red-ink); margin-right: var(--gap-danger); }
+.resume-act.quiet { margin-left: var(--gap-danger); }
+.remove, .close { position: relative; }
+.remove::before, .close::before { content: ""; position: absolute; left: 50%; top: 50%; width: 100%; height: 100%; min-width: var(--hit); min-height: var(--hit); transform: translate(-50%, -50%); }
+.read-toggle, .resume-title { font-size: 28rpx; }
+/* V4.2 FX5a: every unfinished import, one tap from the bar; each row opens where it stopped or is given up. */
+.resume-more { display: flex; align-items: center; justify-content: flex-end; min-height: var(--hit); margin: -18rpx 0 6rpx; padding: 0 8rpx; color: var(--link); font-size: 26rpx; }
+.open-list { max-height: 60vh; }
+.open-row { display: flex; align-items: center; gap: 8rpx; min-height: 112rpx; border-top: 2rpx solid var(--rule); }
+.open-row:first-child { border-top: 0; }
+.open-main { padding: 14rpx 0; }
+.source-note.warn { color: var(--amber-ink); }
+.notice .link + .link { margin-left: 24rpx; }

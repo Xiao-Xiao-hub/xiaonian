@@ -1,0 +1,95 @@
+/* 卡片 tab（D112、D113）：照随心记 10-notes 的搜索、标签行、卡片墙、筛选和多选栏。
+   .utabs、.chip、.ico、.fold-row、.btn-line 是 app.wxss 的公共类。 */
+.page { padding: 0 32rpx calc(160rpx + env(safe-area-inset-bottom)); }
+.search-box { box-sizing: border-box; display: flex; flex: 1; align-items: center; gap: 12rpx; min-width: 0; height: 64rpx; padding: 0 24rpx; border-radius: 32rpx; background: rgba(255, 255, 255, 0.86); }
+.search-box .ico { width: 30rpx; height: 30rpx; }
+.search { flex: 1; min-width: 0; height: 64rpx; color: var(--ink); font-size: 26rpx; }
+.search-ph { color: var(--faint); }
+
+/* 头脑风暴入口（D113）：卡片 tab 最上面的一大块。小狸 + 标题和一句说明 +
+   推荐的 3 张卡（便利贴一样微微歪着）+ 开始按钮。 */
+.bs-hero { position: relative; overflow: hidden; margin: 8rpx 0 20rpx; padding: 32rpx 28rpx 28rpx; border-radius: 32rpx; background: linear-gradient(150deg, #eef3ff 0%, #f6f1ff 52%, #fff4e6 100%); box-shadow: var(--shadow-lg); }
+.bs-hero::before { content: ""; position: absolute; top: -60rpx; right: -40rpx; width: 260rpx; height: 260rpx; border-radius: 50%; background: radial-gradient(circle, rgba(255, 214, 120, 0.45), rgba(255, 214, 120, 0) 70%); }
+.bs-top { position: relative; display: flex; align-items: flex-start; min-height: 184rpx; }
+.bs-tx { flex: 1; min-width: 0; padding-right: 220rpx; }
+.bs-h { display: block; color: var(--ink); font-size: 40rpx; font-weight: 800; line-height: 1.3; letter-spacing: 2rpx; }
+.bs-d { display: block; margin-top: 10rpx; color: var(--body); font-size: 26rpx; line-height: 1.55; }
+.bs-why { display: inline-block; margin-top: 14rpx; padding: 4rpx 16rpx; border-radius: 20rpx; background: rgba(255, 255, 255, 0.78); color: var(--primary-ink); font-size: 22rpx; line-height: 1.6; }
+.bs-xl { position: absolute; top: -36rpx; right: -24rpx; width: 260rpx; height: 260rpx; }
+.bs-cards { position: relative; display: flex; gap: 16rpx; margin-top: 12rpx; }
+.bs-card { position: relative; box-sizing: border-box; flex: 1; min-width: 0; height: 156rpx; padding: 18rpx 18rpx 16rpx; overflow: hidden; border-radius: 18rpx; background: var(--card); box-shadow: 0 6rpx 18rpx rgba(31, 35, 41, 0.08); border-top: 8rpx solid var(--t, var(--rule-2)); }
+.bs-card .tl { font-size: 22rpx; }
+.bs-card .tl-ic { width: 24rpx; height: 24rpx; }
+.bs-ttl { display: -webkit-box; margin-top: 10rpx; overflow: hidden; color: var(--ink); font-size: 26rpx; font-weight: 600; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.bs-card.done { opacity: 0.7; }
+.bs-empty { display: flex; align-items: center; justify-content: center; border: 3rpx dashed #c6cfe3; border-top: 3rpx dashed #c6cfe3; background: rgba(255, 255, 255, 0.5); box-shadow: none; color: #9aa6c2; font-size: 44rpx; }
+.bs-wait { border-top-color: var(--rule-2); background: rgba(255, 255, 255, 0.6); box-shadow: none; }
+.bs-foot { display: flex; align-items: center; gap: 20rpx; margin-top: 28rpx; }
+.bs-need { flex: none; color: var(--amber-ink); font-size: 26rpx; font-weight: 600; }
+.bs-go { display: flex; align-items: center; justify-content: center; flex: 1; width: auto !important; min-height: 88rpx; margin: 0 !important; padding: 0 32rpx; border-radius: 44rpx; background: var(--primary-fill); box-shadow: 0 12rpx 28rpx rgba(47, 107, 246, 0.28); color: #ffffff; font-size: 30rpx; font-weight: 700; line-height: 88rpx; }
+.bs-go::after { border: 0; }
+.bs-go.off, .bs-go[disabled] { background: var(--disabled) !important; box-shadow: none; color: #ffffff !important; }
+
+/* 回顾：同一套风格，小一号 */
+.review { display: flex; align-items: center; gap: 20rpx; margin: 0 0 24rpx; padding: 24rpx 28rpx; border-radius: 28rpx; background: linear-gradient(150deg, #fff8e6 0%, #fffdf6 100%); box-shadow: var(--shadow); }
+.rv-ic { flex: none; width: 72rpx; height: 72rpx; }
+.rv-tx { flex: 1; min-width: 0; }
+.rv-h { display: block; color: var(--ink); font-size: 32rpx; font-weight: 700; line-height: 1.35; }
+.rv-n { display: block; margin-top: 4rpx; color: var(--faint); font-size: 24rpx; line-height: 1.4; }
+.rv-n.on { color: var(--note-ink); font-weight: 600; }
+.rv-badge { flex: none; min-width: 44rpx; height: 44rpx; padding: 0 12rpx; box-sizing: border-box; border-radius: 22rpx; background: var(--red); color: #ffffff; font-size: 24rpx; font-weight: 700; line-height: 44rpx; text-align: center; }
+.review .chev { color: var(--ghost); font-size: 34rpx; line-height: 1; }
+
+/* 类型标签（带数量）+ 筛选；不叫 .bar，那是 app.wxss 的加载条 */
+.type-bar { display: flex; align-items: center; gap: 8rpx; margin-bottom: 20rpx; }
+.tabs-row { flex: 1; min-width: 0; white-space: nowrap; }
+.tabs-row .utabs { display: inline-flex; padding-right: 16rpx; }
+.cnt { margin-left: 6rpx; color: var(--faint); font-size: 24rpx; font-weight: 400; }
+.tools { display: flex; flex: none; align-items: center; }
+.tool { display: flex; align-items: center; padding: 8rpx 12rpx; font-size: 26rpx; color: var(--sub); }
+.tool .ico { width: 36rpx; height: 36rpx; }
+.tool.dots { font-size: 36rpx; font-weight: 700; line-height: 40rpx; }
+
+.panel { margin-bottom: 20rpx; padding: 8rpx 24rpx 16rpx; border-radius: 28rpx; background: var(--card); box-shadow: var(--shadow); }
+.group { display: flex; align-items: flex-start; gap: 16rpx; padding: 12rpx 0; }
+.group .gname { flex: none; width: 80rpx; color: var(--sub); font-size: 24rpx; line-height: 64rpx; }
+.chips { display: flex; flex: 1; flex-wrap: wrap; gap: 12rpx; min-width: 0; }
+.muted { color: var(--sub); font-size: 24rpx; line-height: 64rpx; }
+.watching { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin-bottom: 20rpx; padding: 12rpx 20rpx; border-radius: 16rpx; background: var(--primary-wash); color: var(--body); font-size: 26rpx; line-height: 1.5; }
+.watching .x { flex: none; padding: 0 8rpx; color: var(--sub); font-size: 34rpx; line-height: 1; }
+
+/* 两列卡片墙（v4 样张 10-notes .wall，D113） */
+.wall { display: flex; align-items: flex-start; gap: 20rpx; }
+.colw { display: flex; flex: 1; flex-direction: column; gap: 20rpx; min-width: 0; }
+.center { display: block; padding: 32rpx; text-align: center; color: var(--sub); font-size: 26rpx; }
+.error { display: block; margin-top: 12rpx; color: var(--red-ink); font-size: 26rpx; }
+.more { margin-top: 20rpx; }
+.examples-row { margin-top: 24rpx; }
+.examples-row + .wall { margin-top: 8rpx; }
+.demo-link { display: block; margin: 24rpx 0 8rpx; text-align: center; }
+
+/* 多选 */
+.sel-head { display: flex; align-items: center; gap: 28rpx; margin: 8rpx 0 20rpx; }
+.sel-head .n { font-size: 34rpx; font-weight: 700; color: var(--ink); }
+.sel-head .link { font-size: 30rpx; color: var(--primary-ink); }
+.sel-head .x { margin-left: auto; font-size: 30rpx; color: var(--sub); }
+.selbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; display: flex; align-items: center; gap: 8rpx; padding: 16rpx 32rpx calc(16rpx + env(safe-area-inset-bottom)) 16rpx; background: var(--card); box-shadow: 0 -2rpx 0 var(--line); }
+.selbar .tb { display: flex; flex-direction: column; align-items: center; gap: 2rpx; width: 112rpx; font-size: 24rpx; line-height: 1.3; color: var(--sub); }
+.selbar .tb .ico { width: 44rpx; height: 44rpx; }
+.selbar .tb.red { color: var(--red-ink); }
+.selbar .tb.off { color: var(--faint); }
+.selbar .btn { flex: 1; margin-left: 16rpx; }
+
+/* 卡不到 3 张（V4.2）：头脑风暴只占一行，先去记卡 */
+.bs-mini { display: flex; align-items: center; gap: 20rpx; margin: 8rpx 0 20rpx; padding: 24rpx 28rpx; border-radius: 28rpx; background: var(--card); box-shadow: var(--shadow); }
+.bs-mini .bs-tx { padding-right: 0; }
+.bs-mh { display: block; color: var(--ink); font-size: 30rpx; font-weight: 700; line-height: 1.35; }
+.bs-md { display: block; margin-top: 4rpx; color: var(--faint); font-size: 24rpx; line-height: 1.4; }
+.bs-mini .btn { flex: none; width: auto !important; margin: 0 !important; padding: 0 32rpx; }
+/* V4.2 G9: a done card in the 头脑风暴 entry stays readable; only its type label fades (as on the wall).
+   Tools, 全选/取消 and × take taps over 44px; 删除 stands apart from 合并. */
+.bs-card.done { opacity: 1; }
+.bs-card.done .tl { opacity: 0.55; }
+.tool { justify-content: center; min-width: 72rpx; padding: 8rpx 4rpx; }
+.selbar .tb { justify-content: center; min-height: var(--hit); }
+.selbar .tb.red { margin-left: var(--gap-danger); }

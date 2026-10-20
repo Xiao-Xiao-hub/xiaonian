@@ -1,0 +1,23 @@
+<view class="page mood-log">
+  <guest-bar />
+  <text wx:if="{{error}}" class="alert">{{error}}</text>
+  <view wx:if="{{loading && !hasAny}}" class="working"><text>打开中…</text><view class="bar" /></view>
+  <view wx:elif="{{!hasAny}}" class="mood-empty"><text class="h3">还没有心情记录</text><text class="hint">聊天时换成聊心情，就会记在这里</text></view>
+  <block wx:else>
+    <block wx:if="{{threads.length}}"><view class="section mood-section"><text class="h3">心情对话</text></view>
+      <view class="mood-list"><view wx:for="{{threads}}" wx:key="id" class="mood-item"><view class="delete-action" data-id="{{item.id}}" bindtap="deleteThread">删除</view><view class="mood-row {{swipeId === item.id ? 'swiped' : ''}}" data-id="{{item.id}}" bindtap="openThread" bindtouchstart="touchStart" bindtouchend="touchEnd"><view class="grow"><text class="mood-title">{{item.title}}</text><text wx:if="{{item.dateText || item.cardsText}}" class="mood-meta">{{item.dateText}}{{item.cardsText ? ' · ' + item.cardsText : ''}}</text></view><button class="btn-text mood-del" data-id="{{item.id}}" catchtap="deleteThread">删除</button></view></view></view>
+    </block>
+    <view wx:if="{{extraText}}" class="fold-row mood-fold {{extraOpen ? 'open' : ''}}" bindtap="toggleExtra"><text>相关记录：{{extraText}}</text></view>
+    <view wx:if="{{extraOpen}}" class="mood-list mood-counts">
+      <view wx:if="{{counts.cards}}" class="mood-row" bindtap="openCards"><view class="mood-icon">☾</view><text class="count-name">心情卡</text><text class="count-value">{{counts.cards}} 张</text><text class="mood-chevron">›</text></view>
+      <block wx:if="{{counts.linkedThreads}}"><view class="mood-row {{tab === 'linked' ? 'on' : ''}}" data-tab="linked" bindtap="selectTab"><view class="mood-icon">▢</view><text class="count-name">用过心情卡的聊天</text><text class="count-value">{{counts.linkedThreads}} 段</text><text class="mood-chevron">›</text></view>
+        <view wx:if="{{tab === 'linked'}}" class="mood-sub"><view wx:for="{{linkedThreads}}" wx:key="id" class="mood-row" data-id="{{item.id}}" bindtap="openThread"><view class="grow"><text class="mood-title">{{item.title}}</text><text wx:if="{{item.dateText || item.cardsText}}" class="mood-meta">{{item.dateText}}{{item.cardsText ? ' · ' + item.cardsText : ''}}</text></view><text class="mood-chevron">›</text></view></view>
+      </block>
+      <block wx:if="{{counts.brainstorms}}"><view class="mood-row {{tab === 'brainstorms' ? 'on' : ''}}" data-tab="brainstorms" bindtap="selectTab"><view class="mood-icon">▦</view><text class="count-name">用过心情卡的头脑风暴</text><text class="count-value">{{counts.brainstorms}} 场</text><text class="mood-chevron">›</text></view>
+        <view wx:if="{{tab === 'brainstorms'}}" class="mood-sub"><view wx:for="{{brainstorms}}" wx:key="id" class="mood-row" data-id="{{item.id}}" bindtap="openBrainstorm"><view class="grow"><text class="mood-title">{{item.title}}</text><text wx:if="{{item.dateText}}" class="mood-meta">{{item.dateText}}</text></view><text class="mood-chevron">›</text></view></view>
+      </block>
+    </view>
+  </block>
+  <button wx:if="{{hasAny}}" class="btn-line danger mood-danger" disabled="{{busy}}" bindtap="deleteAll">删除全部心情内容</button>
+  <button wx:if="{{consentedAt}}" class="mood-revoke" disabled="{{busy}}" bindtap="revokeConsent">撤回心情同意</button>
+</view>

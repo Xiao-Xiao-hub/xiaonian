@@ -1,0 +1,55 @@
+:host { display:block; width:100%; height:100%; }
+.viewport { position:relative; width:100%; height:100%; overflow:hidden; }
+.map-plane { position:absolute; left:0; top:0; transform-origin:0 0; transform:scale(.72); }
+/* Night-sky palette as the portrait star map (components/sky): lines in blue and
+   pale white, nodes as the dark knowledge cards with their state on the border. */
+.map-edge,.relation-edge { position:absolute; height:6px; border-radius:3px; background:#4fb2ff; transform-origin:0 50%; }
+.map-edge.branch { height:2px; background:#dfe6f1; }
+.map-edge.exam { height:4px; background:linear-gradient(#dfe6f1 0 25%,transparent 25% 55%,#dfe6f1 55% 80%,transparent 80%); }
+.map-edge.extra { height:0; border-top:2px dashed #dfe6f1; background:none; }
+.task-node { position:absolute; display:flex; flex-direction:column; justify-content:center; box-sizing:border-box; padding:8px 10px; border:2px solid rgba(125,170,255,.26); border-radius:10px; background:#0f1d48; color:#eaf0ff; transition:transform .25s,opacity .25s,width .25s; }
+.task-node.ok,.inner-node.ok,.relation-node.ok { border-color:rgba(255,214,102,.75); box-shadow:0 0 14px rgba(255,200,70,.22); }
+.task-node.pending,.inner-node.pending,.relation-node.pending { border-color:#ffc04d; }
+.task-node.stuck,.inner-node.stuck,.relation-node.stuck { border-color:#ff6b6b; }
+.task-node.due,.inner-node.due,.relation-node.due { border-color:#ffb84d; }
+.task-node.practice,.inner-node.practice,.relation-node.practice { border-color:#8ccaff; }
+.task-node.seen,.inner-node.seen,.relation-node.seen { border-color:#b6c4e6; }
+.task-node.group { clip-path:polygon(0 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%); }
+.task-node.group::after { content:""; position:absolute; right:0; bottom:0; border-top:14px solid rgba(125,170,255,.38); border-right:14px solid transparent; }
+.task-node.branch { padding:7px 9px; border-radius:8px; }
+.task-node.expanded { display:block; padding:0; background:rgba(9,18,48,.92); clip-path:none; }
+.task-node.expanded::after { display:none; }
+.task-node.is-next { border-color:#7fc1ff; box-shadow:0 0 0 1px #7fc1ff,0 0 20px rgba(127,193,255,.5); }
+.node-name { display:-webkit-box; overflow:hidden; font-size:15px; font-weight:600; line-height:20px; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
+.task-node.branch .node-name { -webkit-line-clamp:1; }
+.branch-label { display:block; margin-top:3px; overflow:hidden; color:#a9b8de; font-size:12px; line-height:16px; white-space:nowrap; text-overflow:ellipsis; }
+.next-tag { align-self:flex-start; flex:none; margin-bottom:4px; padding:0 6px; border-radius:4px; background:#3d8bff; color:#fff; font-size:12px; font-weight:700; line-height:18px; }
+.later { opacity:.45; }
+.group-head { display:flex; justify-content:space-between; padding:7px 10px; color:#e8eefc; font-size:14px; }
+.inner-node { position:absolute; display:flex; flex-direction:column; justify-content:center; box-sizing:border-box; height:76px; padding:6px 8px; border:2px solid rgba(125,170,255,.26); border-radius:8px; background:#0f1d48; color:#eaf0ff; }
+.inner-node.is-next { border-color:#7fc1ff; box-shadow:0 0 0 1px #7fc1ff,0 0 16px rgba(127,193,255,.5); }
+.inner-edge { position:absolute; z-index:0; height:2px; background:#4fb2ff; transform-origin:0 50%; }
+.task-node.branch .inner-node { height:66px; }
+.task-node.branch .inner-node .node-name { -webkit-line-clamp:1; }
+.relation-edge { height:2px; background:#4fb2ff; opacity:.8; }
+.relation-edge.before { height:4px; background:#9ad6ff; opacity:1; box-shadow:0 0 5px rgba(154,214,255,.9); }
+.relation-edge.after { height:0; border-top:3px dashed #4fb2ff; background:none; opacity:1; }
+.relation-edge.dim { opacity:.2; }
+.external-link { position:relative; display:inline-block; margin:8px 0 0 12px; padding:4px 9px; border:1px solid rgba(160,190,255,.2); border-radius:12px; background:rgba(20,36,84,.6); color:#dbe6ff; font-size:12px; }
+.relation-node { position:absolute; display:flex; align-items:center; justify-content:center; box-sizing:border-box; min-width:70px; padding:4px 10px; border:2px solid rgba(125,170,255,.26); border-radius:16px; background:#0f1d48; color:#eaf0ff; font-size:15px; font-weight:600; text-align:center; }
+.relation-node.dim { opacity:.28; }
+.relation-node.after { border-style:dashed; }
+.relation-node.selected { box-shadow:0 0 0 3px #0b1532,0 0 0 6px #7fc1ff; }
+/* Pressed (V4.1): at once, from hover-class or from the WXS tap (.pressing).
+   Not a transform: .task-node already has one inline. */
+.node-press, .pressing { background:#1c3270; border-color:#9ad6ff; }
+/* Zoomed in (V4.1 G4, .detail from the landscape page at s >= .9): the
+   layout (pages/map/layout.js detailLayout) gives every point a 320x168 card:
+   one line of name, the first formula at 20px, then up to two keys in plain
+   text, two lines each; what does not fit is cut at the bottom. */
+.detail .task-node:not(.expanded), .detail .inner-node { justify-content:flex-start; overflow:hidden; padding:9px 12px; }
+.detail .task-node:not(.expanded) .node-name, .detail .inner-node .node-name { flex:none; font-size:16px; line-height:22px; -webkit-line-clamp:1; }
+.detail .group-head { padding:10px 14px; font-size:15px; font-weight:600; line-height:22px; }
+.lx-fx { flex:none; max-height:52px; margin-top:6px; overflow:hidden; }
+.lx-keys { flex:1; min-height:0; margin-top:6px; overflow:hidden; }
+.lx-key + .lx-key { margin-top:4px; }

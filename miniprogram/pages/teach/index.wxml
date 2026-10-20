@@ -1,0 +1,107 @@
+<view class="page tool-page" style="padding-bottom:{{stage === 'talk' ? 'calc(380rpx + ' + kb + 'px)' : '88rpx'}}" capture-bind:touchstart="studyTouch">
+  <guest-bar />
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+  <view wx:if="{{usageText}}" class="usage">{{usageText}}</view>
+
+  <block wx:if="{{stage === 'pick'}}">
+    <tool-start icon="ic-speech-balloon.webp" title="讲一遍" lede="讲给小狸听，看漏了哪条要点" photo="{{false}}">
+      <view class="tc-topic">
+        <input class="tc-in" maxlength="60" placeholder="自己写个主题，比如：泰勒公式的余项" placeholder-class="placeholder" value="{{topic}}" bindinput="onTopic" bindconfirm="startTopic" confirm-type="go" />
+        <view class="tc-go {{topic ? 'on' : ''}}" hover-class="btn-press" bindtap="startTopic" aria-role="button" aria-label="开始讲">讲</view>
+      </view>
+    </tool-start>
+    <view wx:if="{{resume || history.length}}" class="sh"><text class="sh-t">讲过的</text></view>
+    <view wx:if="{{resume || history.length}}" class="tc-list">
+      <view wx:if="{{resume}}" class="tc-past" hover-class="pressed" bindtap="resumeTalk" aria-role="button">
+        <view class="tc-copy"><text class="tc-pt-name">{{resume.name}}</text><text class="tc-s">{{resume.review ? '讲完了，回来看点评' : resume.draft ? '有一段还没发' : '接着讲'}}</text></view>
+        <text class="tag amber">继续刚才的讲解</text>
+      </view>
+      <view wx:for="{{history}}" wx:key="id" wx:if="{{historyAll || index < 3}}" class="tc-past" hover-class="pressed" data-id="{{item.id}}" data-tool="{{item.tool}}" bindtap="openPast" aria-role="button">
+        <view class="tc-copy"><text class="tc-pt-name">{{item.title}}</text><text class="tc-s">{{item.when}}</text></view>
+        <text wx:if="{{item.open}}" class="tag amber">没讲完</text>
+        <text wx:else class="tc-go-r">›</text>
+      </view>
+      <view wx:if="{{!historyAll && (history.length > 3 || historyMore)}}" class="more-line" hover-class="pressed" bindtap="showAllHistory" aria-role="button">全部记录</view>
+      <view wx:if="{{historyAll && historyMore}}" class="more-line" hover-class="pressed" bindtap="moreHistory" aria-role="button">{{historyBusy ? '打开中…' : '更早的记录'}}</view>
+    </view>
+    <view wx:if="{{historyFailed}}" class="alert">记录没打开<text class="link" bindtap="retryHistory">再试一次</text></view>
+    <view class="sh"><text class="sh-t">或者挑一个知识点</text></view>
+    <scroll-view scroll-x class="tc-tabs" enhanced show-scrollbar="{{false}}">
+      <text class="chip {{!chapterId ? 'on' : ''}}" data-id="" bindtap="selectChapter">全部</text>
+      <text wx:for="{{tabs}}" wx:key="id" class="chip {{chapterId === item.id ? 'on' : ''}}" data-id="{{item.id}}" bindtap="selectChapter">{{item.short}}</text>
+    </scroll-view>
+    <point-list chapters="{{chapters}}" chapter-id="{{chapterId}}" bindpick="pickPoint" />
+  </block>
+
+  <block wx:elif="{{stage === 'talk'}}">
+    <view class="tc-head">
+      <view class="xl-av"><image wx:if="{{!faceBroken}}" src="{{face}}" webp="{{true}}" mode="aspectFill" binderror="faceBroken" /></view>
+      <view class="tc-copy">
+        <text class="tc-t">讲给小狸听</text>
+        <text class="tc-s">{{name}}</text>
+      </view>
+    </view>
+    <view wx:if="{{!messages.length}}" class="tc-empty">像给同学讲题一样，把它讲明白。小狸听不懂会追问。</view>
+    <block wx:for="{{messages}}" wx:key="id">
+      <view wx:if="{{item.role === 'user'}}" class="tc-me"><view class="tc-bubble"><rich blocks="{{item.blocks}}" /></view></view>
+      <view wx:else class="tc-xl">
+        <view class="xl-av sm"><image wx:if="{{!faceBroken}}" src="{{face}}" webp="{{true}}" mode="aspectFill" binderror="faceBroken" /></view>
+        <view class="tc-card">
+          <text wx:if="{{item.thinking}}" class="small quiet">小狸在想…</text>
+          <rich wx:if="{{item.blocks.length}}" blocks="{{item.blocks}}" />
+          <text wx:if="{{item.tail}}" class="tc-tail">{{item.tail}}</text>
+          <text wx:if="{{item.error}}" class="small red">{{item.error}}</text>
+        </view>
+      </view>
+    </block>
+    <view class="tc-composer" style="bottom:{{kb}}px">
+      <textarea class="tc-input" fixed auto-height disable-default-padding maxlength="2000" cursor-spacing="28" adjust-position="{{false}}" show-confirm-bar="{{false}}" placeholder="讲给小狸听" placeholder-class="placeholder" value="{{draft}}" focus="{{focus}}" bindinput="onDraft" bindblur="onBlur" bindkeyboardheightchange="keyboardHeight" />
+      <view class="tc-acts">
+        <view class="tc-done {{(messages.length || draft) && !sending && !reviewing ? 'on' : ''}}" hover-class="pressed" bindtap="finish" aria-role="button">讲完了</view>
+        <view class="tc-send {{draft && !sending ? 'on' : ''}}" hover-class="btn-press" bindtap="submit" aria-role="button" aria-label="发送"><image class="icon" src="/assets/icons/send-white.png" /></view>
+      </view>
+    </view>
+  </block>
+
+  <block wx:elif="{{stage === 'result'}}">
+    <view class="tc-card big">
+      <text class="h3">{{name}}</text>
+      <block wx:if="{{review}}">
+        <text class="tc-score">完整讲清 {{review.got}} / {{review.total}} 条要点</text>
+        <text wx:if="{{review.said}}" class="tc-score">{{review.said}}</text>
+        <view wx:if="{{review.covered.length}}" class="tc-group">
+          <text class="tc-gt green">已提到</text>
+          <view wx:for="{{review.covered}}" wx:key="index" class="tc-pt">
+            <view class="tc-row"><text class="tag {{item.status === 'covered' ? 'green' : 'amber'}}">{{item.label}}</text><view class="tc-pt-t"><rich blocks="{{item.blocks}}" /></view></view>
+            <text wx:if="{{item.quote}}" class="tc-q">「{{item.quote}}」</text>
+          </view>
+        </view>
+        <view wx:if="{{review.missed.length}}" class="tc-group">
+          <text class="tc-gt amber">漏了</text>
+          <view wx:for="{{review.missed}}" wx:key="index" class="tc-pt"><rich blocks="{{item.blocks}}" /></view>
+        </view>
+        <view wx:if="{{review.wrong.length}}" class="tc-group">
+          <text class="tc-gt red">说得不对</text>
+          <view wx:for="{{review.wrong}}" wx:key="index" class="tc-pt">
+            <text class="tc-q">「{{item.quote}}」</text>
+            <rich blocks="{{item.why}}" />
+            <view wx:if="{{item.fix.length}}" class="tc-fix"><text class="tc-fk">应该是</text><rich blocks="{{item.fix}}" /></view>
+          </view>
+        </view>
+        <view wx:if="{{review.best}}" class="tc-best"><text class="tc-fk">讲得最清楚的一句</text><text class="tc-best-t">「{{review.best}}」</text></view>
+      </block>
+      <block wx:else>
+        <text class="lede">{{fallback.keys.length ? '这次没对上要点，不扣额度。对照下面几条自己看看：' : '这次没对上要点，不扣额度。过一会儿再对一次。'}}</text>
+        <view wx:for="{{fallback.keys}}" wx:key="index" class="tc-pt"><text>{{index + 1}}. {{item}}</text></view>
+      </block>
+    </view>
+    <button wx:if="{{review}}" class="btn" hover-class="btn-press" bindtap="save">存成卡</button>
+    <button wx:elif="{{!reviewing && !reviewError}}" class="btn" hover-class="btn-press" bindtap="finish">再对一次</button>
+    <button class="btn-line" hover-class="pressed" bindtap="goOn">接着讲</button>
+  </block>
+
+  <view wx:if="{{reviewing || reviewError}}" class="tc-wait">
+    <task-progress steps="{{reviewSteps}}" startedAt="{{reviewAt}}" expectSec="{{40}}" slowAfter="{{3600}}" vague="{{true}}" error="{{reviewError}}" retryText="再对一次" busy="{{reviewing}}" leaveText="{{reviewing ? '先去做别的，回来接着看' : ''}}" bind:retry="finish" bind:leave="leave" />
+  </view>
+  <view wx:if="{{error}}" class="alert">{{error}}<text wx:if="{{loadFailed}}" class="link" bindtap="load">再试一次</text></view>
+</view>

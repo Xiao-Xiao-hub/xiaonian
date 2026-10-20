@@ -1,0 +1,10 @@
+{
+  "navigationStyle": "custom",
+  "disableScroll": true,
+  "backgroundColor": "#060b20",
+  "navigationBarTextStyle": "white",
+  "usingComponents": {
+    "map-sky": "./components/sky/index",
+    "guest-bar": "/components/guest-bar/index"
+  }
+}

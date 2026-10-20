@@ -1,0 +1,4 @@
+<view wx:if="{{rows.length}}" class="ts">
+  <text class="ts-head">进行中</text>
+  <view wx:for="{{rows}}" wx:key="key" class="ts-row" data-url="{{item.url}}" bindtap="open"><text class="ts-title">{{item.title}}</text><text class="ts-state {{item.retry ? 'retry' : ''}}">{{item.state}}</text><text class="ts-chev">›</text></view>
+</view>

@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "题库",
+  "usingComponents": {
+    "guest-bar": "/components/guest-bar/index",
+    "point-list": "/components/point-list/index"
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "pages": [
+    "pages/notes/index",
+    "pages/deck/index",
+    "pages/learn/index",
+    "pages/talk/index",
+    "pages/profile/index",
+    "pages/ask/index",
+    "pages/note/index",
+    "pages/library/index",
+    "pages/review/index",
+    "pages/mistakes/index",
+    "pages/capture/index",
+    "pages/proofread/index",
+    "pages/material/index",
+    "pages/problem/index",
+    "pages/practice/index",
+    "pages/homework/index",
+    "pages/draft/index",
+    "pages/teach/index",
+    "pages/privacy/index",
+    "pages/map/index",
+    "pages/map/landscape/index",
+    "pages/point/index",
+    "pages/bank/index",
+    "pages/knowledge/index",
+    "pages/chapter/index",
+    "pages/ranks/index",
+    "pages/crisis/index",
+    "pages/mood-consent/index",
+    "pages/mood-log/index",
+    "pages/card/index",
+    "pages/card-pick/index",
+    "pages/tags/index",
+    "pages/resume-settings/index",
+    "pages/resume-list/index",
+    "pages/chat/index",
+    "pages/collect/index",
+    "pages/help/index",
+    "pages/welcome/index",
+    "pages/onboard/index",
+    "pages/legal/index",
+    "pages/grade/index",
+    "pages/chat-history/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "晓念",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f5f6f8",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#8f959e",
+    "selectedColor": "#2f6bf6",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/notes/index",
+        "text": "随心记",
+        "iconPath": "assets/tab/pen.png",
+        "selectedIconPath": "assets/tab/pen-blue.png"
+      },
+      {
+        "pagePath": "pages/deck/index",
+        "text": "卡片",
+        "iconPath": "assets/tab/deck.png",
+        "selectedIconPath": "assets/tab/deck-blue.png"
+      },
+      {
+        "pagePath": "pages/learn/index",
+        "text": "学习",
+        "iconPath": "assets/tab/map.png",
+        "selectedIconPath": "assets/tab/map-blue.png"
+      },
+      {
+        "pagePath": "pages/talk/index",
+        "text": "聊一聊",
+        "iconPath": "assets/tab/chat.png",
+        "selectedIconPath": "assets/tab/chat-blue.png"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的",
+        "iconPath": "assets/tab/user.png",
+        "selectedIconPath": "assets/tab/user-blue.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents",
+  "subPackages": [
+    {
+      "root": "pages/import",
+      "pages": ["source/index", "split/index"]
+    },
+    {
+      "root": "pages/brainstorm",
+      "pages": ["pick/index", "process/index", "conclude/index", "result/index", "history/index"]
+    }
+  ]
+}

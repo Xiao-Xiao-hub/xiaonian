@@ -1,0 +1,43 @@
+/* 02-onboard.html：新手引导三页（样张 px × 2 = rpx） */
+page { height: 100%; background: #ffffff; }
+.root { display: flex; flex-direction: column; height: 100vh; padding-bottom: env(safe-area-inset-bottom); box-sizing: border-box; }
+.skip { display: inline-block; padding: 24rpx 24rpx 24rpx 0; color: var(--sub); font-size: 30rpx; }
+.pages { flex: 1; min-height: 0; }
+.pg { display: flex; flex-direction: column; }
+.stage { position: relative; flex: 1; min-height: 0; max-height: 912rpx; margin: 8rpx 32rpx 0; overflow: hidden; border-radius: 56rpx; background: linear-gradient(180deg, #eaf1ff 0%, #f4f7ff 100%); }
+.txt { flex: none; padding: 52rpx 56rpx 0; text-align: center; }
+.txt .tb { display: block; color: var(--ink); font-size: 48rpx; font-weight: 800; }
+.txt .ts { display: block; margin-top: 16rpx; color: var(--sub); font-size: 30rpx; line-height: 1.6; }
+.dots { display: flex; justify-content: center; gap: 12rpx; margin-top: 44rpx; }
+.dot { width: 12rpx; height: 12rpx; border-radius: 6rpx; background: #d5d9e0; }
+.dot.on { width: 36rpx; background: var(--primary); }
+.go { flex: none; padding: 8rpx 48rpx 24rpx; }
+.go .btn { min-height: 100rpx; font-size: 34rpx; }
+
+/* 第 1 页：写一句 → 卡片 */
+.xl { position: absolute; left: 12rpx; top: 20rpx; width: 208rpx; height: 208rpx; }
+.mini-in { position: absolute; left: 192rpx; right: 36rpx; top: 68rpx; padding: 24rpx 28rpx; border-radius: 32rpx; background: #ffffff; box-shadow: var(--shadow); color: var(--ink); font-size: 30rpx; line-height: 1.55; }
+.caret { display: inline-block; width: 4rpx; height: 34rpx; margin-left: 4rpx; vertical-align: -6rpx; background: var(--primary); }
+.flow { position: absolute; left: 50%; top: 300rpx; display: flex; flex-direction: column; align-items: center; width: 160rpx; margin-left: -80rpx; }
+.flow .dash { width: 4rpx; height: 92rpx; background: repeating-linear-gradient(180deg, var(--primary) 0 10rpx, transparent 10rpx 18rpx); }
+.flow .arrow { width: 20rpx; height: 20rpx; margin-top: -16rpx; border-right: 4rpx solid var(--primary); border-bottom: 4rpx solid var(--primary); transform: rotate(45deg); }
+/* 示例卡由 card-tile 画（和卡片墙同一张卡面，V4.2 FX5c） */
+.big-pc { position: absolute; left: 80rpx; right: 80rpx; top: 464rpx; }
+
+/* 第 2 页：卡墙缩小 */
+.mini-wall { position: absolute; left: 28rpx; right: 28rpx; top: 32rpx; }
+.wall { display: flex; align-items: flex-start; gap: 20rpx; }
+.colw { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 20rpx; }
+.note { position: absolute; right: 32rpx; bottom: 32rpx; padding: 12rpx 20rpx; border-radius: 20rpx; background: rgba(31, 35, 41, 0.78); color: #ffffff; font-size: 24rpx; }
+
+/* 第 3 页：地图 + 问 AI */
+.night { background: radial-gradient(120% 80% at 70% 0%, #1d3a7a 0%, #0f1d44 55%, #0a1430 100%); }
+.sky { position: absolute; left: 0; top: 0; width: 686rpx; height: 860rpx; background-repeat: no-repeat, repeat; background-size: 686rpx 860rpx, 480rpx 480rpx; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 343 430'%3E%3Cg stroke='%234fb2ff' stroke-width='3' fill='none' stroke-linecap='round'%3E%3Cpath d='M172 40V112'/%3E%3Cpath d='M172 112L96 176M172 112L248 176'/%3E%3Cpath d='M96 176L172 238M248 176L172 238'/%3E%3C/g%3E%3Cg fill='%23ffd36e'%3E%3Ccircle cx='172' cy='40' r='8'/%3E%3Ccircle cx='172' cy='112' r='8'/%3E%3Ccircle cx='96' cy='176' r='8'/%3E%3Ccircle cx='248' cy='176' r='8'/%3E%3C/g%3E%3Ccircle cx='172' cy='238' r='11' fill='%233d8bff' stroke='%23bfe0ff' stroke-width='3'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cg fill='white'%3E%3Ccircle cx='14' cy='22' r='1.1' opacity='.85'/%3E%3Ccircle cx='58' cy='9' r='.7' opacity='.5'/%3E%3Ccircle cx='97' cy='41' r='.9' opacity='.6'/%3E%3Ccircle cx='151' cy='17' r='1.3' opacity='.9'/%3E%3Ccircle cx='213' cy='52' r='.7' opacity='.45'/%3E%3Ccircle cx='33' cy='78' r='.8' opacity='.55'/%3E%3Ccircle cx='121' cy='88' r='.6' opacity='.4'/%3E%3Ccircle cx='188' cy='101' r='1' opacity='.7'/%3E%3Ccircle cx='72' cy='129' r='1.2' opacity='.75'/%3E%3Ccircle cx='9' cy='153' r='.7' opacity='.5'/%3E%3Ccircle cx='146' cy='159' r='.8' opacity='.55'/%3E%3Ccircle cx='226' cy='172' r='.6' opacity='.4'/%3E%3Ccircle cx='48' cy='201' r='.9' opacity='.6'/%3E%3Ccircle cx='113' cy='217' r='.6' opacity='.45'/%3E%3Ccircle cx='174' cy='229' r='1.1' opacity='.8'/%3E%3C/g%3E%3C/svg%3E"); }
+.lb { position: absolute; color: #dfe8ff; font-size: 24rpx; white-space: nowrap; }
+.lb-row { position: absolute; left: 0; width: 686rpx; top: 512rpx; display: flex; justify-content: center; }
+.lb-row .lb { position: static; }
+.lb.next { color: #9ed0ff; font-weight: 700; }
+.ask { position: absolute; left: 36rpx; right: 36rpx; bottom: 36rpx; padding: 24rpx 28rpx; border-radius: 8rpx 32rpx 32rpx 32rpx; background: #ffffff; box-shadow: 0 20rpx 52rpx rgba(0, 0, 0, 0.3); color: var(--ink); font-size: 28rpx; line-height: 1.65; }
+.ask-k { display: block; margin-bottom: 4rpx; color: var(--faint); font-size: 24rpx; }
+/* The bubble is white inside the night stage: keep the day colours of the formula mark. */
+.night .ask .mk.fx { background: #e6eeff; color: #1e50c8; }

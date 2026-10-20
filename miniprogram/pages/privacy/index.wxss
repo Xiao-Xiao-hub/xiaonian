@@ -1,0 +1,7 @@
+.sec-k { display: block; margin-top: 32rpx; padding-left: 8rpx; color: var(--sub); font-size: 26rpx; }
+.item .title { font-weight: 500; }
+.chev { flex: none; width: 14rpx; height: 14rpx; margin-right: 6rpx; border-top: 3rpx solid #c3c7cf; border-right: 3rpx solid #c3c7cf; transform: rotate(45deg); }
+.center { margin-top: 20rpx; text-align: center; }
+.version { margin-top: 32rpx; }
+.gp { padding: 28rpx 0 8rpx; color: var(--body); font-size: 30rpx; line-height: 1.85; }
+.lk { color: var(--primary); }

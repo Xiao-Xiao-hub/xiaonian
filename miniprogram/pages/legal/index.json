@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "协议与隐私",
+  "navigationBarBackgroundColor": "#ffffff",
+  "backgroundColor": "#ffffff",
+  "usingComponents": { "rich": "/components/rich/index" }
+}

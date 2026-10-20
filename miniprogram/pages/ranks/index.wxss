@@ -1,0 +1,59 @@
+/* 我的进度（Ranks 画板），颜色只用 app.wxss 的令牌 */
+/* 等级卡：学习页原来的段位卡 */
+.me { margin-top: 16rpx; }
+.me-head { display: flex; align-items: baseline; justify-content: space-between; gap: 18rpx; }
+.me-level { color: var(--ink); font-size: 48rpx; font-weight: 800; }
+.me-level text { font-size: 34rpx; }
+.me-correct { color: var(--body); font-size: 26rpx; }
+.me-correct text { color: var(--ink); font-size: 32rpx; font-weight: 700; }
+.xp-track { height: 16rpx; margin-top: 22rpx; overflow: hidden; border-radius: 8rpx; background: var(--map-track); }
+.xp-fill { height: 100%; border-radius: 8rpx; background: var(--primary); }
+.me-xp { display: block; margin-top: 16rpx; color: var(--pencil); font-size: 24rpx; }
+.head { padding-top: 24rpx; }
+.head .h1 { font-size: 42rpx; }
+.head .lede { margin-top: 8rpx; font-size: 28rpx; }
+
+.card { margin-top: 24rpx; padding: 28rpx 32rpx; background: var(--card); border: 2rpx solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.card-h { display: block; font-size: 32rpx; font-weight: 700; line-height: 1.4; color: var(--ink); }
+/* 规则折起来：标题整行点开 */
+.card-h.fold-row { display: flex; min-height: 72rpx; margin: -8rpx 0; font-size: 30rpx; color: var(--ink); }
+.card-h3 { display: block; margin-top: 24rpx; font-size: 28rpx; font-weight: 600; color: var(--ink); }
+.para { display: block; margin-top: 16rpx; font-size: 28rpx; line-height: 1.75; color: var(--body); }
+
+/* 四个段位：印章一列对齐 */
+.ranks { display: flex; flex-direction: column; gap: 20rpx; margin-top: 20rpx; }
+.rank { display: flex; align-items: flex-start; gap: 20rpx; }
+.rank-stamp { flex: none; width: 136rpx; padding-top: 4rpx; }
+.rank-line { flex: 1; min-width: 0; font-size: 28rpx; line-height: 1.7; color: var(--body); }
+
+/* 圆点列表 */
+.dots { display: flex; flex-direction: column; gap: 12rpx; margin-top: 16rpx; }
+.dot { position: relative; display: block; padding-left: 28rpx; font-size: 26rpx; line-height: 1.75; color: var(--body); }
+.dot::before { content: ""; position: absolute; left: 4rpx; top: 18rpx; width: 10rpx; height: 10rpx; border-radius: 5rpx; background: var(--map-muted); }
+
+/* 例表：三列 */
+.table { margin-top: 20rpx; border: 2rpx solid var(--rule); border-radius: var(--radius-s); overflow: hidden; }
+.table-cap { display: block; padding: 12rpx 24rpx; font-size: 24rpx; color: var(--map-muted); background: var(--bg); }
+.tr { display: flex; border-top: 2rpx solid var(--rule); }
+.td { flex: 1; padding: 12rpx 24rpx; font-size: 28rpx; color: var(--ink); }
+.td.num { text-align: right; }
+.th .td { font-size: 24rpx; font-weight: 600; color: var(--body); }
+
+/* 经验、等级：一排小块 */
+.pills { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 16rpx; }
+.pill { display: flex; align-items: baseline; gap: 10rpx; padding: 10rpx 20rpx; border-radius: var(--radius-s); background: var(--bg); }
+.pill-k { font-size: 24rpx; color: var(--body); }
+.pill-v { font-size: 30rpx; font-weight: 700; color: var(--ink); }
+/* 五个等级排一行：等宽五格，Lv. 在上、经验在下 */
+.levels { flex-wrap: nowrap; }
+.levels .pill { flex: 1 1 0; min-width: 0; flex-direction: column; align-items: center; gap: 2rpx; padding: 10rpx 4rpx; }
+.levels .pill-v { font-size: 28rpx; }
+
+/* 格子图例：三列 */
+.legend { display: flex; flex-wrap: wrap; gap: 16rpx 0; margin-top: 16rpx; }
+.legend-item { display: flex; align-items: center; gap: 12rpx; width: 33.33%; font-size: 24rpx; line-height: 1.4; color: var(--body); }
+.end { display: block; margin: 28rpx 8rpx 0; font-size: 24rpx; line-height: 1.6; text-align: center; color: var(--map-muted); }
+.record { display: flex; gap: 16rpx; }
+.record-item { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
+.record-v { font-size: 34rpx; font-weight: 700; color: var(--ink); }
+.record-k { font-size: 24rpx; color: var(--pencil); }

@@ -1,0 +1,56 @@
+.crisis-page {
+  height: calc(100vh - env(safe-area-inset-bottom));
+  min-height: calc(100vh - env(safe-area-inset-bottom));
+  padding: 0 48rpx 40rpx;
+}
+
+.crisis-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  text-align: center;
+}
+
+.crisis-spacer { flex-basis: 48rpx; }
+.crisis-spacer-top { flex: 1 1 0; }
+.crisis-spacer-bottom { flex: 2 1 0; }
+
+.crisis-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  width: 104rpx;
+  height: 104rpx;
+  margin-bottom: 32rpx;
+  border-radius: 50%;
+  background: var(--primary-wash);
+}
+
+.crisis-icon { width: 52rpx; height: 52rpx; }
+.crisis-title { color: var(--ink); font-size: 48rpx; font-weight: 700; line-height: 1.35; }
+.crisis-copy { margin-top: 20rpx; color: var(--body); font-size: 32rpx; line-height: 1.65; }
+
+.hotline-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 44rpx;
+  padding: 32rpx 32rpx 28rpx;
+  border-radius: 32rpx;
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+.hotline-label { color: var(--body); font-size: 30rpx; font-weight: 600; }
+.hotline-number { color: var(--ink); font-size: 84rpx; font-weight: 700; line-height: 1.25; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
+.hotline-note { color: var(--pencil); font-size: 26rpx; }
+.emergency-copy { margin-top: 40rpx; color: var(--ink); font-size: 32rpx; line-height: 1.65; }
+.emergency-number { font-size: 36rpx; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.crisis-actions { display: flex; flex-direction: column; gap: 20rpx; }
+.hotline-button { display: flex; align-items: center; justify-content: center; gap: 12rpx; }
+.phone-icon { width: 36rpx; height: 36rpx; }
+.continue-button { width: 100%; }
+/* V4.2 (G5): 110 and 120 call on tap. */
+.emergency-number.call { padding: 8rpx 6rpx; color: var(--primary-ink); text-decoration: underline; }

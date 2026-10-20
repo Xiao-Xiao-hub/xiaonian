@@ -1,0 +1,56 @@
+<page-head title="卡片" tint="slate">
+  <view wx:if="{{ready && !guest}}" class="search-box"><view class="ico ico-search"/><input class="search" value="{{query}}" bindinput="search" bindconfirm="submitSearch" placeholder="找一张卡" placeholder-class="search-ph" confirm-type="search"/></view>
+</page-head>
+<view wx:if="{{ready}}" class="page ph-body">
+  <guest-bar />
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+
+  <view wx:if="{{selecting}}" class="sel-head"><text class="n">已选 {{selected.length}} 张</text><view class="link tap-area" bindtap="selectAll">全选</view><view class="x tap-area" bindtap="cancelSelect">取消</view></view>
+  <block wx:else>
+    <view wx:if="{{bs.need && consent && !guest}}" class="bs-mini"><view class="bs-tx"><text class="bs-mh">头脑风暴</text><text class="bs-md">再记 {{bs.need}} 张就能用</text></view><button class="btn sm" bindtap="openNotes">记一张</button></view>
+    <view wx:else class="bs-hero">
+      <view class="bs-top">
+        <view class="bs-tx"><text class="bs-h">头脑风暴</text><text class="bs-d">挑几张卡放在一起想，找出新的联系</text><text wx:if="{{bs.why || bs.example}}" class="bs-why">{{bs.example ? '示例' : bs.why}}</text></view>
+        <image wx:if="{{bsImg}}" class="bs-xl" src="{{bsImg}}" webp="{{true}}" mode="aspectFit" binderror="hideBsImg"/>
+      </view>
+      <view wx:if="{{!bs.failed}}" class="bs-cards">
+        <view wx:for="{{bs.cards}}" wx:key="id" class="bs-card t-{{item.typeClass}} {{item.done ? 'done' : ''}}" style="transform:rotate({{index === 0 ? '-3deg' : index === 1 ? '1.5deg' : '-1deg'}})" data-id="{{item.id}}" bindtap="onBsCard"><view class="tl"><image class="tl-ic" src="{{item.typeIcon}}" mode="aspectFit"/><text>{{item.typeName}}</text></view><text class="bs-ttl">{{item.titleView.text}}</text></view>
+        <view wx:for="{{bs.need}}" wx:key="*this" class="bs-card bs-empty"><text>＋</text></view>
+        <block wx:if="{{!bs.ready}}"><view wx:for="{{[0,1,2]}}" wx:key="*this" class="bs-card bs-wait"/></block>
+      </view>
+      <view class="bs-foot">
+        <text wx:if="{{bs.need}}" class="bs-need">还差 {{bs.need}} 张卡</text><text wx:elif="{{bs.failed}}" class="bs-need">没打开，下拉刷新</text>
+        <button class="bs-go {{(bs.need || !bs.ready || bs.cards.length < 3) && !guest && consent ? 'off' : ''}}" disabled="{{(bs.need || !bs.ready || bs.cards.length < 3) && !guest && consent}}" bindtap="startBrainstorm">开始头脑风暴</button>
+      </view>
+    </view>
+    <view class="review" bindtap="openReview">
+      <image class="rv-ic" src="{{rvImg}}" webp="{{true}}" mode="aspectFit" binderror="hideRvImg" wx:if="{{rvImg}}"/>
+      <view class="rv-tx"><text class="rv-h">回顾和提醒</text><text class="rv-n {{dueCount ? 'on' : ''}}">{{dueCount ? '今天有 ' + dueCount + ' 件' : '今天没有要问你的'}}</text></view>
+      <text wx:if="{{dueCount}}" class="rv-badge">{{dueCount}}</text><text class="chev">›</text>
+    </view>
+    <view wx:if="{{!guest}}" class="type-bar">
+      <scroll-view class="tabs-row" scroll-x enhanced show-scrollbar="{{false}}"><view class="utabs"><text wx:for="{{tabs}}" wx:key="id" class="{{tab===item.id?'on':''}}" data-value="{{item.id}}" bindtap="pickTab">{{item.name}}<text wx:if="{{item.n!==''}}" class="cnt">{{item.n}}</text></text></view></scroll-view>
+      <view class="tools"><view class="tool tap-area" bindtap="togglePanel" aria-role="button" aria-label="筛选"><view class="ico ico-filter {{panelOpen || filterText ? 'on' : ''}}"/></view><view class="tool dots tap-area" bindtap="moreMenu" aria-role="button" aria-label="更多">⋯</view></view>
+    </view>
+  </block>
+
+  <view wx:if="{{panelOpen && !selecting}}" class="panel">
+    <view class="group"><text class="gname">标签</text><view class="chips"><text wx:for="{{tagChoices}}" wx:key="id" class="chip {{item.selected?'on':''}}" data-key="tag" data-value="{{item.id}}" bindtap="filter">{{item.name}}</text><text wx:if="{{!tagChoices.length}}" class="muted">还没有标签</text></view></view>
+    <view class="group"><text class="gname">关于</text><view class="chips"><text wx:for="{{scenes}}" wx:key="id" class="chip {{item.selected?'on':''}}" data-key="scene" data-value="{{item.id}}" bindtap="filter">{{item.name}}</text></view></view>
+    <view class="group"><text class="gname">只看</text><view class="chips"><text class="chip {{retest?'on':''}}" data-key="retest" bindtap="toggleFlag">待再试</text></view></view>
+    <view class="group"><text class="gname">排序</text><view class="chips"><text wx:for="{{orders}}" wx:key="id" class="chip {{order===item.id?'on':''}}" data-value="{{item.id}}" bindtap="sort">{{item.name}}</text></view></view>
+  </view>
+  <view wx:if="{{filterText}}" class="watching"><text>正在看：{{filterText}}</text><view class="x tap-area" bindtap="clearFilters" aria-role="button" aria-label="清除筛选">×</view></view>
+
+  <view wx:if="{{cards.length}}" class="wall"><view wx:for="{{cols}}" wx:for-item="col" wx:for-index="ci" wx:key="ci" class="colw"><card-tile wx:for="{{col}}" wx:key="id" card="{{item}}" selected="{{item.selected}}" picking="{{selecting}}" due="{{item.due}}" bind:tap="onTileTap" bind:longpress="hold"/></view></view>
+  <text wx:if="{{loading}}" class="center">打开中…</text><button wx:elif="{{cursor}}" class="btn-line more" bindtap="more">再看一些</button><text wx:elif="{{(allTotal>=1 || filterText) && !cards.length}}" class="center">没有找到卡，换个条件试试</text><text wx:elif="{{consent && !allTotal}}" class="center">还没有卡</text>
+  <text wx:if="{{error}}" class="error">{{error}}</text>
+
+  <block wx:if="{{allTotal<4 && !selecting}}"><view class="fold-row examples-row {{examplesOpen?'open':''}}" bindtap="toggleExamples">看看示例</view><block wx:if="{{examplesOpen}}"><view class="wall"><view wx:for="{{exampleCols}}" wx:for-item="col" wx:for-index="ci" wx:key="ci" class="colw"><card-tile wx:for="{{col}}" wx:key="id" card="{{item}}" bind:tap="onTileTap"/></view></view><text class="link demo-link" bindtap="demoBrainstorm">看它们怎么一起头脑风暴 ›</text></block></block>
+
+  <view wx:if="{{selecting}}" class="selbar">
+    <view class="tb {{merging||selected.length<2||selected.length>10?'off':''}}" bindtap="merge"><view class="ico ico-merge {{merging||selected.length<2||selected.length>10?'off':''}}"/><text>{{merging?'合并中…':'合并'}}</text></view>
+    <view class="tb red" bindtap="removeSelected"><view class="ico ico-trash"/><text>删除</text></view>
+    <button class="btn" bindtap="brainstorm">{{selected.length>=3 ? '拿这 ' + selected.length + ' 张头脑风暴' : '头脑风暴'}}</button>
+  </view>
+</view>

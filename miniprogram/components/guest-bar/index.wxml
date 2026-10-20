@@ -1,0 +1,1 @@
+<view wx:if="{{guest}}" class="guest-bar"><text class="gb-text">游客模式，不保存、不用 AI</text><text class="gb-go" bindtap="agree">去同意</text></view>

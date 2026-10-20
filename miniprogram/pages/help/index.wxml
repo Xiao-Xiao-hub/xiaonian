@@ -1,0 +1,44 @@
+<view class="page">
+  <text class="sec-k">新手入门</text>
+  <view class="rows">
+    <view class="item" hover-class="pressed" data-id="start" bindtap="toggle"><text class="copy title">三步上手</text><view class="chev {{open.start ? 'up' : 'down'}}" /></view>
+    <view wx:if="{{open.start}}" class="body">
+      <view wx:for="{{steps}}" wx:key="*this" class="step"><text class="step-n">{{index + 1}}</text><text class="step-text">{{item}}</text></view>
+    </view>
+    <block wx:for="{{basics}}" wx:key="id">
+      <view class="item" hover-class="pressed" data-id="{{item.id}}" bindtap="toggle"><text class="copy title">{{item.title}}</text><view class="chev {{open[item.id] ? 'up' : 'down'}}" /></view>
+      <view wx:if="{{open[item.id]}}" class="body"><text class="para">{{item.text}}</text></view>
+    </block>
+    <view class="item" hover-class="pressed" bindtap="openTour"><text class="copy title">再看一遍新手引导</text><view class="chev" /></view>
+  </view>
+
+  <text class="sec-k">产品资料</text>
+  <view class="rows">
+    <block wx:for="{{about}}" wx:key="id">
+      <view class="item" hover-class="pressed" data-id="{{item.id}}" bindtap="toggle"><text class="copy title">{{item.title}}</text><view class="chev {{open[item.id] ? 'up' : 'down'}}" /></view>
+      <view wx:if="{{open[item.id]}}" class="body"><text class="para">{{item.text}}</text></view>
+    </block>
+  </view>
+
+  <text class="sec-k">学习与卡片</text>
+  <view class="rows">
+    <block wx:for="{{sections}}" wx:key="id">
+      <view class="item" hover-class="pressed" data-id="{{item.id}}" bindtap="toggle"><text class="copy title">{{item.title}}</text><view class="chev {{open[item.id] ? 'up' : 'down'}}" /></view>
+      <view wx:if="{{open[item.id]}}" class="body"><text class="para">{{item.text}}</text></view>
+    </block>
+  </view>
+
+  <text class="sec-k">反馈与隐私</text>
+  <view class="rows">
+    <view class="item fb"><view class="copy"><text class="title">意见反馈</text><text class="snippet">哪里不好用，告诉我们</text></view><view class="chev" /><button class="fb-btn" open-type="feedback" aria-label="意见反馈" /></view>
+    <block wx:for="{{privacy}}" wx:key="id">
+      <view class="item" hover-class="pressed" data-id="{{item.id}}" bindtap="toggle"><text class="copy title">{{item.title}}</text><view class="chev {{open[item.id] ? 'up' : 'down'}}" /></view>
+      <view wx:if="{{open[item.id]}}" class="body"><text class="para">{{item.text}}</text></view>
+    </block>
+    <view class="item" hover-class="pressed" bindtap="openPrivacy"><text class="copy title">隐私政策</text><view class="chev" /></view>
+  </view>
+
+  <view class="rows gap">
+    <view class="item" hover-class="pressed" bindtap="openHotline"><view class="copy"><text class="title">求助热线</text><text class="snippet">心理援助热线 12356</text></view><view class="chev" /></view>
+  </view>
+</view>

@@ -1,0 +1,4 @@
+{
+  "navigationBarTitleText": "头脑风暴",
+  "usingComponents": { "brainstorm-report": "../../../components/brainstorm-report/index", "task-progress": "/components/task-progress/index" }
+}

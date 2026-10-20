@@ -1,0 +1,101 @@
+<view class="page brainstorm">
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+  <view wx:if="{{fixed}}" class="fixed-head"
+    ><text class="batch-title">{{batchTitle || '选好的这 ' + cards.length + ' 张'}}</text
+    ><text class="hint">点卡可以去掉不想要的</text></view
+  >
+  <block wx:else>
+    <text wx:if="{{notice}}" class="notice">{{notice}}</text>
+    <view class="select-row"
+      ><text class="count">有 {{total}} 张可以挑</text
+      ><view class="select-actions"
+        ><button class="btn-text {{filterOpen||filterCount?'on':''}}" bindtap="toggleFilter">
+          筛选{{filterCount ? ' · ' + filterCount : ''}}</button
+        ><button class="btn-text" bindtap="toggleSearch">⌕</button
+        ><button wx:if="{{selected.length}}" class="btn-text" bindtap="clearSelected">
+          全不选</button
+        ><button wx:else class="btn-text" loading="{{selectingAll}}" bindtap="selectAll">
+          全选
+        </button></view
+      ></view
+    >
+    <input
+      wx:if="{{searchOpen}}"
+      class="search"
+      focus
+      value="{{query}}"
+      placeholder="搜一搜"
+      placeholder-class="placeholder"
+      bindinput="search"
+      bindconfirm="submitSearch"
+    />
+    <view wx:if="{{filterOpen}}" class="filter-panel">
+      <text class="filter-label">种类</text>
+      <view class="chips"
+        ><button
+          wx:for="{{types}}"
+          wx:key="id"
+          class="chip {{item.selected?'on':''}}"
+          data-key="type"
+          data-value="{{item.id}}"
+          bindtap="filter"
+        >{{item.name}}</button></view
+      >
+      <block wx:if="{{tagChoices.length}}">
+        <text class="filter-label">标签</text>
+        <view class="chips"
+          ><button
+            wx:for="{{tagChoices}}"
+            wx:key="id"
+            class="chip {{item.selected?'on':''}}"
+            data-key="tag"
+            data-value="{{item.id}}"
+            bindtap="filter"
+          >#{{item.name}}</button></view
+        >
+      </block>
+      <text class="filter-label">这段在聊</text>
+      <view class="chips"
+        ><button
+          wx:for="{{scenes}}"
+          wx:key="id"
+          class="chip {{item.selected?'on':''}}"
+          data-key="scene"
+          data-value="{{item.id}}"
+          bindtap="filter"
+        >{{item.name}}</button></view
+      >
+      <view class="filter-foot"
+        ><button wx:if="{{filterCount}}" class="btn-text" bindtap="clearFilters">清空</button
+        ><button class="btn-text" bindtap="toggleFilter">收起</button></view
+      >
+    </view>
+  </block>
+  <view class="wall"
+    ><card-tile
+      wx:for="{{cards}}"
+      wx:key="id"
+      card="{{item}}"
+      selected="{{item.selected}}"
+      picking="{{true}}"
+      bind:tap="toggle"
+  /></view>
+  <text wx:if="{{!loading&&!cards.length}}" class="empty">{{filterCount||query ? '没找到，换个筛选试试' : '还没有卡，先去随心记写几句吧'}}</text
+  ><text wx:if="{{loading&&!cards.length}}" class="empty">打开中…</text>
+  <button wx:if="{{cursor}}" class="btn-text more" loading="{{loading}}" bindtap="more">
+    再看一些
+  </button>
+  <text wx:if="{{tagError}}" class="hint">{{tagError}}</text
+  ><text wx:if="{{error}}" class="alert">{{error}}</text>
+  <view class="bottom"
+    ><text>选了 <text class="bold">{{selected.length}}</text> 张</text
+    ><button
+      class="btn"
+      loading="{{starting}}"
+      disabled="{{starting}}"
+      bindtap="start"
+    >
+      {{selected.length<3 ? '再挑 '+(3-selected.length)+' 张' : '开始头脑风暴'}}
+    </button></view
+  >
+</view>

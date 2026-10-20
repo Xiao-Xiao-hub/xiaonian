@@ -1,0 +1,38 @@
+<template name="inl">
+  <block wx:for="{{c}}" wx:key="index">
+    <text wx:if="{{item.t === 'text' && item.mk}}" class="{{item.b ? 'r-b' : ''}} {{item.i ? 'r-i' : ''}} {{item.code ? 'r-code' : ''}} {{item.del ? 'r-del' : ''}}{{item.mk ? ' mk ' + item.mk : ''}}{{item.hi ? ' hi' : ''}}" data-mk="{{item.mk}}" bindtap="onMark">{{item.v}}</text>
+    <text wx:elif="{{item.t === 'text'}}" class="{{item.b ? 'r-b' : ''}} {{item.i ? 'r-i' : ''}} {{item.code ? 'r-code' : ''}} {{item.del ? 'r-del' : ''}}">{{item.v}}</text>
+    <image wx:elif="{{item.t === 'math' && !broken[item.id]}}" class="r-math {{item.d ? 'r-math-d' : ''}}{{item.mk ? ' mk ' + item.mk : ''}}{{item.hi ? ' hi' : ''}}" mode="widthFix" src="{{base}}/v1/formula/{{item.id}}.png{{retry[item.id] ? '?r=1' : ''}}" style="width: {{item.w}}em; height: {{item.h}}em; vertical-align: {{item.va}}em;" data-id="{{item.id}}" binderror="onBroken" />
+    <view wx:elif="{{item.t === 'glue'}}" class="r-glue"><image wx:if="{{!broken[item.m.id]}}" class="r-math{{item.m.mk ? ' mk ' + item.m.mk : ''}}{{item.m.hi ? ' hi' : ''}}" mode="widthFix" src="{{base}}/v1/formula/{{item.m.id}}.png{{retry[item.m.id] ? '?r=1' : ''}}" style="width: {{item.m.w}}em; height: {{item.m.h}}em; vertical-align: {{item.m.va}}em;" data-id="{{item.m.id}}" binderror="onBroken" /><text wx:else class="r-tex{{item.m.mk ? ' mk ' + item.m.mk : ''}}{{item.m.hi ? ' hi' : ''}}">{{item.m.tex}}</text><text class="{{item.mk ? 'mk ' + item.mk : ''}}{{item.hi ? ' hi' : ''}}">{{item.v}}</text></view>
+    <text wx:else class="r-tex{{item.mk ? ' mk ' + item.mk : ''}}{{item.hi ? ' hi' : ''}}">{{item.tex || item.v}}</text>
+  </block>
+</template>
+<view class="rich">
+  <block wx:for="{{view}}" wx:key="index" wx:for-item="b">
+    <view wx:if="{{b.t === 'p'}}" class="r-p" hover-class="{{tappable ? 'r-hover' : 'none'}}" data-index="{{index}}" bindtap="onTap"><template is="inl" data="{{c: b.c, base, broken, retry}}" /></view>
+    <view wx:elif="{{b.t === 'h'}}" class="r-h" hover-class="{{tappable ? 'r-hover' : 'none'}}" data-index="{{index}}" bindtap="onTap"><template is="inl" data="{{c: b.c, base, broken, retry}}" /></view>
+    <scroll-view wx:elif="{{b.t === 'math'}}" scroll-x class="r-display" data-index="{{index}}" bindtap="onTap">
+      <image wx:if="{{!broken[b.id]}}" class="r-display-img" src="{{base}}/v1/formula/{{b.id}}.png{{retry[b.id] ? '?r=1' : ''}}" style="width: {{b.w}}em; height: {{b.h}}em;" data-id="{{b.id}}" binderror="onBroken" />
+      <text wx:else class="r-tex">{{b.tex}}</text>
+    </scroll-view>
+    <view wx:elif="{{b.t === 'tex'}}" class="r-p" hover-class="{{tappable ? 'r-hover' : 'none'}}" data-index="{{index}}" bindtap="onTap"><text class="r-tex">{{b.v}}</text></view>
+    <view wx:elif="{{b.t === 'list'}}" class="r-list" hover-class="{{tappable ? 'r-hover' : 'none'}}" data-index="{{index}}" bindtap="onTap">
+      <view wx:for="{{b.items}}" wx:key="index" wx:for-item="li" class="r-li" style="margin-left: {{li.lv * 36}}rpx;">
+        <text class="r-n">{{li.n}}</text>
+        <view class="r-lc"><template is="inl" data="{{c: li.c, base, broken, retry}}" /></view>
+      </view>
+    </view>
+    <view wx:elif="{{b.t === 'quote'}}" class="r-quote" hover-class="{{tappable ? 'r-hover' : 'none'}}" data-index="{{index}}" bindtap="onTap"><template is="inl" data="{{c: b.c, base, broken, retry}}" /></view>
+    <scroll-view wx:elif="{{b.t === 'code'}}" scroll-x class="r-pre" data-index="{{index}}" bindtap="onTap"><text class="r-pre-text">{{b.v}}</text></scroll-view>
+    <view wx:elif="{{b.t === 'hr'}}" class="r-hr" />
+    <scroll-view wx:elif="{{b.t === 'table'}}" scroll-x class="r-table" data-index="{{index}}" bindtap="onTap">
+      <view class="r-tr r-th">
+        <view wx:for="{{b.head}}" wx:key="index" wx:for-item="cell" class="r-td"><template is="inl" data="{{c: cell, base, broken, retry}}" /></view>
+      </view>
+      <view wx:for="{{b.rows}}" wx:key="index" wx:for-item="row" class="r-tr">
+        <view wx:for="{{row}}" wx:key="index" wx:for-item="cell" class="r-td"><template is="inl" data="{{c: cell, base, broken, retry}}" /></view>
+      </view>
+    </scroll-view>
+  </block>
+  <view wx:if="{{tail}}" class="r-p r-tail"><text>{{tailText}}</text><text class="r-caret" /></view>
+</view>

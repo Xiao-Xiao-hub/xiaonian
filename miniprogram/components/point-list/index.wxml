@@ -1,0 +1,18 @@
+<view wx:for="{{chapters}}" wx:for-item="chapter" wx:key="id" wx:if="{{!chapterId||chapterId===chapter.id}}" class="pl-chapter">
+  <view class="pl-head"><text class="pl-book">{{chapter.book}}</text><text class="pl-name">{{chapter.short}}</text><text class="pl-count">{{chapter.count}}</text></view>
+  <view class="pl-list">
+    <block wx:for="{{chapter.points}}" wx:key="id">
+    <view class="pl-row {{item.ready?'':'wait'}}" hover-class="pressed" data-id="{{item.id}}" data-ready="{{item.ready}}" bindtap="pick" aria-role="button" aria-label="{{item.name}}，{{item.section}}，{{item.tier}}，{{item.count}}{{item.progress?'，'+item.progress:''}}">
+      <view class="pl-main">
+        <text class="pl-title"><text wx:if="{{item.mark}}" class="pl-mark">{{item.mark}}</text>{{item.name}}</text>
+        <view class="pl-meta"><text class="pl-sec tnum">{{item.section}}</text><text class="tier-tag {{item.tierCls}}">{{item.tier}}</text><text class="pl-n">{{item.count}}</text></view>
+      </view>
+      <text wx:if="{{item.progress}}" class="pl-prog {{item.progressCls}}">{{item.progress}}</text>
+      <text class="pl-chev">›</text>
+    </view>
+    <view wx:if="{{showItems&&item.ready&&item.items.length}}" class="pl-items">
+      <text wx:for="{{item.items}}" wx:for-item="p" wx:for-index="pi" wx:key="index" class="pl-item {{p.cls}}" hover-class="pressed" data-id="{{item.id}}" data-index="{{p.index}}" catchtap="item" aria-role="button" aria-label="{{p.label}}">{{p.no}}</text>
+    </view>
+    </block>
+  </view>
+</view>

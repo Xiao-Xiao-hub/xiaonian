@@ -1,0 +1,132 @@
+<view class="page">
+  <!-- 我的进度：学习页“我的进度 ›”的那张卡搬到这里 -->
+  <view wx:if="{{me}}" class="card me">
+    <view class="me-head"><text class="me-level"><text>Lv.</text>{{me.level}}</text><text class="me-correct">做对 <text>{{me.correctText}}</text> 个点</text></view>
+    <view class="xp-track"><view class="xp-fill" style="width:{{me.xpPct}}%" /></view>
+    <text class="me-xp">{{me.xpText}}</text>
+  </view>
+  <view wx:if="{{record}}" class="card record">
+    <view class="record-item"><text class="record-v tnum">{{record.days}}</text><text class="record-k">天学过</text></view>
+    <view class="record-item"><text class="record-v tnum">{{record.streak}} 天</text><text class="record-k">当前连续</text></view>
+    <view class="record-item"><text class="record-v tnum">{{record.today}}</text><text class="record-k">今天</text></view>
+  </view>
+
+  <view class="head">
+    <text class="h1">段位和等级怎么算</text>
+    <text class="lede">每个点第一次自己做对，就加经验；经验攒够了，等级往上升。</text>
+    <text class="lede">一章里每一层做对八成左右，这一章就升一段。</text>
+    <text class="lede">看了提示或解析的那天，做对先算练习；第二天自己再做对才算数。</text>
+  </view>
+
+  <view class="card">
+    <view class="fold-row card-h {{open.ranks?'open':''}}" data-key="ranks" bindtap="toggle" aria-role="button">四个段位</view>
+    <block wx:if="{{open.ranks}}">
+      <view class="ranks">
+        <view wx:for="{{ranks}}" wx:key="rank" class="rank">
+          <view class="rank-stamp"><text class="stamp {{item.stamp}}">{{item.rank}}</text></view>
+          <text class="rank-line">{{item.line}}</text>
+        </view>
+      </view>
+      <view class="dots">
+        <text class="dot">一个点都没碰过（没做对、没标会、也没打开看过）的章不显示段位，写“还没开始”。</text>
+        <text class="dot">拓展点不设段。每做对一个，章名后的“拓展 N”加 1，也加经验。</text>
+      </view>
+    </block>
+  </view>
+
+  <view class="card">
+    <view class="fold-row card-h {{open.up?'open':''}}" data-key="up" bindtap="toggle" aria-role="button">怎么升段</view>
+    <block wx:if="{{open.up}}">
+      <text class="para">每章按“基础 → 重点 → 难点”一层层升。一层要做对的点数 = 这一层的点数 × 0.8（八成），四舍五入，至少 1 个；做对过的点数够了，这一层就达标。比如 {{sample[0].n}} 个点要 {{sample[0].need}} 个，{{sample[1].n}} 个点要 {{sample[1].need}} 个。</text>
+      <view class="table">
+        <text class="table-cap">例：中值与应用</text>
+        <view class="tr th">
+          <text class="td">层</text>
+          <text class="td num">点数</text>
+          <text class="td num">要做对</text>
+        </view>
+        <view wx:for="{{example}}" wx:key="tier" class="tr">
+          <text class="td">{{item.tier}}</text>
+          <text class="td num tnum">{{item.n}}</text>
+          <text class="td num tnum">{{item.need}}</text>
+        </view>
+      </view>
+      <view class="dots">
+        <text class="dot">基础达标是基础段；重点也达标，升重点段；难点也达标，升难点段。</text>
+        <text class="dot">一章没有某一层，这一层算已过。比如“导数”这一章没有难点，重点达标就连升两段。</text>
+        <text class="dot">每章分开算，一章做得多，不能替另一章算数。</text>
+        <text class="dot">全书段位看最低的那一章，还没开始的章按起步算。</text>
+        <text class="dot">某一章先不学，可以在章节页右上角点 ⋯，选“这章先放着”，它就不算进全书。随时能放回来；放回来后全书段位按最低的一章重算，可能变低。</text>
+        <text class="dot">做对八成只说明“大部分做对过”，不等于“都会”。</text>
+      </view>
+    </block>
+  </view>
+
+  <view class="card">
+    <view class="fold-row card-h {{open.xp?'open':''}}" data-key="xp" bindtap="toggle" aria-role="button">经验和等级</view>
+    <block wx:if="{{open.xp}}">
+      <text class="para">每个点第一次做对时给一次经验：</text>
+      <view class="pills">
+        <view wx:for="{{xp}}" wx:key="tier" class="pill"><text class="pill-k">{{item.tier}}</text><text class="pill-v tnum">+{{item.xp}}</text></view>
+      </view>
+      <text class="para">等级越往后越慢。要攒到的累计经验：</text>
+      <view class="pills levels">
+        <view wx:for="{{levels}}" wx:key="level" class="pill"><text class="pill-k">Lv.{{item.level}}</text><text class="pill-v tnum">{{item.xp}}</text></view>
+      </view>
+      <view class="dots">
+        <text class="dot">高数上全部做对一共 {{total}} 经验，到 Lv.{{maxLevel}}。“满级”要等没放着的章里每个点都做对过才出现。</text>
+        <text class="dot">经验按层加权，所以等级不等于做对的点数。上面的“做对 X/{{points}} 个点”不算先放着的章。</text>
+        <text class="dot">同一个点只在第一次做对时给经验。段位和等级只升不降，忘了、做错、跳过都不扣经验。</text>
+      </view>
+    </block>
+  </view>
+
+  <view class="card">
+    <view class="fold-row card-h {{open.count?'open':''}}" data-key="count" bindtap="toggle" aria-role="button">什么算做对过</view>
+    <block wx:if="{{open.count}}">
+      <text class="card-h3">算数，加经验</text>
+      <view class="dots">
+        <text class="dot">在练一题（知识点的题库题）里，自己做对这一点的题。不限时。</text>
+      </view>
+      <text class="card-h3">先不算数，也不加经验</text>
+      <view class="dots">
+        <text class="dot">看了提示或完整解析、看过讲解里的同一道例题、在知识点里问了 AI、收到卡点提示，或者这一点今天交错过一题：今天做对只算练习，明天自己再做对才算数。</text>
+        <text class="dot">交错一题，马上显示答案和解析，这道题今天就做完了；格子不变，也不扣经验。换一道题照样能做。</text>
+        <text class="dot">点“我会了”：格子变空心，随时能撤销；以后做对照样算、照样给经验。</text>
+        <text class="dot">在知识点页读了一会儿、还没做对：记成“看过”。</text>
+        <text class="dot">在拍题、批改、错题本里做对，或者知识点页的 AI 加练做对：不算地图进度，去练一题做对才算数。</text>
+      </view>
+    </block>
+  </view>
+
+  <view class="card">
+    <view class="fold-row card-h {{open.review?'open':''}}" data-key="review" bindtap="toggle" aria-role="button">隔几天回头看看</view>
+    <block wx:if="{{open.review}}">
+      <view class="dots">
+        <text class="dot">第一次做对大约 {{dueDays}} 天后（按点错开，前后差一两天），格子变浅，提醒你回头看看。只是提醒，段位、等级、经验都不掉。</text>
+        <text class="dot">回头看看时做对，格子亮回来，但不再加经验。下次是 {{reviewDays}} 天后，再下次是 {{finalReviewDays}} 天后；{{finalReviewDays}} 天那次也做对，之后就不再提醒，想练随时能做。</text>
+        <text class="dot">回头看看时做错，格子保持浅色，间隔回到 {{dueDays}} 天，明天再出一次。</text>
+        <text class="dot">在拍题、批改、错题本里做错的题，会放进对应的知识点，格子加一个红点；这一点以前做对过的话，当天就该回头看看。</text>
+        <text class="dot">红点带来的回头看看做对，间隔保持原来的天数，不往后拉长；做错照上一条处理。点“知道了”只收起红点提示，安排不变。</text>
+        <text class="dot">学习页“今天”里每天最多放 {{todayReviews}} 个回头看看，其余的留在地图上，不催。</text>
+      </view>
+    </block>
+  </view>
+
+  <view class="card">
+    <view class="fold-row card-h {{open.legend?'open':''}}" data-key="legend" bindtap="toggle" aria-role="button">格子和 ✓ ○ 的意思</view>
+    <block wx:if="{{open.legend}}">
+      <view class="dots">
+        <text class="dot">✓ 做对了：那天没用帮助，自己做对的。</text>
+        <text class="dot">○ 再做一题确认：你说了“我会了”，或者是从你做对的点推出来的。</text>
+      </view>
+      <view class="legend">
+        <view wx:for="{{legend}}" wx:key="text" class="legend-item">
+          <view class="map-cell small {{item.cls}}"><view wx:if="{{item.red}}" class="red" /></view>
+          <text>{{item.text}}</text>
+        </view>
+      </view>
+    </block>
+  </view>
+  <text class="end">只给自己看：不排行，不和别人比，经验不看连续天数。</text>
+</view>

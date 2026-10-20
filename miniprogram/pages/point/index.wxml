@@ -1,0 +1,247 @@
+<view class="page" capture-bind:touchstart="studyTouch">
+  <text class="ai-line">AI 生成可能有误，注意核实</text>
+  <view wx:if="{{error}}" class="alert">{{error}}<text wx:if="{{canRetry}}" class="link" bindtap="load">再试一次</text><text wx:else class="link" bindtap="goLearn">回学习首页</text></view>
+  <view wx:if="{{loading && !point}}" class="working"><text class="h3">打开中…</text><view class="bar" /></view>
+
+  <block wx:if="{{point}}">
+    <!-- v4 练一题 (30-learn.html #try): the dark kp card (name, one formula, ›);
+         tapping it opens the key points, 先弄懂, the chapter link and ⋯. -->
+    <view class="kp" hover-class="pressed" bindtap="toggleKp" aria-role="button" aria-label="{{point.name}}，{{kpOpen?'收起要点':'点开看要点'}}">
+      <view class="kp-star {{point.star}}" />
+      <view class="kp-copy"><text class="kp-name">{{point.retestMode?'再试一次 · ':''}}{{point.name}}</text><view wx:if="{{point.kpFormula}}" class="kp-fx"><rich blocks="{{point.kpFormula}}" /></view><text wx:elif="{{point.formulaText}}" class="kp-fx">{{point.formulaText}}</text></view>
+      <text class="kp-learn" hover-class="pressed" catchtap="openDetail" aria-role="button">看讲解</text>
+      <text class="kp-chev {{kpOpen?'open':''}}">›</text>
+    </view>
+    <view wx:if="{{kpOpen}}" class="kp-more">
+      <block wx:if="{{point.keys.length}}"><text class="kp-more-h">要点</text><view wx:for="{{point.keys}}" wx:key="index" class="kp-key"><rich blocks="{{item}}" /></view></block>
+      <text wx:if="{{point.review}}" class="review-note">好几天没碰了，再做一遍巩固下</text>
+      <!-- 先弄懂：前置点 -->
+      <block wx:if="{{point.prereqs.length&&!point.retestMode}}">
+        <text class="kp-more-h">先弄懂</text>
+        <view wx:for="{{point.prereqs}}" wx:key="id" class="prereq" hover-class="pressed" data-id="{{item.id}}" catchtap="openPrereq">
+          <view class="map-cell small {{item.cell}}" />
+          <text class="prereq-name">{{item.name}}</text>
+          <text class="prereq-state">{{item.state}}</text>
+        </view>
+      </block>
+      <view class="kp-more-foot">
+        <text class="head-link" hover-class="pressed" bindtap="openChapter">{{point.tier}} · {{point.meta}}{{point.stateText?' · '+point.stateText:''}} ›</text>
+        <text class="kp-more-btn" hover-class="pressed" bindtap="openMore" aria-role="button" aria-label="更多">更多 ⋯</text>
+      </view>
+    </view>
+    <view wx:if="{{point.retestMode}}" class="retest-head"><text class="retest-copy">{{point.retest.line}}</text><text class="retest-copy">{{point.retest.subline}}</text></view>
+    <view wx:if="{{point.red}}" class="tool-red"><text class="tool-red-title">错题本里有这类题</text><button class="btn-text" disabled="{{loading || busy || marking || helpBusy}}" bindtap="clearRed">知道了</button></view>
+
+    <block wx:if="{{!ai}}">
+    <!-- 题目卡：标签 + 题干 -->
+    <view wx:if="{{point.problem}}" class="qcard">
+      <view class="q-tags"><text class="tag">{{point.problem.kindText}}</text><text wx:if="{{point.tier}}" class="tag">{{point.tier}}</text><text wx:if="{{point.problem.total>1}}" class="q-no tnum">{{point.problem.index+1}} / {{point.problem.total}}</text></view>
+      <view class="qt"><rich blocks="{{point.problem.blocks}}" /></view>
+    </view>
+    <view wx:else class="qcard">
+      <text class="empty-line">题还在出，先看看别的</text>
+    </view>
+
+    <view wx:if="{{point.problem && point.retestMode}}" class="prediction-card">
+      <text class="prediction-title">先猜一下，你能做出来吗？</text>
+      <view class="prediction-options">
+        <button class="prediction {{prediction==='yes'?'on':''}}" data-prediction="yes" disabled="{{predictionLocked||result||busy||helpBusy}}" bindtap="choosePrediction">能</button>
+        <button class="prediction {{prediction==='unsure'?'on':''}}" data-prediction="unsure" disabled="{{predictionLocked||result||busy||helpBusy}}" bindtap="choosePrediction">没把握</button>
+        <button class="prediction {{prediction==='no'?'on':''}}" data-prediction="no" disabled="{{predictionLocked||result||busy||helpBusy}}" bindtap="choosePrediction">不能</button>
+      </view>
+      <text wx:if="{{prediction==='no'&&!result}}" class="prediction-note">试试看，错了也没关系。</text>
+    </view>
+
+    <view wx:if="{{point.problem && (!point.retestMode||prediction)}}" class="answer-section">
+      <block wx:if="{{point.problem.format === 'choice'}}">
+        <text wx:if="{{point.problem.questions.length > 1}}" class="answer-hint choice-rule">每问选一个，全对才算。</text>
+        <view wx:for="{{point.problem.questions}}" wx:for-item="question" wx:for-index="qIndex" wx:key="key" class="choice-question">
+          <view class="choice-prompt"><text wx:if="{{point.problem.questions.length > 1}}" class="part-label">第 {{qIndex + 1}} 问</text><rich blocks="{{question.blocks}}" /></view>
+          <view wx:for="{{question.options}}" wx:for-item="option" wx:key="id" class="choice-option {{answers[qIndex] === option.id ? 'selected' : ''}} {{done || loading || busy || marking || helpBusy ? 'locked' : ''}} {{result.solution && result.solution.options[qIndex] === option.id ? 'right' : ''}} {{result.solution && answers[qIndex] === option.id && result.solution.options[qIndex] !== option.id ? 'wrong' : ''}}" data-question="{{qIndex}}" data-id="{{option.id}}" bindtap="chooseOption" aria-role="radio" aria-checked="{{answers[qIndex] === option.id}}">
+            <view class="option-id">{{option.id}}</view><view class="option-content"><rich blocks="{{option.blocks}}" /></view>
+          </view>
+          <!-- V4.2: each question says 对 / 不对 in words, not only in colour -->
+          <text wx:if="{{result.solution && result.solution.options[qIndex]}}" class="choice-verdict {{answers[qIndex] === result.solution.options[qIndex] ? 'ok' : 'no'}}">{{answers[qIndex] === result.solution.options[qIndex] ? '这一问选对了' : '这一问应选 ' + result.solution.options[qIndex]}}</text>
+        </view>
+      </block>
+      <block wx:else>
+        <!-- 填空题：数字键盘（D113），不弹系统键盘；分数上下叠着显示 -->
+        <text wx:if="{{point.problem.blanks.length > 1}}" class="answer-hint">每一空都填上，全对才算做对。</text>
+        <view class="pad-wrap"><numpad blanks="{{point.problem.blanks}}" values="{{answers}}" active="{{numActive}}" disabled="{{done || loading || busy || marking || helpBusy}}" bindchange="onPad" /></view>
+      </block>
+      <text wx:if="{{point.practice && !correct}}" class="practice-notice">今天先当练习，明天自己做对就算数。</text>
+    </view>
+    <view wx:if="{{fail}}" class="alert">{{fail}}</view>
+
+    <!-- 判题结果（规格第 11 节前三档） -->
+    <view wx:if="{{result}}" class="result {{result.tone}}">
+      <view wx:if="{{result.levelUp}}" class="level-up">
+        <text class="level-up-k">{{result.levelUp.text}}</text>
+        <text class="level-up-v tnum">{{result.levelUp.sub}}</text>
+      </view>
+      <view class="verdict-line">
+        <text class="verdict-text">{{result.text}}</text>
+        <view wx:if="{{result.standard}}" class="verdict-std">
+          <text>和标准答案</text>
+          <view class="inline-rich"><rich blocks="{{result.standard}}" /></view>
+          <text>一致</text>
+        </view>
+      </view>
+      <view wx:if="{{result.predictionLine}}" class="prediction-result"><text>{{result.predictionLine}}</text><text wx:if="{{result.retestPassed}}" class="retest-pass">✓ 做对了</text></view>
+      <view wx:if="{{result.read}}" class="read">
+        <text>读出来是</text>
+        <view class="inline-rich"><rich blocks="{{result.read}}" /></view>
+      </view>
+      <!-- 对错都给解法（D113） -->
+      <view wx:if="{{result.solution}}" class="solution">
+        <view class="sol-answer"><text class="tag green">答案</text><view class="sol-answer-c"><rich blocks="{{result.solution.answer}}" /></view></view>
+        <view wx:if="{{result.solution.explanation}}" class="sol-explain"><text class="part-label">解法</text><rich blocks="{{result.solution.explanation}}" /></view>
+      </view>
+      <view wx:for="{{result.items}}" wx:key="label" class="part-result {{item.tone}}">
+        <view class="part-result-head"><text>{{item.label}}</text><text>{{item.text}}</text></view>
+        <view wx:if="{{item.read}}" class="part-reading"><text>上次交的答案</text><rich blocks="{{item.read}}" /></view>
+        <view wx:if="{{item.standard}}" class="part-reading"><text>标准答案</text><rich blocks="{{item.standard}}" /></view>
+      </view>
+      <view wx:if="{{result.progress}}" class="progress">
+        <view class="progress-top">
+          <view class="progress-label">
+            <text>{{result.progress.label}}</text>
+            <text wx:if="{{result.xp&&!result.retest}}" class="xp-badge tnum">+{{result.xp}} 经验</text>
+          </view>
+          <text class="tnum">{{result.progress.count}}</text>
+        </view>
+        <view class="progress-cells">
+          <view wx:for="{{result.progress.cells}}" wx:key="id" class="map-cell big {{item.cls}} {{item.fresh ? 'fresh' : ''}}" />
+        </view>
+      </view>
+      <view wx:if="{{result.rank}}" class="rank-row" hover-class="pressed" bindtap="openSheet">
+        <text class="stamp {{result.rank.stamp}}">{{result.rank.rank}}</text>
+        <text class="rank-row-text">{{result.rank.text}}</text>
+        <text class="rank-row-more">看看 ›</text>
+      </view>
+      <!-- 全书升段卡关掉以后从这里再打开 -->
+      <view wx:if="{{book}}" class="rank-row" hover-class="pressed" bindtap="openBook">
+        <text class="stamp {{book.stamp}}">{{book.rank}}</text>
+        <text class="rank-row-text">全书 升到{{book.rank}}</text>
+        <text class="rank-row-more">看看 ›</text>
+      </view>
+      <view wx:for="{{learningCards}}" wx:key="id" class="learning-card" data-id="{{item.id}}" bindtap="openLearningCard"><text><text wx:if="{{item.titleBy==='ai'}}" class="ai-dot">● </text>{{item.title}}</text><text class="link">{{item.closedAt ? '✓ 想明白的' : item.type==='method' ? '用到了这张卡 ›' : '写下关键的一步 ›'}}</text></view>
+      <view wx:if="{{result.retestWrong}}" class="wrong-note">
+        <text class="part-label">卡在哪一步？</text>
+        <textarea class="field" maxlength="300" value="{{wrongNote}}" bindinput="wrongNoteInput" placeholder="写下卡住的一步"/>
+        <button class="btn-line" bindtap="collectWrong">记一笔</button>
+      </view>
+    </view>
+    <text wx:if="{{helpBusy}}" class="answer-hint">打开中…</text>
+    <view wx:if="{{helpError}}" class="alert">{{helpError}}</view>
+    <text wx:if="{{helpNotice}}" class="practice-notice">{{helpNotice}}</text>
+    <view wx:if="{{hint}}" class="help-card"><text class="part-label">思路提示</text><rich blocks="{{hint}}" /></view>
+    <view wx:if="{{explanation}}" class="help-card"><text class="part-label">完整解析</text><rich blocks="{{explanation}}" /></view>
+    <text wx:if="{{correct && !result && !point.review}}" class="done-line">你做对过，想练随时再做</text>
+
+    <view wx:if="{{fail && !point.problem}}" class="alert">{{fail}}</view>
+    <!-- 题库做完一轮：AI 再出一道（能出的点），回详情，换个知识点 -->
+    <view wx:if="{{bankDone && done}}" class="bank-done">
+      <text class="bank-done-t">这个点的 {{point.problem.total}} 道题都做过了</text>
+      <button wx:if="{{aiPractice}}" class="btn bd-main" hover-class="btn-press" disabled="{{aiBusy}}" bindtap="aiStart">让 AI 再出一道</button>
+      <text wx:if="{{aiPractice}}" class="hint ai-count">AI 出的题只练手，不算进地图和题库</text>
+      <view wx:if="{{aiError}}" class="alert">{{aiError}}</view>
+      <view class="pair"><button class="btn-line" bindtap="openDetail">回详情</button><button class="btn-line" bindtap="goBank">换个知识点</button></view>
+    </view>
+    <!-- 做完以后：底栏主按钮是“下一题”（题库里的下一道）；这里留下一个点和回学习首页 -->
+    <view wx:if="{{result && !(bankDone && done)}}" class="leave-row"><button wx:if="{{result.next && done}}" class="btn-text" bindtap="openNext">{{result.next.text}}</button><button class="btn-text" bindtap="goLearn">回学习首页</button></view>
+
+    <!-- 底栏：左边“卡住了”“看提示”，右边主按钮“提交” -->
+    <view wx:if="{{point.problem && !(bankDone && done)}}" class="tbot">
+      <block wx:if="{{!(point.retestMode&&!result)||prediction}}">
+        <button class="btn-text tb-link" disabled="{{busy || loading || marking || helpBusy}}" bindtap="openStuck">卡住了</button>
+        <button wx:if="{{point.problem.hasHint && !hint && !done}}" class="btn-text tb-link" disabled="{{busy || loading || marking || helpBusy}}" bindtap="showHint">看提示</button>
+      </block>
+      <button wx:if="{{!done}}" class="btn tb-main" hover-class="btn-press" disabled="{{!canSubmit || busy || loading || marking || helpBusy}}" bindtap="submit">{{busy ? '正在判…' : '提交'}}</button>
+      <button wx:else class="btn tb-main" hover-class="btn-press" disabled="{{loading}}" bindtap="nextProblem">下一题</button>
+    </view>
+    </block>
+
+    <view wx:if="{{aiBusy}}" class="ai-wait">
+      <task-progress steps="{{aiSteps}}" startedAt="{{aiAt}}" expectSec="{{40}}" slowAfter="{{3600}}" vague="{{true}}" leaveText="先去做别的，回来接着看" bind:leave="aiLeave" />
+    </view>
+    <!-- AI 再出一道：同一个知识点，同样的选项卡；判完给步骤和答案 -->
+    <block wx:if="{{ai}}">
+      <view class="qcard">
+        <view class="q-tags"><text class="tag violet">AI 出的题</text><text class="tag">只练手</text><text wx:if="{{point.tier}}" class="tag">{{point.tier}}</text></view>
+        <view class="qt"><rich blocks="{{ai.question}}" /></view>
+      </view>
+      <view class="answer-section">
+        <block wx:if="{{ai.choice}}">
+          <view wx:for="{{ai.options}}" wx:for-item="option" wx:for-index="oi" wx:key="id" class="choice-option {{aiPick === oi ? 'selected' : ''}} {{aiResult || aiSending ? 'locked' : ''}} {{aiResult && ai.correct === option.id ? 'right' : ''}} {{aiResult && aiPick === oi && ai.correct && ai.correct !== option.id ? 'wrong' : ''}}" data-index="{{oi}}" bindtap="aiChoose" aria-role="radio" aria-checked="{{aiPick === oi}}">
+            <view class="option-id">{{option.id}}</view><view class="option-content"><rich blocks="{{option.blocks}}" /></view>
+          </view>
+        </block>
+        <text wx:else class="link" bindtap="aiOpenChat">去解题页作答 ›</text>
+      </view>
+      <view wx:if="{{aiError}}" class="alert" bindtap="aiReload">{{aiError}}</view>
+      <view wx:if="{{aiResult}}" class="result {{aiResult.tone}}">
+        <view class="verdict-line"><text class="verdict-text">{{aiResult.text}}</text></view>
+        <view class="solution">
+          <view wx:if="{{ai.steps}}" class="sol-explain"><text class="part-label">步骤</text><rich blocks="{{ai.steps}}" /></view>
+          <view wx:if="{{ai.answer}}" class="sol-answer"><text class="tag green">答案</text><view class="sol-answer-c"><rich blocks="{{ai.answer}}" /></view></view>
+          <view wx:if="{{ai.solution}}" class="sol-explain"><rich blocks="{{ai.solution}}" /></view>
+        </view>
+      </view>
+      <view wx:if="{{aiResult}}" class="pair ai-after"><button class="btn-line" bindtap="openDetail">回详情</button><button class="btn-line" bindtap="goBank">换个知识点</button></view>
+      <view wx:if="{{ai.choice || aiResult}}" class="tbot">
+        <button wx:if="{{!aiResult}}" class="btn tb-main" hover-class="btn-press" disabled="{{aiPick < 0 || aiSending || !ai.choice}}" bindtap="aiSubmit">{{aiSending ? '正在判…' : '提交'}}</button>
+        <button wx:else class="btn tb-main" hover-class="btn-press" disabled="{{aiBusy}}" bindtap="aiStart">再出一道</button>
+      </view>
+    </block>
+  </block>
+
+  <!-- 章升段：从底部升起的半屏卡，平涂，不放彩带 -->
+  <view wx:if="{{sheet && sheetOpen}}" class="mask" catchtap="closeSheet">
+    <view class="pop rank-sheet" catchtap="hold">
+      <view class="sheet-close" aria-role="button" aria-label="关闭" catchtap="closeSheet"><text>×</text></view>
+      <view class="sheet-grip" />
+      <text class="stamp big {{sheet.stamp}}">{{sheet.rank}}</text>
+      <text class="sheet-title">{{sheet.title}}</text>
+      <text class="sheet-line">{{sheet.line}}</text>
+      <text wx:if="{{sheet.jump}}" class="sheet-jump">{{sheet.jump}}</text>
+      <view wx:if="{{sheet.next}}" class="sheet-next">
+        <view class="sheet-next-top">
+          <text class="sheet-k">下一段</text>
+          <text class="stamp {{sheet.next.stamp}}">{{sheet.next.rank}}</text>
+          <text class="sheet-gap">{{sheet.next.gap}}</text>
+        </view>
+        <text wx:if="{{sheet.next.note}}" class="sheet-note">{{sheet.next.note}}</text>
+        <view class="sheet-next-cells">
+          <view class="cells">
+            <view wx:for="{{sheet.next.cells}}" wx:key="id" class="map-cell {{item.cls}}" />
+          </view>
+          <text class="sheet-count tnum">{{sheet.next.count}}</text>
+        </view>
+      </view>
+      <view class="pair sheet-actions">
+        <button class="btn" hover-class="btn-press" bindtap="openChapter">接着做这一章</button>
+        <button class="btn-line" hover-class="btn-press" bindtap="goMap">回地图</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 全书升段：同一张卡铺满全屏，盖下印章；平涂，不放彩带，不震动 -->
+  <view wx:if="{{book && bookOpen}}" class="mask book-mask">
+    <view class="pop rank-sheet book-card" catchtap="hold">
+      <text class="stamp big book-stamp {{book.stamp}}">{{book.rank}}</text>
+      <text class="sheet-title">{{book.title}}</text>
+      <text class="sheet-line">{{book.line}}</text>
+      <view wx:if="{{book.chapters.length}}" class="book-chapters">
+        <view wx:for="{{book.chapters}}" wx:key="id" class="book-chapter">
+          <text class="book-chapter-name">{{item.short}}</text>
+          <text class="stamp {{item.stamp}}">{{item.rank}}</text>
+        </view>
+      </view>
+      <view class="pair sheet-actions">
+        <button class="btn" hover-class="btn-press" bindtap="closeBook">好</button>
+        <button class="btn-line" hover-class="btn-press" bindtap="goMap">看看地图</button>
+      </view>
+    </view>
+  </view>
+</view>

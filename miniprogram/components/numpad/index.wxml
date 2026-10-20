@@ -1,0 +1,20 @@
+<view class="np-slots">
+  <view wx:for="{{slots}}" wx:key="key" class="np-slot-row">
+    <text wx:if="{{item.label}}" class="np-label">{{item.label}}</text>
+    <view class="np-slot {{item.on&&!disabled?'on':''}} {{item.empty?'empty':''}}" data-index="{{index}}" bindtap="pick" aria-role="textbox" aria-label="{{item.label||'答案'}}：{{item.text||'空'}}">
+      <text wx:if="{{item.empty}}" class="np-ph">{{item.on&&!disabled?'':'填数'}}</text>
+      <block wx:else>
+        <text wx:if="{{item.neg}}" class="np-neg">−</text>
+        <view wx:if="{{item.frac}}" class="np-frac"><text class="np-num">{{item.num}}</text><view class="np-line" /><text class="np-den {{item.den?'':'blank'}}">{{item.den||' '}}</text></view>
+        <text wx:else class="np-val">{{item.num}}</text>
+      </block>
+      <view wx:if="{{item.on&&!disabled}}" class="np-caret" />
+    </view>
+    <text wx:if="{{item.note}}" class="np-note">{{item.note}}</text>
+  </view>
+</view>
+<view wx:if="{{!disabled}}" class="np-pad">
+  <view wx:for="{{keys}}" wx:for-item="row" wx:key="index" class="np-row">
+    <view wx:for="{{row}}" wx:key="id" class="np-key {{item.cls}} {{item.k==='ok'&&!ready?'off':''}} {{item.k==='ok'&&!multi?'np-none':''}}" hover-class="np-press" hover-start-time="0" hover-stay-time="80" data-k="{{item.k}}" bindtap="key" aria-role="button" aria-label="{{item.aria}}">{{item.text}}</view>
+  </view>
+</view>

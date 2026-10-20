@@ -1,0 +1,100 @@
+.head { padding-top: 32rpx; }
+
+/* 今天：蓝紫渐变的大卡片，白字 */
+.hero { position: relative; overflow: hidden; margin-top: 20rpx; padding: 32rpx 32rpx 28rpx; border-radius: 32rpx; background: linear-gradient(135deg, #3a7bff 0%, #6a5cff 62%, #8a5cf6 100%); box-shadow: 0 16rpx 40rpx rgba(70, 90, 240, 0.28); color: #ffffff; }
+.hero::before { content: ""; position: absolute; right: -80rpx; top: -100rpx; width: 320rpx; height: 320rpx; border-radius: 50%; background: rgba(255, 255, 255, 0.12); }
+.hero::after { content: ""; position: absolute; right: 120rpx; bottom: -140rpx; width: 260rpx; height: 260rpx; border-radius: 50%; background: rgba(255, 255, 255, 0.07); }
+.hero-top { position: relative; z-index: 1; display: flex; align-items: flex-start; justify-content: space-between; gap: 16rpx; }
+.hero-hello { min-width: 0; }
+.hero-date { display: block; font-size: 24rpx; opacity: 0.8; }
+.hero-greet { display: block; margin-top: 2rpx; font-size: 30rpx; font-weight: 600; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.streak { display: flex; align-items: baseline; gap: 4rpx; flex: none; padding: 8rpx 20rpx 8rpx 14rpx; border-radius: 999rpx; background: rgba(255, 255, 255, 0.22); }
+.streak.lit { background: #ffffff; color: #f2711c; }
+.streak-icon { width: 34rpx; height: 34rpx; align-self: center; }
+.streak-n { font-size: 34rpx; font-weight: 800; line-height: 1.2; }
+.streak-u { font-size: 24rpx; font-weight: 600; }
+.hero-title { position: relative; z-index: 1; display: block; margin-top: 26rpx; font-size: 44rpx; font-weight: 800; line-height: 1.3; letter-spacing: 1rpx; }
+.hero-sub { position: relative; z-index: 1; display: block; margin-top: 6rpx; font-size: 26rpx; opacity: 0.88; }
+.week { position: relative; z-index: 1; display: flex; justify-content: space-between; margin-top: 28rpx; }
+.day { display: flex; flex-direction: column; align-items: center; gap: 10rpx; width: 64rpx; }
+.day-label { font-size: 24rpx; line-height: 1; opacity: 0.75; }
+.day-dot { width: 40rpx; height: 40rpx; border-radius: 50%; background: rgba(255, 255, 255, 0.18); }
+.day.on .day-dot { background: #ffffff; box-shadow: inset 0 0 0 10rpx rgba(255, 166, 77, 0.9); }
+.day.now .day-label { opacity: 1; font-weight: 700; }
+.day.now .day-dot { border: 3rpx solid #ffffff; }
+.stats { position: relative; z-index: 1; display: flex; margin-top: 28rpx; padding-top: 22rpx; border-top: 2rpx solid rgba(255, 255, 255, 0.22); }
+.stat { flex: 1; min-width: 0; }
+.stat + .stat { padding-left: 24rpx; border-left: 2rpx solid rgba(255, 255, 255, 0.22); }
+.stat-n { display: block; font-size: 40rpx; font-weight: 800; line-height: 1.2; }
+.stat-k { display: block; font-size: 24rpx; opacity: 0.8; }
+
+/* 三种问法：一个大按钮，两张小卡 */
+.ask-main { display: flex; align-items: center; gap: 22rpx; margin-top: 28rpx; padding: 28rpx 30rpx; border-radius: 28rpx; background: #172033; box-shadow: 0 12rpx 28rpx rgba(23, 32, 51, 0.22); color: #ffffff; }
+.ask-main-icon { display: flex; align-items: center; justify-content: center; width: 84rpx; height: 84rpx; flex: none; border-radius: 24rpx; background: linear-gradient(135deg, #3a7bff, #6a5cff); }
+.ask-main-icon .icon { width: 44rpx; height: 44rpx; }
+.ask-main-copy { flex: 1; min-width: 0; }
+.ask-main-title { display: block; font-size: 34rpx; font-weight: 700; line-height: 1.35; }
+.ask-main-sub { display: block; margin-top: 2rpx; font-size: 24rpx; opacity: 0.72; }
+.ask-pair { display: flex; gap: 20rpx; margin-top: 20rpx; }
+.ask-side { flex: 1; min-width: 0; padding: 24rpx 26rpx; background: var(--card); border: 2rpx solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.ask-side .tile { width: 64rpx; height: 64rpx; border-radius: 18rpx; }
+.ask-side-title { display: block; margin-top: 18rpx; font-size: 30rpx; font-weight: 700; }
+.ask-side-sub { display: block; margin-top: 2rpx; font-size: 24rpx; color: var(--pencil); }
+
+/* 学习地图入口 */
+.learn-entry { display: flex; align-items: center; gap: 22rpx; min-height: 120rpx; margin-top: 28rpx; padding: 24rpx 28rpx; background: var(--card); border: 2rpx solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.learn-entry .tile { align-self: center; }
+.learn-copy { flex: 1; min-width: 0; }
+.learn-title { display: block; font-size: 30rpx; font-weight: 700; line-height: 1.45; }
+.learn-sub { display: block; margin-top: 2rpx; font-size: 24rpx; color: var(--pencil); }
+.learn-entry .chevron { width: 28rpx; height: 28rpx; flex: none; }
+
+.starter { margin-top: 20rpx; }
+
+/* 错题本 */
+.book { margin-top: 20rpx; }
+.book-nums { display: flex; }
+.book-num { flex: 1; min-width: 0; }
+.book-n { display: block; font-size: 44rpx; font-weight: 800; line-height: 1.2; }
+.book-n.due { color: var(--red-ink); }
+.book-n.good { color: var(--green); }
+.book-k { display: block; font-size: 24rpx; color: var(--pencil); }
+.book-head { display: block; margin: 26rpx 0 8rpx; padding-top: 22rpx; border-top: 2rpx solid var(--rule); font-size: 24rpx; color: var(--pencil); }
+.weak { display: flex; align-items: center; gap: 16rpx; padding: 8rpx 0; font-size: 26rpx; }
+.weak-label { width: 220rpx; flex: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.weak-track { flex: 1; height: 14rpx; border-radius: 7rpx; background: var(--track); overflow: hidden; }
+.weak-bar { height: 100%; border-radius: 7rpx; background: linear-gradient(90deg, #ff8a65, var(--red)); }
+.weak-n { width: 40rpx; flex: none; text-align: right; font-weight: 700; }
+.weak-go { flex: none; padding: 4rpx 0 4rpx 12rpx; font-size: 24rpx; font-weight: 600; color: var(--primary); }
+
+/* 专项练：五章，两列小卡 */
+.drills { display: flex; flex-wrap: wrap; gap: 16rpx; margin-top: 20rpx; }
+.drill { width: calc(50% - 8rpx); padding: 20rpx 24rpx; background: var(--card); border: 2rpx solid var(--line); border-radius: var(--radius-s); box-shadow: var(--shadow); }
+.drill:nth-child(odd) { border-left: 6rpx solid var(--primary); }
+.drill:nth-child(even) { border-left: 6rpx solid var(--violet); }
+.drill-title { display: block; font-size: 28rpx; font-weight: 700; }
+.drill-sub { display: block; margin-top: 2rpx; font-size: 24rpx; color: var(--pencil); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.book-empty { display: block; margin-top: 18rpx; padding-top: 18rpx; border-top: 2rpx solid var(--rule); font-size: 26rpx; line-height: 1.7; color: var(--body); }
+
+/* 资料 */
+.entries { display: flex; gap: 20rpx; margin-top: 20rpx; }
+.entry { flex: 1; min-width: 0; padding: 24rpx 26rpx; background: var(--card); border: 2rpx solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.entry-icon { display: block; width: 40rpx; height: 40rpx; }
+.entry-title { display: block; margin-top: 18rpx; font-size: 28rpx; font-weight: 600; }
+.entry-sub { display: block; margin-top: 2rpx; font-size: 24rpx; color: var(--pencil); }
+.review-line { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin-top: 20rpx; padding: 22rpx 28rpx; background: var(--card); border: 2rpx solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); font-size: 26rpx; font-weight: 600; }
+.review-line .quiet { font-size: 24rpx; font-weight: 400; }
+
+/* 作业本：纸面上的平卡片，墨色字，连续天数用红笔 */
+.notebook .hero { background: var(--card); border: 2rpx solid var(--line); border-radius: var(--radius); box-shadow: none; color: var(--ink); }
+.notebook .hero::before, .notebook .hero::after { display: none; }
+.notebook .streak, .notebook .streak.lit { background: none; border: 2rpx solid var(--red-soft); color: var(--red-ink); }
+.notebook .day-dot { background: none; border: 2rpx solid var(--rule-2); }
+.notebook .day.on .day-dot { background: var(--red); border-color: var(--red-ink); box-shadow: none; }
+.notebook .day.now .day-dot { border: 3rpx solid var(--ink); }
+.notebook .stats { border-top-color: var(--rule); }
+.notebook .stat + .stat { border-left-color: var(--rule); }
+.notebook .ask-main { background: var(--ink); border-radius: var(--radius); box-shadow: none; }
+.notebook .ask-main-icon { background: none; border: 2rpx solid rgba(255, 253, 249, 0.4); border-radius: 12rpx; }
+.notebook .weak-bar { background: var(--red); }
+.notebook .drill:nth-child(odd), .notebook .drill:nth-child(even) { border-left: 2rpx solid var(--line); }

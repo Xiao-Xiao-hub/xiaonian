@@ -1,0 +1,92 @@
+<view class="page" capture-bind:touchstart="studyTouch">
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+  <view class="head">
+    <text class="kicker">{{today}}</text>
+    <text class="h2">{{card ? '还记得吗' : done ? '今天的资料都回头看过了' : '今天没有要回头看的资料'}}</text>
+    <text class="lede">{{card ? (card.checkable ? '先在心里想一遍，想好再翻开。' : '') : counts.total ? '记住了，就隔久一点再来。' : '资料和题目设成“过几天回头看看”，到时候会出现在这儿。知识点要回头看的，在知识地图里。'}}</text>
+  </view>
+  <view wx:if="{{loadFailed}}" class="alert">{{error}}<text class="link" bindtap="load">再试一次</text></view>
+  <view wx:elif="{{error}}" class="alert">{{error}}</view>
+
+  <block wx:if="{{card}}">
+    <view class="deck-meta">
+      <text class="kicker tnum">{{index + 1}} / {{cards.length}}</text>
+    </view>
+    <view class="deck">
+      <view class="paper card">
+        <text class="gutter">{{card.kindText}}</text>
+        <text class="card-title">{{card.title || '未命名'}}</text>
+        <view wx:if="{{card.questionBlocks}}" class="lined"><rich blocks="{{card.questionBlocks}}" /></view>
+        <text wx:elif="{{card.question}}" class="lined"><text wx:for="{{card.parts}}" wx:key="index" class="{{item.num ? 'hl' : ''}}">{{item.text}}</text></text>
+        <view class="recall">
+          <text class="recall-k">想一想</text>
+          <text class="recall-v">{{card.prompt}}</text>
+        </view>
+      </view>
+    </view>
+
+    <block wx:if="{{!card.checkable}}">
+      <text class="hint">这道题还没有答案和讲解，没法对照着记。先去看提示，讲过了再来。</text>
+      <button class="btn" hover-class="btn-press" bindtap="openCard">去看提示</button>
+      <view wx:if="{{index + 1 < cards.length}}" class="links"><text class="link" bindtap="skip">先看下一个</text></view>
+    </block>
+    <button wx:elif="{{!flipped}}" class="btn" hover-class="btn-press" bindtap="flip">想好了，看答案</button>
+    <block wx:else>
+      <view wx:if="{{card.points.length}}" class="notes">
+        <view wx:for="{{card.points}}" wx:key="index" class="note-block">
+          <text class="n">{{index + 1}}</text>
+          <text class="title">{{item.title}}</text>
+          <view wx:if="{{item.blocks}}" class="text"><rich blocks="{{item.blocks}}" /></view>
+          <text wx:else class="text">{{item.explanation}}</text>
+        </view>
+      </view>
+      <view wx:if="{{card.answer}}" class="ref">
+        <view class="row">
+          <text class="k">答案</text>
+          <text class="tag {{card.sourceTone}}">{{card.sourceText}}</text>
+        </view>
+        <view wx:if="{{card.answerBlocks}}" class="v"><rich blocks="{{card.answerBlocks}}" /></view>
+        <text wx:else class="v">{{card.answer.value}}</text>
+        <text wx:if="{{card.answer.check}}" class="check mono">验算  {{card.answer.check}}</text>
+      </view>
+      <view wx:if="{{card.steps.length}}" class="notes">
+        <view wx:for="{{card.steps}}" wx:key="index" class="note-block">
+          <text class="n">{{index + 1}}</text>
+          <text class="over">{{index + 1 === card.steps.length ? '整道题怎么做' : '关键一步'}}</text>
+          <view wx:if="{{card.stepBlocks[index]}}" class="text"><rich blocks="{{card.stepBlocks[index]}}" /></view>
+          <text wx:else class="text">{{item}}</text>
+        </view>
+      </view>
+      <view wx:if="{{card.textBlocks}}" class="lede"><rich blocks="{{card.textBlocks}}" /></view>
+      <text wx:elif="{{card.text}}" class="lede">{{card.text}}</text>
+      <view class="pair">
+        <button class="btn-line" hover-class="btn-press" disabled="{{busy}}" bindtap="forgot">没记住</button>
+        <button class="btn" hover-class="btn-press" disabled="{{busy}}" bindtap="remembered">记住了</button>
+      </view>
+    </block>
+    <view wx:if="{{card.checkable}}" class="links">
+      <text class="link" bindtap="openCard">看原来的内容</text>
+    </view>
+  </block>
+
+  <view wx:elif="{{!loading && !loadFailed && (done || !counts.total)}}" class="empty">
+    <image wx:if="{{done}}" class="done-mark" src="/assets/marks/tick-green.png" />
+    <text wx:if="{{done}}" class="block">这次看了 {{done}} 个。</text>
+    <text wx:if="{{!counts.total && !done}}" class="link block" bindtap="openLibrary">去我的资料挑一份</text>
+  </view>
+
+  <block wx:if="{{!card && upcoming.length}}">
+    <view class="section"><text class="h3">还有 {{upcoming.length}} 个过几天再看</text></view>
+    <view class="rows">
+      <view wx:for="{{upcoming}}" wx:key="id" class="item" hover-class="pressed" data-index="{{index}}" bindtap="openUpcoming">
+        <text class="when">{{item.due}}</text>
+        <view class="copy">
+          <text class="title">{{item.title || '未命名'}}</text>
+          <view class="meta"><text>{{item.kindText}}</text></view>
+        </view>
+        <image class="chevron" src="/assets/icons/chevron-faint.png" />
+      </view>
+    </view>
+  </block>
+  <view wx:if="{{loading && !card && !upcoming.length}}" class="empty">打开中…</view>
+</view>

@@ -1,0 +1,194 @@
+<view class="page" capture-bind:touchstart="studyTouch">
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+  <view wx:if="{{loadFailed}}" class="alert">{{error}}<text wx:if="{{canRetry}}" class="link" bindtap="reload">再试一次</text><text wx:else class="link" bindtap="openLibrary">回我的资料</text></view>
+  <view wx:elif="{{error}}" class="alert">{{error}}</view>
+
+  <view wx:if="{{waiting}}" class="working">
+    <text class="h3">正在出题…</text>
+    <text class="small">{{slow ? '比平时慢，还在出。' : ''}}可以先离开，回来接着做。</text>
+    <view class="bar" />
+  </view>
+  <view wx:if="{{genError && !waiting && !target}}" class="failed">
+    <text class="h2">{{mode === 'quiz' ? '这组题没出成' : '这道题没出成'}}</text>
+    <text class="lede">{{genError}}</text>
+    <button class="btn" hover-class="btn-press" bindtap="retry">再试一次</button>
+    <view class="links">
+      <text class="link" bindtap="back">{{mode === 'quiz' ? '回到资料' : '回到原题'}}</text>
+    </view>
+  </view>
+  <view wx:elif="{{genError && !waiting}}" class="alert">{{genError}}<text class="link" bindtap="retry">再试一次</text></view>
+
+  <!-- quiz -->
+  <block wx:if="{{mode === 'quiz' && target && !waiting}}">
+    <view wx:if="{{target.stale}}" class="notice">原文改过了，要按新的出一组吗？<text class="link" bindtap="newQuiz">重新出题</text></view>
+    <view wx:if="{{finished}}" class="finished">
+      <image class="done-mark" src="/assets/marks/tick-green.png" />
+      <text class="h2 center">这组题做完了</text>
+      <text class="lede center">回去看看没把握的地方，或者再来一组。</text>
+      <button class="btn" hover-class="btn-press" bindtap="newQuiz">再来一组</button>
+      <view wx:if="{{review}}" class="review-state">
+        <text>{{reviewText}}</text>
+        <text class="link" bindtap="removeReview">不用提醒了</text>
+      </view>
+      <view class="links">
+        <text class="link" bindtap="toMaterial">回到资料</text>
+        <text wx:if="{{!review}}" class="link" bindtap="addReview">过几天回头看看</text>
+      </view>
+    </view>
+    <block wx:elif="{{question}}">
+      <view class="head">
+        <view class="row">
+          <text class="kicker">{{question.type === 'choice' ? '选择题' : '简答题'}}</text>
+          <text class="kicker tnum">{{index + 1}} / {{total}}</text>
+        </view>
+        <view class="ticks"><view wx:for="{{ticks}}" wx:key="index" class="t {{item}}" /></view>
+      </view>
+      <view class="paper">
+        <text class="gutter tnum">{{index + 1}}</text>
+        <view wx:if="{{question.stemBlocks}}" class="lined"><rich blocks="{{question.stemBlocks}}" /></view>
+        <text wx:else class="lined">{{question.stem}}</text>
+      </view>
+      <view wx:for="{{question.options}}" wx:key="index" class="option {{item.cls}}" data-index="{{index}}" bindtap="pick">
+        <text class="letter">{{item.letter}}</text>
+        <view wx:if="{{item.blocks}}" class="option-text"><rich blocks="{{item.blocks}}" /></view>
+        <text wx:else class="option-text">{{item.text}}</text>
+      </view>
+    </block>
+  </block>
+
+  <!-- problem / variant -->
+  <block wx:if="{{mode !== 'quiz' && parts.length && !waiting}}">
+    <view class="head"><text class="kicker">{{mode === 'variant' ? '再来一道同类题' : '先自己做一遍'}}</text></view>
+    <view class="paper">
+      <text class="gutter">题</text>
+      <view wx:if="{{textBlocks}}" class="lined"><rich blocks="{{textBlocks}}" /></view>
+      <text wx:else class="lined"><text wx:for="{{parts}}" wx:key="index" class="{{item.num ? 'hl' : ''}}">{{item.text}}</text></text>
+    </view>
+  </block>
+
+  <block wx:if="{{!waiting && !result && !finished && (mode === 'problem' ? parts.length : target)}}">
+    <block wx:if="{{!(mode === 'quiz' && question.type === 'choice')}}">
+      <view class="label">你的答案</view>
+      <textarea class="field short" placeholder-class="placeholder" auto-height maxlength="500" disabled="{{judging}}" placeholder="可以只写结果，也可以写上关键步骤" value="{{text}}" bindinput="onText" />
+    </block>
+    <view wx:if="{{judging}}" class="working">
+      <text class="h3">正在看你的答案…</text>
+      <text class="small">{{slow ? '比平时慢，还在看。' : ''}}可以先离开，回来接着看。</text>
+      <view class="bar" />
+    </view>
+    <view wx:if="{{judgeError}}" class="alert">{{judgeError}}</view>
+    <button class="btn" hover-class="btn-press" disabled="{{judging}}" bindtap="submit">{{judgeError ? '再交一次' : '看看对不对'}}</button>
+    <view wx:if="{{mode === 'problem'}}" class="links">
+      <text class="link" bindtap="toProblem">没思路？看看提示</text>
+    </view>
+    <view wx:if="{{mode === 'variant' && !peek}}" class="links">
+      <text class="link" bindtap="peekAnswer">不会，看看答案</text>
+    </view>
+    <view wx:if="{{peek}}" class="ref">
+      <view class="row">
+        <text class="k">参考答案</text>
+        <text class="tag {{peek.tone}}">{{peek.sourceText}}</text>
+      </view>
+      <view wx:if="{{peek.blocks}}" class="v"><rich blocks="{{peek.blocks}}" /></view>
+      <text wx:else class="v">{{peek.value}}</text>
+      <text wx:if="{{peek.check}}" class="check mono">验算  {{peek.check}}</text>
+    </view>
+  </block>
+
+  <!-- result -->
+  <block wx:if="{{result}}">
+    <view class="verdict {{result.tone}}">
+      <image class="mark" src="/assets/marks/{{result.mark}}.png" />
+      <view class="copy">
+        <text class="title">{{result.title}}</text>
+        <text class="sub">{{result.sub}}</text>
+      </view>
+    </view>
+    <view wx:if="{{result.compare}}" class="compare">
+      <view class="cell"><text class="k">你的答案</text><view wx:if="{{result.mineBlocks}}" class="v"><rich blocks="{{result.mineBlocks}}" /></view><text wx:else class="v">{{result.mine}}</text></view>
+      <view class="cell"><text class="k">参考答案</text><view wx:if="{{result.referenceBlocks}}" class="v"><rich blocks="{{result.referenceBlocks}}" /></view><text wx:else class="v">{{result.reference}}</text></view>
+    </view>
+    <view wx:elif="{{mode !== 'quiz'}}" class="compare">
+      <view class="cell"><text class="k">你的答案</text><view wx:if="{{result.mineBlocks}}" class="v"><rich blocks="{{result.mineBlocks}}" /></view><text wx:else class="v">{{result.mine}}</text></view>
+    </view>
+    <view wx:if="{{result.cause || result.sourceTone === 'red'}}" class="facts">
+      <text wx:if="{{result.sourceTone === 'red'}}" class="tag red">参考答案：{{result.sourceText}}</text>
+      <text wx:if="{{result.cause}}" class="tag red">可能卡在：{{result.cause}}</text>
+    </view>
+    <view wx:if="{{result.comment}}" class="notes">
+      <view class="note-block">
+        <text class="n word">评</text>
+        <text class="over">点评</text>
+        <view wx:if="{{result.commentBlocks}}" class="text"><rich blocks="{{result.commentBlocks}}" /></view>
+        <text wx:else class="text">{{result.comment}}</text>
+      </view>
+    </view>
+
+    <block wx:if="{{result.hasDetail}}">
+      <view class="fold-row {{detailOpen ? 'open' : ''}}" bindtap="toggleDetail" aria-role="button">看看怎么做</view>
+      <block wx:if="{{detailOpen}}">
+        <view wx:if="{{result.sourceText && result.sourceTone !== 'red'}}" class="facts">
+          <text class="tag {{result.sourceTone}}">参考答案：{{result.sourceText}}</text>
+        </view>
+        <text wx:if="{{result.check}}" class="check mono">验算  {{result.check}}</text>
+        <text wx:if="{{result.note}}" class="hint note-line">{{result.note}}</text>
+        <view wx:if="{{result.explanation && result.explanation !== result.check}}" class="notes">
+          <view class="note-block">
+            <text class="n word">解</text>
+            <text class="over">解法</text>
+            <view wx:if="{{result.explanationBlocks}}" class="text"><rich blocks="{{result.explanationBlocks}}" /></view>
+            <text wx:else class="text">{{result.explanation}}</text>
+          </view>
+        </view>
+        <text wx:if="{{result.cite}}" class="cite" bindtap="openSource">出自{{result.cite}}</text>
+      </block>
+    </block>
+
+    <view wx:if="{{mode === 'problem' && mapPoint}}" class="map-link" hover-class="pressed" bindtap="openMap">
+      <view class="map-link-copy">
+        <text class="map-link-k">相关知识点</text>
+        <text class="map-link-title">{{mapPoint.name}}</text>
+      </view>
+      <text class="map-link-go">去看看 ›</text>
+    </view>
+
+    <block wx:if="{{mode === 'quiz'}}">
+      <button class="btn" hover-class="btn-press" bindtap="next">{{index + 1 >= total ? '做完了' : '下一题'}}</button>
+      <view class="links"><text class="link" bindtap="toMaterial">回到资料</text></view>
+    </block>
+    <block wx:elif="{{mode === 'problem' && !result.revealed}}">
+      <button class="btn" hover-class="btn-press" bindtap="again">再试一次</button>
+      <view class="links"><text class="link" bindtap="toProblem">看看提示</text></view>
+    </block>
+    <block wx:elif="{{mode === 'problem'}}">
+      <button class="btn" hover-class="btn-press" bindtap="toVariant">再来一道差不多的</button>
+      <view class="links"><text class="link" bindtap="toProblem">回到题目</text></view>
+    </block>
+    <block wx:else>
+      <button class="btn" hover-class="btn-press" bindtap="newVariant">再来一道</button>
+      <view class="links"><text class="link" bindtap="toProblem">回到原题</text></view>
+    </block>
+    <view wx:if="{{review}}" class="review-state">
+      <text>{{reviewText}}</text>
+      <text class="link" bindtap="removeReview">不用提醒了</text>
+    </view>
+    <view wx:elif="{{!result.correct}}" class="links">
+      <text class="link" bindtap="addReview">过几天回头看看</text>
+    </view>
+  </block>
+
+  <view wx:if="{{loading}}" class="empty">打开中…</view>
+
+  <view wx:if="{{sheet}}" class="mask" catchtap="closeSheet">
+    <view class="pop" catchtap="noop">
+      <view class="pop-top">
+        <text class="h3">{{sheet.title}}</text>
+        <text class="close" catchtap="closeSheet">关闭</text>
+      </view>
+      <view wx:for="{{sheet.lines}}" wx:key="no" class="line {{item.hit ? 'hit' : ''}}">
+        <text class="no">{{item.no}}</text>
+        <text class="line-text">{{item.text}}</text>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,74 @@
+<view class="page" capture-bind:touchstart="studyTouch">
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+  <view wx:if="{{loadFailed}}" class="alert">{{error}}<text wx:if="{{canRetry}}" class="link" bindtap="reload">再试一次</text><text wx:else class="link" bindtap="openLibrary">回我的资料</text></view>
+  <view wx:elif="{{error}}" class="alert">{{error}}</view>
+  <block wx:if="{{material}}">
+    <view class="head head-row">
+      <view class="head-copy">
+        <text class="kicker">题目</text>
+        <text class="h2">{{material.title || '未命名题目'}}</text>
+      </view>
+      <view class="btn-icon" hover-class="pressed" bindtap="openMore" aria-role="button" aria-label="更多">⋯</view>
+    </view>
+    <view class="paper">
+      <text class="gutter">题</text>
+      <view wx:if="{{textBlocks}}" class="lined"><rich blocks="{{textBlocks}}" /></view>
+      <text wx:else class="lined"><text wx:for="{{parts}}" wx:key="index" class="{{item.num ? 'hl' : ''}}">{{item.text}}</text></text>
+      <view wx:if="{{material.current && material.current.answer}}" class="paper-foot">
+        <text class="small quiet">你给的答案：{{material.current.answer}}</text>
+      </view>
+    </view>
+
+    <button class="btn" hover-class="btn-press" bindtap="tryAnswer"><text>先自己做一遍</text><image class="icon" src="/assets/icons/arrow-white.png" /></button>
+    <view class="divider">做不下去，再看提示</view>
+
+    <view wx:if="{{hints && hints.stale}}" class="notice">题目改过了，要按新的重写提示吗？<text class="link" bindtap="regenerate">重写</text></view>
+
+    <view wx:if="{{hints && !hints.data.complete}}" class="sheet">
+      <text class="h3">题目好像少了条件</text>
+      <text wx:if="{{hints.data.missing}}" class="lede">{{hints.data.missing}}</text>
+      <text class="lede">补上就能接着讲。<text class="link" bindtap="edit">去补上</text></text>
+    </view>
+
+    <view wx:if="{{levels.length}}" class="notes">
+      <view wx:for="{{levels}}" wx:key="index" class="note-block">
+        <text class="n">{{index + 1}}</text>
+        <text class="over">{{item.over}}</text>
+        <view wx:if="{{item.blocks}}" class="text"><rich blocks="{{item.blocks}}" /></view>
+        <text wx:else class="text">{{item.text}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{answer}}" class="ref">
+      <view class="row">
+        <text class="k">参考答案</text>
+        <text class="tag {{answer.tone}}">{{answer.sourceText}}</text>
+      </view>
+      <view wx:if="{{answer.blocks}}" class="v"><rich blocks="{{answer.blocks}}" /></view>
+      <text wx:else class="v">{{answer.value}}</text>
+      <text wx:if="{{answer.check}}" class="check mono">验算  {{answer.check}}</text>
+      <text wx:if="{{answer.note}}" class="ref-note">{{answer.note}}</text>
+    </view>
+
+    <view wx:if="{{waiting}}" class="working">
+      <text class="h3">正在想提示</text>
+      <text class="small">{{slow ? '比平时慢，还在想。' : ''}}可以先离开，回来接着看。</text>
+      <view class="bar" />
+    </view>
+    <view wx:if="{{hintError}}" class="alert">{{hintError}}</view>
+
+    <view wx:if="{{levels.length < 3 && !(hints && !hints.data.complete)}}" class="pair hint-pair">
+      <button wx:if="{{nextLabel}}" class="btn-line" hover-class="btn-press" disabled="{{waiting}}" bindtap="nextHint">{{nextLabel}}</button>
+      <button class="btn-line" hover-class="btn-press" disabled="{{waiting}}" bindtap="showSolution">看完整解法</button>
+    </view>
+
+    <view wx:if="{{review}}" class="review-state">
+      <text>{{reviewText}}</text>
+      <text class="link" bindtap="removeReview">不用提醒了</text>
+    </view>
+    <view wx:if="{{attempts && variantText}}" class="links">
+      <text class="link" bindtap="practiceVariant">{{variantText}}</text>
+    </view>
+  </block>
+  <view wx:elif="{{loading}}" class="empty">打开中…</view>
+</view>

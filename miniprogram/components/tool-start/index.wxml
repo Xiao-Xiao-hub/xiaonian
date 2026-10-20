@@ -1,0 +1,20 @@
+<view class="ts">
+  <view class="ts-head">
+    <view class="ts-copy">
+      <text class="ts-t">{{title}}</text>
+      <text class="ts-s">{{lede}}</text>
+    </view>
+    <image wx:if="{{src && !broken}}" class="ts-ic" src="{{src}}" webp="{{true}}" mode="aspectFit" binderror="broken" />
+  </view>
+  <view wx:if="{{photo}}" class="ts-acts">
+    <view class="ts-btn main" hover-class="btn-press" bindtap="camera" aria-role="button">
+      <image class="ts-i" src="/assets/icons/camera-white.png" />
+      <text>拍照</text>
+    </view>
+    <view class="ts-btn" hover-class="pressed" bindtap="album" aria-role="button">
+      <image class="ts-i" src="/assets/icons/image-ink.png" />
+      <text>从相册选</text>
+    </view>
+  </view>
+  <slot />
+</view>

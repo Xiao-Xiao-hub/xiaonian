@@ -1,0 +1,52 @@
+<view class="map-page night" capture-bind:touchstart="studyTouch">
+  <!-- Behind the map, never over it (V4.1): stars and a few CSS meteors. -->
+  <view class="sky-back" aria-hidden="true"><image class="sky-stars" src="/pages/map/stars.png" mode="aspectFill" /><view class="meteor m1" /><view class="meteor m2" /><view class="meteor m3" /></view>
+  <view class="custom-nav" style="padding-top:{{navTop}}px;height:{{navHeight}}px"><view class="nav-back" bindtap="goLearn" aria-role="button" aria-label="返回">‹</view><text>知识地图</text></view>
+  <guest-bar />
+  <scroll-view scroll-x class="chtabs" enhanced show-scrollbar="false">
+    <text class="ct {{chapterId==='all'?'on':''}}" data-id="all" bindtap="selectChapter" aria-role="button">全书</text>
+    <text wx:for="{{chapters}}" wx:key="id" class="ct {{chapterId===item.id?'on':''}}" data-id="{{item.id}}" bindtap="selectChapter" aria-role="button">{{item.name}}</text>
+  </scroll-view>
+  <view class="msub">
+    <block wx:if="{{bookMode}}"><text wx:if="{{!guest}}" class="score">全书 <text class="b">{{bookProgress}}</text>%</text></block>
+    <block wx:elif="{{tab}}"><text class="score">核心点做对 <text class="b">{{guest?0:tab.correct}}</text>/ {{tab.total}} 点</text><view class="pbar"><view style="width:{{guest?0:tab.progress}}%" /></view></block>
+    <view wx:if="{{chapter&&!bookMode}}" class="zoom"><text class="zb" bindtap="zoomOut" aria-role="button" aria-label="缩小">−</text><view class="zd"><view class="{{zoom==='far'?'on':''}}" /><view class="{{zoom==='near'?'on':''}}" /></view><text class="zb" bindtap="zoomIn" aria-role="button" aria-label="放大">+</text></view>
+    <text class="mbtn" bindtap="openMenu" aria-role="button" aria-label="更多">⋯</text>
+  </view>
+
+  <view wx:if="{{error}}" class="map-alert" bindtap="load">{{error}}<text>再试一次</text></view>
+  <view wx:if="{{fail}}" class="map-alert">{{fail}}</view>
+  <view wx:if="{{loading&&!chapter&&!bookMode}}" class="map-loading">地图打开中…</view>
+
+  <scroll-view wx:if="{{bookMode}}" scroll-y class="book-view">
+    <view wx:for="{{bookRows}}" wx:key="id" class="book-row {{item.hidden?'hidden':''}}" data-id="{{item.id}}" bindtap="selectChapter">
+      <view class="book-row-head"><text class="book-no">{{item.book}}</text><text class="book-name">{{item.short}}</text><text wx:if="{{item.hidden}}" class="hidden-label">这章先放着</text></view>
+      <view class="book-dots"><view wx:for="{{item.dots}}" wx:for-item="dot" wx:key="id" class="book-dot {{dot.cls}}" /></view>
+      <text wx:if="{{!guest}}" class="book-count">核心点做对 {{item.correct}}/{{item.total}} 点</text>
+    </view>
+  </scroll-view>
+
+  <block wx:if="{{chapter&&!bookMode}}">
+    <view class="stage-wrap">
+      <map-sky layout="{{layout}}" motion="{{motion}}" bindnode="nodeTap" bindpractice="practiceTap" bindsettle="stageSettle" binddragging="stageDragging" bindready="stageReady" />
+      <view wx:if="{{chapter.hidden&&!guest}}" class="chapter-disabled">这章先放着了<text bindtap="restoreChapter">放回来</text></view>
+      <view wx:if="{{edgeNext&&!dragging}}" class="edge-next" style="left:{{edgeNext.left}}px;top:{{edgeNext.top}}px" bindtap="backToNext" aria-role="button">{{edgeNext.text}}</view>
+    </view>
+    <view wx:if="{{zoom==='far'}}" class="nextp">
+      <view wx:if="{{next}}" class="np">
+        <view class="np-main"><view class="np-k"><text class="np-tag">下一步</text><text wx:if="{{next.key}}" class="np-kt">★ 重点</text><text wx:elif="{{next.hard}}" class="np-kt">◆ 难点</text></view><text class="np-name">{{next.name}}</text><text wx:if="{{next.reason}}" class="np-why">{{next.reason}}</text></view>
+        <button class="btn np-go" bindtap="nextTap">{{next.ready && !next.learn?'练一题':'看看'}}</button>
+      </view>
+      <text wx:elif="{{!guest}}" class="np-none">{{noNext}}</text>
+      <text wx:else class="np-none">点一颗星看看它讲什么</text>
+      <view class="legend"><text class="lg ok">做对了</text><text class="lg due">该复习</text><text class="lg pend">再试试</text><text class="lg stuck">卡住了</text></view>
+      <view class="legend"><text class="lg practice">练过</text><text class="lg seen">看过</text><text class="lg none">没碰过</text><text class="lg nx">下一步</text></view>
+      <view class="legend"><text class="lg k">重点</text><text class="lg h">难点</text><text class="lg up">拔高</text><text class="lg opt">选学</text></view>
+    </view>
+  </block>
+
+  <view wx:if="{{legendOpen}}" class="scrim" catchtouchmove="hold" bindtap="toggleLegend"><view class="pop legend-pop" catchtap="hold"><view class="pop-top"><text class="h3">这些颜色啥意思</text><text class="close" bindtap="toggleLegend">关闭</text></view><view class="legend-grid"><text class="lg ok">金色：做对了</text><text class="lg due">金色带圈：该复习了</text><text class="lg pend">空心：再试试，或你标了会</text><text class="lg stuck">红色：卡住了</text><text class="lg practice">蓝圈：练过，还没自己做对</text><text class="lg seen">白圈：看过讲解</text><text class="lg none">灰色：还没碰过</text><text class="lg nx">蓝色闪：下一步先练这个</text><text class="lg k">重点</text><text class="lg h">难点</text><text class="lg main">亮蓝线：核心点</text><text class="lg up">浅色实线：拔高</text><text class="lg opt">浅色虚线：选学</text><text class="lg dim">淡一些的：老师还没讲到</text></view></view></view>
+
+  <view wx:if="{{taughtOpen}}" class="scrim" catchtouchmove="hold" bindtap="closeTaught"><view class="pop taught-sheet" catchtap="hold"><view class="pop-top"><text class="h3">老师讲到哪了？</text><text class="close" bindtap="closeTaught">关闭</text></view><text class="hint">选一下，推荐更准</text><scroll-view scroll-x class="taught-chapters"><text wx:for="{{chapters}}" wx:key="id" class="{{taughtChapter===item.id?'on':''}}" data-id="{{item.id}}" bindtap="chooseTaughtChapter">{{item.name}}</text></scroll-view><view class="section-grid"><button wx:for="{{taughtSections}}" wx:key="*this" class="chip" data-value="{{item}}" bindtap="saveTaught">{{item}}</button></view><view class="taught-other"><button class="chip" data-value="none" bindtap="saveTaught">还没开讲</button><button class="chip" data-value="all" bindtap="saveTaught">老师全讲完了</button><button class="chip" bindtap="closeTaught">先不选</button></view></view></view>
+
+</view>

@@ -1,0 +1,41 @@
+<view class="root">
+<page-head>
+  <text class="skip" bindtap="finish">跳过</text>
+</page-head>
+<swiper class="pages" current="{{current}}" bindchange="change">
+  <swiper-item class="pg">
+    <view class="stage">
+      <image wx:if="{{smile}}" class="xl" src="{{smile}}" webp="{{true}}" mode="aspectFit" binderror="hideSmile" />
+      <view class="mini-in">x→0 时，sin 3x 比 x 的极限怎么算<text class="caret" /></view>
+      <view class="flow"><view class="dash" /><view class="arrow" /></view>
+      <view class="big-pc"><card-tile card="{{first}}" /></view>
+    </view>
+    <view class="txt"><text class="tb">想到就写，一句就行</text><text class="ts">写下的话会整理成卡片，自动分好类型</text></view>
+  </swiper-item>
+  <swiper-item class="pg">
+    <view class="stage">
+      <view class="mini-wall">
+        <view class="wall"><view wx:for="{{wall}}" wx:for-item="col" wx:for-index="ci" wx:key="ci" class="colw"><card-tile wx:for="{{col}}" wx:key="id" card="{{item}}" /></view></view>
+      </view>
+      <text class="note">示例</text>
+    </view>
+    <view class="txt"><text class="tb">有了卡片，大概是这样</text><text class="ts">每张卡按自己的方式回头问你：回顾、接着聊，或打个勾</text></view>
+  </swiper-item>
+  <swiper-item class="pg">
+    <view class="stage night">
+      <view class="sky" />
+      <text class="lb" style="left: 376rpx; top: 62rpx;">无穷小与无穷大</text>
+      <text class="lb" style="left: 376rpx; top: 206rpx;">极限运算</text>
+      <text class="lb" style="right: 522rpx; top: 334rpx;">无穷小阶</text>
+      <text class="lb" style="left: 524rpx; top: 334rpx;">重要极限二</text>
+      <view class="lb-row"><text class="lb next">等价替换 · 下一步</text></view>
+      <view class="ask"><text class="ask-k">解题 · 一步步做</text><view>第 1 步：先看分母 <text class="mk fx">x²</text> 是几阶，再决定分子要展开到哪一项。</view></view>
+    </view>
+    <view class="txt"><text class="tb">学高数，跟着地图走</text><text class="ts">知识点连成线，不会的题 AI 一步步带你做</text></view>
+  </swiper-item>
+</swiper>
+<view class="dots"><view wx:for="{{[0, 1, 2]}}" wx:key="*this" class="dot {{current === item ? 'on' : ''}}" /></view>
+<view class="go">
+  <button class="btn" hover-class="btn-press" bindtap="next">{{current === 2 ? '开始使用' : '下一步'}}</button>
+</view>
+</view>

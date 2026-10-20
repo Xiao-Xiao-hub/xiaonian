@@ -1,0 +1,32 @@
+<view class="lseg">
+  <view class="seg">
+    <text wx:for="{{docs}}" wx:key="key" class="{{doc === item.key ? 'on' : ''}}" data-doc="{{item.key}}" bindtap="pick">{{item.name}}</text>
+  </view>
+</view>
+<view class="doc">
+  <view wx:if="{{error}}" class="state">
+    <text class="err">{{error}}</text>
+    <button class="btn-line sm" hover-class="btn-press" bindtap="retry">再试一次</button>
+  </view>
+  <text wx:elif="{{loading}}" class="state faint">正在打开…</text>
+  <block wx:elif="{{view}}">
+    <text class="dt">{{view.title}}</text>
+    <text class="dv">{{view.version}}</text>
+    <view class="dsum">
+      <view class="dh">{{view.summary.head}}<text wx:if="{{view.summary.note}}" class="small">{{view.summary.note}}</text></view>
+      <rich blocks="{{view.summary.blocks}}" />
+    </view>
+    <view class="dh toc-h">目录</view>
+    <view class="toc">
+      <view wx:for="{{view.sections}}" wx:key="title" class="toc-i" data-index="{{index}}" bindtap="jump">
+        <text class="toc-t">{{item.title}}</text>
+        <view class="chev" />
+      </view>
+    </view>
+    <view wx:if="{{view.blocks.length}}" class="lead"><rich blocks="{{view.blocks}}" /></view>
+    <view wx:for="{{view.sections}}" wx:key="title" id="s{{index}}" class="sec">
+      <text class="sec-t">{{item.title}}</text>
+      <rich blocks="{{item.blocks}}" />
+    </view>
+  </block>
+</view>

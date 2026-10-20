@@ -1,0 +1,139 @@
+.brainstorm {
+  padding-bottom: 150rpx;
+}
+.ai-line {
+  margin: -10rpx 0 18rpx;
+  color: var(--pencil);
+  font-size: 24rpx;
+  text-align: center;
+}
+.fixed-head {
+  margin-bottom: 18rpx;
+}
+.batch-title {
+  display: block;
+  color: var(--ink);
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.search {
+  box-sizing: border-box;
+  width: 100%;
+  height: 76rpx;
+  margin: 12rpx 0;
+  padding: 0 22rpx;
+  border: 2rpx solid var(--rule-2);
+  border-radius: 18rpx;
+  background: var(--card);
+  color: var(--ink);
+}
+.select-row,
+.select-actions,
+.bottom {
+  display: flex;
+  align-items: center;
+}
+.select-row {
+  justify-content: space-between;
+  margin: 4rpx 0 8rpx;
+  color: var(--pencil);
+  font-size: 26rpx;
+}
+.select-actions .btn-text {
+  min-height: 64rpx;
+  padding: 0 14rpx;
+  font-size: 26rpx;
+}
+.select-actions .btn-text.on {
+  font-weight: 700;
+}
+.filter-panel {
+  margin: 4rpx 0 16rpx;
+  padding: 8rpx 22rpx 4rpx;
+  border: 2rpx solid var(--rule);
+  border-radius: 20rpx;
+  background: var(--card);
+}
+.filter-label {
+  display: block;
+  margin-top: 14rpx;
+  color: var(--pencil);
+  font-size: 24rpx;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 10rpx;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56rpx;
+  padding: 0 20rpx;
+  border-radius: 999rpx;
+  background: var(--chip);
+  color: var(--body);
+  font-size: 26rpx;
+}
+.chip.on {
+  background: var(--primary-wash);
+  color: var(--primary);
+  font-weight: 700;
+}
+.filter-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6rpx;
+}
+.filter-foot .btn-text {
+  min-height: 64rpx;
+  font-size: 26rpx;
+}
+.wall {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+  margin-top: 14rpx;
+}
+.empty {
+  display: block;
+  padding: 90rpx 0;
+  color: var(--pencil);
+  text-align: center;
+}
+.more {
+  display: flex;
+  margin: 24rpx auto;
+}
+.hint {
+  margin-top: 16rpx;
+}
+.bottom {
+  position: fixed;
+  z-index: 8;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  gap: 20rpx;
+  padding: 16rpx 32rpx calc(16rpx + env(safe-area-inset-bottom));
+  border-top: 2rpx solid var(--rule);
+  background: var(--card);
+  color: var(--ink);
+  font-size: 28rpx;
+}
+.bottom text {
+  flex: 1;
+}
+.bottom .bold {
+  color: var(--primary);
+  font-size: 34rpx;
+  font-weight: 600;
+}
+.bottom .btn {
+  flex: 0 0 300rpx;
+  width: auto !important;
+  margin: 0;
+}

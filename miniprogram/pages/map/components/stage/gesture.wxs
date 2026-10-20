@@ -1,0 +1,144 @@
+function stateFor(owner) {
+  var local = owner.getState();
+  if (!local.motion) local.motion = { tx: 0, ty: 0, s: 0.72, moved: false, startX: 0, startY: 0, startTx: 0, startTy: 0, distance: 0, centerX: 0, centerY: 0, lastX: 0, lastY: 0, lastTime: 0, vx: 0, vy: 0, pinching: false };
+  return local.motion;
+}
+
+function number(value, fallback) {
+  var n = parseFloat(value);
+  return isNaN(n) ? fallback : n;
+}
+// Two levels (D110): stars below 0.66 (pages/map/stars.js SPLIT), cards from there.
+function level(s) { return s < 0.66 ? "far" : "near"; }
+function plane(instance) { return instance.selectComponent(".map-plane"); }
+function render(instance, transition) {
+  var state = stateFor(instance);
+  var target = plane(instance);
+  if (!target) return;
+  target.setStyle({
+    transform: "translate(" + state.tx + "px," + state.ty + "px) scale(" + state.s + ")",
+    transition: transition ? "transform .22s ease-out" : "none"
+  });
+  target.removeClass("far"); target.removeClass("mid"); target.removeClass("near");
+  target.addClass(level(state.s));
+}
+function parseMotion(value) {
+  var parts = (value || "").split(",");
+  return { tx: number(parts[0], 0), ty: number(parts[1], 0), s: Math.max(0.2, Math.min(1, number(parts[2], 0.72))) };
+}
+function motionChanged(value, oldValue, owner) {
+  var state = stateFor(owner);
+  var parsed = parseMotion(value);
+  state.tx = parsed.tx; state.ty = parsed.ty; state.s = parsed.s;
+  render(owner, true);
+}
+function start(event, owner) {
+  var state = stateFor(owner);
+  var origin = event.currentTarget.dataset;
+  state.left = number(origin.left, 0); state.top = number(origin.top, 0);
+  // The star map lets a tall chapter shrink to fit (data-min, pages/map/stars.js MIN).
+  state.min = number(origin.min, 0.4);
+  owner.callMethod("gestureStart", {});
+  var touches = event.touches || [];
+  state.moved = false; state.startTx = state.tx; state.startTy = state.ty; state.vx = 0; state.vy = 0; state.pinching = touches.length > 1;
+  // V4.1: a tap is decided here (see end), not by the native tap under a
+  // catchtouch* viewport. Remember where and when the one finger went down
+  // and what it went down on; show the press at once.
+  if (touches.length === 1) {
+    var target = (event.target && event.target.dataset) || {};
+    state.multi = false; state.tapX = touches[0].pageX; state.tapY = touches[0].pageY;
+    state.tapTx = state.tx; state.tapTy = state.ty;
+    state.tapTime = number(event.timeStamp, 0); state.tapId = target.id || ""; state.tapAct = target.act || "";
+    state.pressing = true;
+    owner.callMethod("gesturePress", spot(state, state.tapX, state.tapY));
+  } else if (touches.length > 1) {
+    state.multi = true;
+    unpress(state, owner);
+  }
+  if (touches.length > 1) {
+    var a = touches[0], b = touches[1], dx = b.pageX - a.pageX, dy = b.pageY - a.pageY;
+    state.distance = Math.sqrt(dx * dx + dy * dy);
+    state.centerX = (a.pageX + b.pageX) / 2; state.centerY = (a.pageY + b.pageY) / 2;
+  } else if (touches.length) {
+    state.startX = touches[0].pageX; state.startY = touches[0].pageY;
+    state.lastX = state.startX; state.lastY = state.startY; state.lastTime = number(event.timeStamp, 0);
+  }
+}
+function move(event, owner) {
+  var state = stateFor(owner);
+  var touches = event.touches || [];
+  if (touches.length > 1) {
+    state.pinching = true; state.multi = true; unpress(state, owner);
+    var a = touches[0], b = touches[1], dx = b.pageX - a.pageX, dy = b.pageY - a.pageY;
+    var distance = Math.sqrt(dx * dx + dy * dy);
+    if (!state.distance) state.distance = distance;
+    var old = state.s, next = Math.max(state.min || 0.4, Math.min(1, old * distance / state.distance));
+    var cx = (a.pageX + b.pageX) / 2 - state.left, cy = (a.pageY + b.pageY) / 2 - state.top;
+    var previousX = state.centerX - state.left, previousY = state.centerY - state.top;
+    state.tx = cx - (previousX - state.tx) * next / old;
+    state.ty = cy - (previousY - state.ty) * next / old;
+    state.centerX = cx + state.left; state.centerY = cy + state.top;
+    state.s = next; state.distance = distance; state.moved = true;
+  } else if (touches.length) {
+    if (state.pressing && far(state, touches[0].pageX, touches[0].pageY)) unpress(state, owner);
+    var mx = touches[0].pageX - state.startX, my = touches[0].pageY - state.startY;
+    if (Math.abs(mx) > 6 || Math.abs(my) > 6) state.moved = true;
+    state.tx = state.startTx + mx; state.ty = state.startTy + my;
+    var now = number(event.timeStamp, state.lastTime + 16), elapsed = Math.max(1, now - state.lastTime);
+    state.vx = (touches[0].pageX - state.lastX) / elapsed; state.vy = (touches[0].pageY - state.lastY) / elapsed;
+    state.lastX = touches[0].pageX; state.lastY = touches[0].pageY; state.lastTime = now;
+  }
+  render(owner, false);
+  return false;
+}
+function end(event, owner) {
+  var state = stateFor(owner);
+  var touches = event.touches || [];
+  if (touches.length) {
+    state.startTx=state.tx; state.startTy=state.ty;
+    state.startX=touches[0].pageX; state.startY=touches[0].pageY;
+    state.lastX=state.startX; state.lastY=state.startY;
+    state.lastTime=number(event.timeStamp,0); state.vx=0; state.vy=0;
+    state.distance=0; state.pinching=false;
+    return false;
+  }
+  var last = (event.changedTouches || [])[0];
+  // pressing is cleared for good once the finger strays past TAP_MOVE or a
+  // second finger lands, so going back to the start is still not a tap.
+  var tap = !!state.pressing && !state.multi && event.type !== "touchcancel" && !!last &&
+    !far(state, last.pageX, last.pageY) &&
+    number(event.timeStamp, state.tapTime) - state.tapTime <= TAP_TIME;
+  if (state.moved && !state.pinching && !tap) {
+    state.tx += Math.max(-120, Math.min(120, state.vx * 120));
+    state.ty += Math.max(-120, Math.min(120, state.vy * 120));
+  }
+  render(owner, true);
+  // tap: whether this touch was a tap; the native tap fallback follows it.
+  owner.callMethod("gestureSettle", { tx: state.tx, ty: state.ty, s: state.s, moved: state.moved && !tap, tap: tap });
+  state.distance = 0;
+  if (tap) {
+    // Where the finger went down, on the plane as it was then.
+    var at = spot(state, state.tapX, state.tapY);
+    at.tx = state.tapTx; at.ty = state.tapTy; at.id = state.tapId; at.act = state.tapAct;
+    state.pressing = false;
+    owner.callMethod("gestureTap", at);
+  } else unpress(state, owner);
+  state.multi = false;
+}
+// A tap: one finger, moved at most TAP_MOVE px, down at most TAP_TIME ms.
+var TAP_MOVE = 10, TAP_TIME = 350;
+function far(state, x, y) {
+  var dx = x - state.tapX, dy = y - state.tapY;
+  return dx * dx + dy * dy > TAP_MOVE * TAP_MOVE;
+}
+// The spot in viewport px, with the plane's pan and zoom (pages/map/hit.js).
+function spot(state, x, y) {
+  return { x: x - state.left, y: y - state.top, tx: state.tx, ty: state.ty, s: state.s };
+}
+function unpress(state, owner) {
+  if (!state.pressing) return;
+  state.pressing = false;
+  owner.callMethod("gesturePress", {});
+}
+
+module.exports = { motionChanged: motionChanged, start: start, move: move, end: end };

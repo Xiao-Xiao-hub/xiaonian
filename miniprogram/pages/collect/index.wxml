@@ -1,0 +1,201 @@
+<view class="page collect">
+  <view class="sheet-handle"></view>
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+  <view class="head"
+    ><text class="h2">{{mode === 'mine' ? '存成我的话' : '存成卡'}}</text
+    ><text class="close" bindtap="close">关闭</text></view
+  >
+  <view wx:if="{{!consent}}" class="notice"
+    >同意隐私政策后就能存<text class="link" bindtap="goConsent"
+      >去同意</text
+    ></view
+  >
+  <block wx:if="{{mode === 'wrap'}}">
+    <text class="label">刚才聊了这些</text
+    ><view class="summary">{{wrap.summary}}</view>
+    <view
+      wx:for="{{cards}}"
+      wx:key="key"
+      class="candidate {{item.selected ? 'on' : ''}}"
+      style="{{item.typeStyle}}"
+      data-index="{{index}}"
+      bindtap="toggleCard"
+      ><text class="check">{{item.selected ? '✓' : ''}}</text
+      ><view class="candidate-type"
+        ><image
+          src="/assets/icons/card-{{item.type}}.svg"
+          mode="aspectFit"
+        /><text>{{item.typeName}}</text></view
+      ><view class="candidate-title"
+        ><text class="ai-dot">•</text
+        ><input
+          wx:if="{{editOpen}}"
+          data-index="{{index}}"
+          data-key="title"
+          value="{{item.title}}"
+          catchtap="noop"
+          bindinput="cardInput" /><text wx:else class="candidate-name"
+          >{{item.title}}</text
+        ></view
+      ><view wx:if="{{item.tags&&item.tags.length}}" class="candidate-tags"
+        ><text wx:for="{{item.tags}}" wx:key="*this"
+          >{{item.name || item}}</text
+        ></view
+      ><text wx:if="{{item.summary}}" class="candidate-sum"
+        >{{item.summary}}</text
+      ></view
+    >
+    <block wx:if="{{editOpen}}">
+      <view
+        class="fold-row {{mineOpen ? 'open' : ''}}"
+        data-key="mineOpen"
+        bindtap="toggle"
+        ><text>补一句我的话<text wx:if="{{mine&&!mineOpen}}" class="filled"
+            >（写好了）</text
+          ></text
+        ></view
+      >
+      <block wx:if="{{mineOpen}}"
+        ><textarea
+          maxlength="300"
+          value="{{mine}}"
+          data-key="mine"
+          bindinput="input"
+          placeholder="用你自己的话写一句"
+        /><scroll-view wx:if="{{quotes.length}}" class="quotes" scroll-x
+          ><button
+            wx:for="{{quotes}}"
+            wx:key="*this"
+            data-quote="{{item}}"
+            bindtap="chooseQuote"
+          >
+            {{item}}
+          </button></scroll-view
+        ></block
+      >
+      <view
+        class="fold-row {{nextOpen ? 'open' : ''}}"
+        data-key="nextOpen"
+        bindtap="toggle"
+        ><text>下一步（如果…就…）<text
+            wx:if="{{(nextIf||nextThen)&&!nextOpen}}"
+            class="filled"
+            >（写好了）</text
+          ></text
+        ></view
+      >
+      <view wx:if="{{nextOpen}}" class="next"
+        ><text>如果</text
+        ><input value="{{nextIf}}" data-key="nextIf" bindinput="input" /><text
+          >就</text
+        ><input value="{{nextThen}}" data-key="nextThen" bindinput="input"
+      /></view>
+    </block>
+  </block>
+  <block wx:elif="{{mode === 'mine'}}"
+    ><textarea
+      maxlength="300"
+      value="{{mine}}"
+      data-key="mine"
+      bindinput="input"
+      placeholder="用你自己的话写一句，也可以从下面选"
+    /><text wx:if="{{quotes.length}}" class="quote-label">从你的话里选</text
+    ><scroll-view wx:if="{{quotes.length}}" class="quotes" scroll-x
+      ><button
+        wx:for="{{quotes}}"
+        wx:key="*this"
+        data-quote="{{item}}"
+        bindtap="chooseQuote"
+      >
+        {{item}}
+      </button></scroll-view
+    ></block
+  >
+  <block wx:else
+    ><text wx:if="{{quote}}" class="label">你说的</text
+    ><view wx:if="{{quote}}" class="source-quote">“{{quote}}”</view
+    ><view class="type-row" data-key="typeOpen" bindtap="toggle"
+      ><text>存成：</text
+      ><text class="type-name">{{typeName}} ▾</text></view
+    ><view wx:if="{{typeOpen}}" class="types"
+      ><button
+        wx:for="{{types}}"
+        wx:key="id"
+        data-type="{{item.id}}"
+        class="{{type === item.id ? 'on' : ''}}"
+        style="{{item.style}}"
+        bindtap="chooseType"
+      >
+        <image
+          src="/assets/icons/card-{{item.id}}.svg"
+          mode="aspectFit"
+        />{{item.name}}
+      </button></view
+    ><block wx:if="{{editOpen}}"
+      ><text class="label">我的话</text
+      ><textarea
+        maxlength="300"
+        value="{{mine}}"
+        data-key="mine"
+        bindinput="input"
+        placeholder="用你自己的话说一句（可不填）"
+      /><scroll-view wx:if="{{quotes.length}}" class="quotes" scroll-x
+        ><button
+          wx:for="{{quotes}}"
+          wx:key="*this"
+          data-quote="{{item}}"
+          bindtap="chooseQuote"
+        >
+          {{item}}
+        </button></scroll-view
+      ><text class="label">标题</text
+      ><input
+        maxlength="16"
+        value="{{title}}"
+        data-key="title"
+        bindinput="input"
+        placeholder="16 个字以内"
+      /></block
+    ><view wx:if="{{pointId}}" class="binding"
+      ><text class="{{pointOff ? 'off' : ''}}"
+        >放进「{{pointName || '这个知识点'}}」</text
+      ><text
+        wx:if="{{origin !== 'map'}}"
+        class="link"
+        data-key="pointOff"
+        bindtap="toggle"
+        >{{pointOff ? '放回去' : '不放'}}</text
+      ></view
+    ><text wx:if="{{mistakeId}}" class="binding">和这道错题放一起</text></block
+  >
+  <block wx:if="{{mode !== 'mine'}}"
+    ><view class="remind-row"
+      ><text class="remind-label">提醒</text
+      ><view class="chips"
+        ><text
+          wx:for="{{reminds}}"
+          wx:key="id"
+          class="chip {{remindEvery === item.id ? 'on' : ''}}"
+          data-value="{{item.id}}"
+          bindtap="pickRemind"
+          >{{item.name}}</text
+        ></view
+      ></view
+    ><view
+      wx:if="{{!editOpen}}"
+      class="fold-row edit-row"
+      data-key="editOpen"
+      bindtap="toggle"
+      >改一改</view
+    ></block
+  >
+  <text wx:if="{{error}}" class="error">{{error}}</text
+  ><view wx:if="{{consent}}" class="buttons"
+    ><button class="btn" disabled="{{saving}}" bindtap="save">
+      {{saving ? '正在存…' : mode === 'wrap' ? '存下这 '+selectedCount+' 张' :
+      '存下'}}</button
+    ></view
+  ><view wx:if="{{consent&&mode === 'wrap'}}" class="drop"
+    ><button class="btn-text" bindtap="dismiss">都不要</button></view
+  >
+</view>

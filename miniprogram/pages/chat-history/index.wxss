@@ -1,0 +1,27 @@
+/* 全部对话: a search box, then the chats, newest first. */
+.history .search-box {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+  padding: 0 24rpx;
+  height: 72rpx;
+  border-radius: 36rpx;
+  background: var(--card);
+}
+.history .search {
+  flex: 1;
+  font-size: 28rpx;
+}
+.history .tag {
+  margin-left: 16rpx;
+  color: var(--primary-ink);
+}
+.history .more {
+  display: block;
+  margin-top: 24rpx;
+  text-align: center;
+}
+.history .empty .h3 {
+  display: block;
+}

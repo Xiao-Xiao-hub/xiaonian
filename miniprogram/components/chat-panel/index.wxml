@@ -1,0 +1,256 @@
+<view class="chat-panel">
+  <block wx:if="{{part === 'header' && thread}}">
+    <view wx:if="{{thread.mode === 'teach'}}" class="teach"
+      >你在讲一遍</view
+    >
+    <view wx:if="{{sceneCandidate}}" class="candidate">
+      <text
+        >想换成聊心情吗？换了以后这段就一直算心情，存下的是心情卡。</text
+      >
+      <view class="candidate-acts">
+        <view
+          class="pill"
+          hover-class="pressed"
+          data-event="moodaccept"
+          bindtap="event"
+          >好</view
+        >
+        <text class="plain" data-event="mooddecline" bindtap="event">不用</text>
+      </view>
+    </view>
+    <view
+      wx:if="{{thread.currentCards && thread.currentCards.length}}"
+      class="cards"
+    >
+      <text class="rail-label">已带上</text>
+      <view wx:for="{{thread.currentCards}}" wx:key="id" class="card">
+        <text class="card-title" data-id="{{item.id}}" bindtap="openCard"
+          ><text wx:if="{{item.titleBy === 'ai'}}" class="dot">•</text
+          >{{item.title || '卡片'}}</text
+        ><text class="card-go" data-id="{{item.id}}" bindtap="openCard">›</text>
+        <text
+          class="card-x"
+          data-event="removecard"
+          data-id="{{item.id}}"
+          bindtap="event"
+          >×</text
+        >
+      </view>
+    </view>
+    <view wx:if="{{breakReminder}}" class="break">{{breakReminder}}</view>
+  </block>
+
+  <!-- V4.2 (G5): related cards next to the newest reply, not at the top. -->
+  <block wx:if="{{part === 'header' || part === 'related'}}">
+    <block wx:if="{{suggestions.length && (part === 'related' || thread)}}">
+      <view
+        class="fold {{suggestOpen ? 'open' : ''}}"
+        hover-class="pressed"
+        bindtap="toggleSuggest"
+        >你以前记过 {{suggestions.length}} 张相关的</view
+      >
+      <view wx:if="{{suggestOpen}}" class="cards">
+        <view wx:for="{{suggestions}}" wx:key="id" class="card">
+          <image
+            wx:if="{{item.kind || item.type}}"
+            src="/assets/icons/card-{{item.kind || item.type}}.svg"
+            mode="aspectFit"
+          />
+          <text class="card-title"
+            ><text wx:if="{{item.titleBy === 'ai'}}" class="dot">•</text
+            >{{item.title}}</text
+          >
+          <text
+            class="add"
+            data-event="suggestadd"
+            data-id="{{item.id}}"
+            bindtap="event"
+            >＋ 带上</text
+          >
+          <text
+            class="card-x"
+            data-event="suggestdismiss"
+            data-id="{{item.id}}"
+            bindtap="event"
+            >×</text
+          >
+        </view>
+      </view>
+    </block>
+  </block>
+
+  <block wx:if="{{part === 'messages' && compact}}">
+    <block wx:for="{{messages}}" wx:key="id">
+      <chat-attach
+        wx:if="{{item.attachments && item.attachments.length}}"
+        class="message-att"
+        items="{{item.attachments}}"
+        right="{{item.role === 'user'}}"
+        bindmore="attachMore"
+      />
+      <view
+        wx:if="{{!item.bare}}"
+        class="bubble {{item.role === 'user' ? 'mine' : ''}}"
+        data-id="{{item.id}}"
+        bindlongpress="hold"
+      >
+        <view wx:if="{{item.cards && item.cards.length}}" class="message-cards"
+          ><text wx:for="{{item.cards}}" wx:key="id"
+            >卡 · {{item.title || '还没起名'}}</text
+          ></view
+        >
+        <text
+          wx:if="{{item.status === 'streaming' && !item.blocks.length && !item.tail}}"
+          class="thinking"
+          >在想…</text
+        >
+        <rich blocks="{{item.blocks}}" tail="{{item.tail}}" />
+        <text wx:if="{{item.status === 'failed'}}" class="failed"
+          >{{item.errorText || '这次没答完，再发一次试试'}}</text
+        >
+        <text
+          wx:if="{{item.id === collectId}}"
+          class="collect"
+          data-event="collect"
+          data-id="{{item.id}}"
+          bindtap="event"
+          >＋ 存成卡</text
+        >
+      </view>
+      <view
+        wx:if="{{item.role === 'assistant' && item.quote && thread && thread.mode === 'teach'}}"
+        class="teach-save"
+      >
+        <text class="teach-save-label"
+          >{{item.mineSaved ? '已存成我的话' : '存成我的话'}}：</text
+        >
+        <button
+          class="teach-quote"
+          loading="{{item.mineSaving}}"
+          disabled="{{item.mineSaving || item.mineSaved}}"
+          data-event="teachsave"
+          data-id="{{item.id}}"
+          data-quote="{{item.selectedQuote || item.quote}}"
+          bindtap="event"
+        >
+          「{{item.selectedQuote || item.quote}}」
+        </button>
+        <button
+          wx:if="{{!item.mineSaved}}"
+          class="teach-change"
+          disabled="{{item.mineSaving}}"
+          data-event="teachchange"
+          data-id="{{item.id}}"
+          bindtap="event"
+        >
+          换一句
+        </button>
+      </view>
+      <scroll-view
+        wx:if="{{item.quoteChoices && item.quoteChoices.length}}"
+        class="teach-choices"
+        scroll-x
+      >
+        <button
+          wx:for="{{item.quoteChoices}}"
+          wx:for-item="choice"
+          wx:key="*this"
+          data-event="teachpick"
+          data-id="{{item.id}}"
+          data-quote="{{choice}}"
+          bindtap="event"
+        >
+          {{choice}}
+        </button>
+      </scroll-view>
+    </block>
+  </block>
+
+  <block
+    wx:if="{{part === 'teach' && message && message.quote && thread && thread.mode === 'teach'}}"
+  >
+    <view class="teach-save">
+      <text class="teach-save-label"
+        >{{message.mineSaved ? '已存成我的话' : '存成我的话'}}：</text
+      >
+      <button
+        class="teach-quote"
+        loading="{{message.mineSaving}}"
+        disabled="{{message.mineSaving || message.mineSaved}}"
+        data-event="teachsave"
+        data-id="{{message.id}}"
+        data-quote="{{message.selectedQuote || message.quote}}"
+        bindtap="event"
+      >
+        「{{message.selectedQuote || message.quote}}」
+      </button>
+      <button
+        wx:if="{{!message.mineSaved}}"
+        class="teach-change"
+        disabled="{{message.mineSaving}}"
+        data-event="teachchange"
+        data-id="{{message.id}}"
+        bindtap="event"
+      >
+        换一句
+      </button>
+    </view>
+    <scroll-view
+      wx:if="{{message.quoteChoices && message.quoteChoices.length}}"
+      class="teach-choices"
+      scroll-x
+    >
+      <button
+        wx:for="{{message.quoteChoices}}"
+        wx:for-item="choice"
+        wx:key="*this"
+        data-event="teachpick"
+        data-id="{{message.id}}"
+        data-quote="{{choice}}"
+        bindtap="event"
+      >
+        {{choice}}
+      </button>
+    </scroll-view>
+  </block>
+
+  <block wx:if="{{part === 'actions'}}">
+    <view wx:if="{{sending || row.shown.length || row.park}}" class="actions">
+      <block wx:if="{{!sending}}">
+        <view
+          wx:for="{{row.shown}}"
+          wx:key="key"
+          class="action {{item.primary ? 'primary' : ''}}"
+          hover-class="pressed"
+          data-event="action"
+          data-key="{{item.key}}"
+          data-value="{{item.value}}"
+          bindtap="event"
+          ><text wx:if="{{item.ai}}" class="dot">•</text>{{item.text}}</view
+        >
+        <view
+          wx:if="{{row.more.length}}"
+          class="action"
+          hover-class="pressed"
+          bindtap="more"
+          >更多 ›</view
+        >
+        <text
+          wx:if="{{row.park}}"
+          class="park"
+          data-event="action"
+          data-key="park"
+          bindtap="event"
+          >先放着</text
+        >
+      </block>
+    </view>
+    <view
+      wx:if="{{wrapDue && !sending && thread && thread.mode !== 'teach'}}"
+      class="wrap-offer"
+      hover-class="pressed"
+      bindtap="wrap"
+      >聊得差不多了？<text class="wrap-go">存成一张卡</text></view
+    >
+  </block>
+</view>

@@ -1,0 +1,65 @@
+<view class="page import-page">
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+  <view wx:if="{{resume && !item && !files.length}}" class="resume-bar"><view class="grow"><text class="resume-title">上次的导入还没完成</text><text class="source-note">{{resume.title}}</text></view><text class="resume-act" bindtap="resumeOpen">继续</text><text class="resume-act quiet" bindtap="resumeDrop">放弃</text></view>
+  <view wx:if="{{resume && openRows.length > 1 && !item && !files.length}}" class="resume-more" bindtap="showOpenList">全部没完成的（{{openRows.length}}）›</view>
+
+  <view wx:if="{{!item}}" class="source-body">
+    <view wx:if="{{repick && !files.length}}" class="notice">上次的图片没传完，再选一次吧。<text wx:if="{{!busy}}" class="link" bindtap="repickPhotos">重新选</text></view>
+    <view wx:if="{{!files.length}}" class="paste-card">
+      <textarea class="paste" value="{{text}}" maxlength="60000" placeholder="把要整理的东西贴进来" placeholder-class="placeholder" bindinput="textInput" disabled="{{busy}}" />
+      <text wx:if="{{charCount>20000}}" class="counter">{{charCount}} 字，先读前 20000 字</text>
+    </view>
+    <view wx:else class="file-card">
+      <view wx:for="{{files}}" wx:key="path" class="file-row"><view class="file-ext">{{item.ext}}</view><view class="grow"><text class="file-name">{{item.name}}</text><text class="source-note">{{item.sizeText}}</text></view><text class="remove" bindtap="clearFiles" aria-role="button" aria-label="移除文件">×</text></view>
+      <view wx:if="{{sourceType==='file' && files[0].ext==='PDF'}}" class="start-row"><text>从第</text><input class="start-input" type="number" value="{{startPage}}" bindinput="startInput" /><text>页起读</text><text class="limit">（一次读 20 页）</text></view>
+      <text wx:if="{{sourceType==='file' && files[0].ext==='PDF'}}" class="source-note pdf-note">选好起始页，点开始读</text>
+    </view>
+    <text wx:if="{{!files.length}}" class="more-source" bindtap="chooseSource">或者拍照、选文件 ›</text>
+    <text wx:if="{{!files.length}}" class="source-hint">聊天记录可以截图，或者导出成文件</text>
+  </view>
+
+  <view wx:else class="source-body">
+    <view class="read-card">
+      <view class="read-head"><view class="file-ext">{{item.source==='paste'?'TXT':(item.fileName?'FILE':'IMG')}}</view><view class="grow"><text class="file-name">{{item.fileName || (item.source==='paste'?'贴进来的文字':'图片里的字')}}</text><text class="source-note">{{item.chars || 0}} 字{{item.pageLine ? ' · ' + item.pageLine : ''}}</text></view></view>
+      <view wx:if="{{item.status==='read'}}" class="read-toggle" bindtap="toggleSegments"><text>读到的内容</text><text class="link">{{segmentsOpen?'收起':'展开'}}</text></view>
+      <view wx:if="{{segmentsOpen && item.status==='read'}}" class="segments">
+        <view wx:for="{{item.segments}}" wx:key="n" class="segment" data-n="{{item.n}}" bindtap="openSegment"><text class="segment-no">{{item.n}}</text><text class="segment-text">{{item.text}}</text><text class="segment-edit">改</text></view>
+      </view>
+    </view>
+    <view wx:if="{{partialLine}}" class="notice">{{partialLine}}。<text wx:if="{{item.status==='read' && item.retryPages && !busy}}" class="link" bindtap="rereadPages">重读这几页</text><text wx:if="{{repickLine && !busy}}" class="link" bindtap="repickMissing">{{repickLine}}</text></view>
+    <view wx:if="{{keptLine}}" class="notice">{{keptLine}}。<text wx:if="{{restLine && item.status==='read' && !busy}}" class="link" bindtap="importRest">{{restLine}}</text><text wx:if="{{nextPage && !busy}}" class="link" bindtap="readMore">接着读第 {{nextPage}} 页起</text></view>
+    <view wx:if="{{unreadLine}}" class="notice">{{unreadLine}}，要用的话截图再导。</view>
+  </view>
+
+  <task-progress wx:if="{{task}}" steps="{{task.steps}}" job="{{task.job}}" error="{{task.error}}" busy="{{busy}}" expect-sec="{{task.phase==='split' ? 90 : 40}}" bind:retry="retryTask" />
+  <text wx:if="{{task && task.canSkip && !waiting}}" class="skip-link" bindtap="skipFailed">先用读到的</text>
+  <view wx:if="{{progress}}" class="progress"><view class="spinner"></view><view><text>{{progress}}</text><text wx:if="{{!sending}}" class="progress-note">可以先离开，回来会接着显示</text></view></view>
+  <text wx:if="{{error}}" class="form-error">{{error}}</text>
+
+  <view wx:if="{{segmentEdit}}" class="mask" bindtap="closeSegment">
+    <view class="sheet" catchtap="noop">
+      <view class="sheet-head"><text>第 {{segmentEdit.n}} 段</text><text class="close" bindtap="closeSegment" aria-role="button" aria-label="关闭">×</text></view>
+      <textarea class="segment-area" value="{{segmentEdit.text}}" maxlength="20000" auto-focus bindinput="segmentInput" />
+      <text class="source-note">空一行就分成两段</text>
+      <view class="sheet-actions"><button class="btn-text drop" disabled="{{busy || segmentEdit.last}}" bindtap="dropSegment">删掉</button><button wx:if="{{!segmentEdit.first}}" class="btn-text" disabled="{{busy}}" bindtap="mergeSegment">并到上一段</button><button class="btn" loading="{{busy}}" disabled="{{busy}}" bindtap="saveSegment">好了</button></view>
+    </view>
+  </view>
+
+  <view wx:if="{{listOpen}}" class="mask" bindtap="closeOpenList">
+    <view class="sheet" catchtap="noop">
+      <view class="sheet-head"><text>没完成的导入</text><text class="close" bindtap="closeOpenList" aria-role="button" aria-label="关闭">×</text></view>
+      <scroll-view scroll-y class="open-list">
+        <view wx:for="{{openRows}}" wx:key="id" class="open-row"><view class="grow open-main" data-id="{{item.id}}" bindtap="openFromList"><text class="file-name">{{item.title}}</text><text class="source-note {{item.retry ? 'warn' : ''}}">{{item.state}}{{item.when ? ' · ' + item.when : ''}}</text></view><text class="resume-act quiet" data-id="{{item.id}}" bindtap="dropFromList">放弃</text></view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <view class="bottom-bar">
+    <button wx:if="{{item && (item.status==='read' || progress || waiting)}}" class="btn-text cancel-btn" disabled="{{busy}}" bindtap="cancel">不导了</button>
+    <button wx:if="{{!item}}" class="btn" loading="{{busy}}" disabled="{{busy}}" bindtap="readSource">开始读</button>
+    <button wx:elif="{{item.status==='read'}}" class="btn" loading="{{busy}}" disabled="{{busy || !item.segments.length}}" bindtap="splitCards">下一步：拆成卡</button>
+    <button wx:elif="{{waiting}}" class="btn-line" bindtap="leave">先去做别的</button>
+    <button wx:elif="{{progress}}" class="btn" loading="{{true}}" disabled="{{true}}">{{item.status==='splitting'?'正在拆，稍等…':'正在读，稍等…'}}</button>
+    <button wx:else class="btn-line" disabled="{{busy}}" bindtap="cancel">不导了</button>
+  </view>
+</view>

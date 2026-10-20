@@ -1,0 +1,315 @@
+.teach {
+  margin: 8rpx 0 4rpx;
+  color: var(--ai-ink);
+  font-size: 24rpx;
+  font-weight: 600;
+  text-align: center;
+}
+.candidate,
+.break {
+  margin: 14rpx 0;
+  padding: 18rpx 22rpx;
+  border-radius: 16rpx;
+  background: var(--note-wash);
+  color: var(--body);
+  font-size: 26rpx;
+  line-height: 1.6;
+}
+.candidate-acts {
+  display: flex;
+  align-items: center;
+  gap: 32rpx;
+  margin-top: 14rpx;
+}
+.pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120rpx;
+  height: 60rpx;
+  padding: 0 28rpx;
+  border-radius: 999rpx;
+  background: var(--primary-fill);
+  color: var(--on-primary);
+  font-size: 26rpx;
+  font-weight: 600;
+}
+.plain {
+  color: var(--pencil);
+  font-size: 26rpx;
+}
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12rpx;
+  padding: 10rpx 0;
+}
+.rail-label {
+  color: var(--pencil);
+  font-size: 24rpx;
+}
+.card {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  gap: 10rpx;
+  padding: 8rpx 16rpx;
+  border: 2rpx solid var(--rule-2);
+  border-radius: 999rpx;
+  background: var(--card);
+  font-size: 24rpx;
+}
+.card image {
+  flex: none;
+  width: 30rpx;
+  height: 30rpx;
+}
+.card-title {
+  max-width: 360rpx;
+  overflow: hidden;
+  color: var(--ink);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card-go {
+  flex: none;
+  color: var(--pencil);
+  font-size: 28rpx;
+}
+.card-x {
+  flex: none;
+  padding: 0 4rpx;
+  color: var(--pencil);
+  font-size: 28rpx;
+}
+.add {
+  flex: none;
+  color: var(--link);
+  font-weight: 600;
+}
+.dot {
+  margin-right: 6rpx;
+  color: var(--ai-ink);
+}
+/* "你以前记过 N 张相关的 ›": one quiet line until it is opened */
+.fold {
+  display: flex;
+  align-items: center;
+  min-height: 64rpx;
+  color: var(--pencil);
+  font-size: 24rpx;
+}
+.fold::after {
+  content: "›";
+  margin-left: 10rpx;
+  color: var(--faint);
+  font-size: 28rpx;
+}
+.fold.open::after {
+  transform: rotate(90deg);
+}
+/* v4 (20-chat): bubbles as wide as their words, replies on the left up to
+   88%, display formulas in a grey block (components/rich reads --display-*). */
+.bubble {
+  position: relative;
+  width: -webkit-fit-content;
+  width: fit-content;
+  max-width: 88%;
+  margin: 20rpx 0;
+  padding: 22rpx 28rpx;
+  border-radius: 8rpx 36rpx 36rpx 36rpx;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  font-size: 30rpx;
+  line-height: 1.7;
+  --display-bg: var(--fill);
+  --display-pad: 16rpx 24rpx;
+}
+/* My words in a solid blue bubble on the right, up to 78%, white text.
+   The text colours inside <rich> come from these variables; formula images
+   get a white chip (components/rich reads --math-bg); code, table heads and
+   colour marks get see-through fills that white text stays readable on. */
+.bubble.mine {
+  max-width: 78%;
+  margin-left: auto;
+  border-radius: 36rpx 8rpx 36rpx 36rpx;
+  background: #2f6bf6;
+  box-shadow: none;
+  --display-bg: transparent;
+  --display-pad: 6rpx 0;
+  --ink: #ffffff;
+  --body: #ffffff;
+  --pencil: rgba(255, 255, 255, 0.8);
+  --primary: #ffffff;
+  --math-bg: #ffffff;
+  --chip: rgba(255, 255, 255, 0.2);
+  --marker-wash: rgba(255, 255, 255, 0.2);
+  --mk-key: rgba(255, 227, 107, 0.45);
+  --mk-key-hi: rgba(255, 229, 143, 0.4);
+  --mk-way: rgba(189, 236, 211, 0.45);
+  --mk-way-hi: rgba(201, 240, 219, 0.4);
+  --mk-warn: #ffb4b4;
+}
+/* A reply not started yet, or one that stopped. */
+.thinking {
+  display: block;
+  color: var(--pencil);
+  font-size: 26rpx;
+}
+.failed {
+  display: block;
+  margin-top: 8rpx;
+  color: var(--red-ink);
+  font-size: 26rpx;
+}
+.collect {
+  display: block;
+  margin-top: 10rpx;
+  color: var(--link);
+  font-size: 24rpx;
+  text-align: right;
+}
+.spot {
+  margin: 8rpx 24rpx;
+  padding: 14rpx 18rpx;
+  border-radius: 14rpx;
+  background: var(--marker-wash);
+  color: var(--body);
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+.spot-go {
+  color: var(--link);
+  font-weight: 600;
+}
+.teach-save {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin: 8rpx 24rpx 4rpx;
+  color: var(--pencil);
+  font-size: 24rpx;
+}
+.teach-save-label {
+  flex: none;
+}
+.teach-quote,
+.teach-change,
+.teach-choices button {
+  width: auto !important;
+  margin: 0;
+  background: transparent;
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+.teach-quote {
+  min-width: 0;
+  padding: 4rpx 8rpx;
+  overflow: hidden;
+  color: var(--ink);
+  font-weight: 700;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.teach-change {
+  flex: none;
+  padding: 4rpx 8rpx;
+  color: var(--link);
+  text-align: center;
+}
+.teach-choices {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8rpx 24rpx 12rpx;
+  white-space: nowrap;
+}
+.teach-choices button {
+  display: inline-block;
+  max-width: 560rpx;
+  margin-right: 10rpx;
+  padding: 9rpx 14rpx;
+  overflow: hidden;
+  border: 2rpx solid var(--rule-2);
+  border-radius: 999rpx;
+  background: var(--card);
+  color: var(--body);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.message-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  margin-bottom: 10rpx;
+}
+.message-cards text {
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
+  background: var(--bg);
+  color: var(--body);
+  font-size: 24rpx;
+}
+.bubble.mine .message-cards text {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+/* Chips under a reply. The row keeps one line of height while the reply is
+   still being written, so the chips do not push the page when they arrive. */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14rpx;
+  min-height: 64rpx;
+  margin-top: 20rpx;
+}
+.action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 64rpx;
+  padding: 0 24rpx;
+  border: 2rpx solid var(--rule-2);
+  border-radius: 999rpx;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 26rpx;
+  white-space: nowrap;
+}
+.action.primary {
+  border-color: transparent;
+  background: var(--primary-fill);
+  color: var(--on-primary);
+  font-weight: 600;
+}
+.action.primary .dot {
+  color: var(--on-primary);
+}
+.park {
+  margin-left: auto;
+  padding: 10rpx 0 10rpx 12rpx;
+  color: var(--pencil);
+  font-size: 26rpx;
+}
+.wrap-offer {
+  margin-top: 20rpx;
+  padding: 18rpx 22rpx;
+  border-radius: 16rpx;
+  background: var(--note-wash);
+  color: var(--body);
+  font-size: 26rpx;
+}
+.wrap-go {
+  margin-left: 8rpx;
+  color: var(--link);
+  font-weight: 600;
+}
+/* A message's photos and documents sit above its bubble (D113). */
+.message-att {
+  display: block;
+  margin-top: 20rpx;
+}

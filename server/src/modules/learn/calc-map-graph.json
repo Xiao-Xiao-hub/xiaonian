@@ -1,0 +1,2766 @@
+[
+  {
+    "chapterId": "limit",
+    "width": 1222,
+    "height": 664,
+    "nodes": [
+      {
+        "id": "limit-function",
+        "x": 656,
+        "y": 18,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "limit-epsilon-n",
+        "x": 1084,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "limit-epsilon-delta",
+        "x": 1084,
+        "y": 402,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "limit-one-sided",
+        "x": 434,
+        "y": 114,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "limit-infinitesimal",
+        "x": 662,
+        "y": 210,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "limit-rules",
+        "x": 662,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "limit-squeeze",
+        "x": 936,
+        "y": 402,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "limit-monotone",
+        "x": 788,
+        "y": 402,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "limit-important-sin",
+        "x": 640,
+        "y": 402,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "limit-important-e",
+        "x": 492,
+        "y": 402,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "limit-order",
+        "x": 298,
+        "y": 402,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "limit-equivalent",
+        "x": 320,
+        "y": 498,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "limit-1-to-inf",
+        "x": 446,
+        "y": 594,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "limit-continuity",
+        "x": 150,
+        "y": 402,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "limit-discontinuity",
+        "x": 18,
+        "y": 498,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "limit-zero-theorem",
+        "x": 166,
+        "y": 498,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "limit-uniform",
+        "x": 468,
+        "y": 498,
+        "width": 120,
+        "height": 52
+      }
+    ],
+    "edges": [
+      {
+        "from": "limit-function",
+        "to": "limit-epsilon-n",
+        "points": [
+          {
+            "x": 776,
+            "y": 50.73
+          },
+          {
+            "x": 1144,
+            "y": 92
+          },
+          {
+            "x": 1144,
+            "y": 140
+          },
+          {
+            "x": 1144,
+            "y": 188
+          },
+          {
+            "x": 1144,
+            "y": 236
+          },
+          {
+            "x": 1144,
+            "y": 284
+          },
+          {
+            "x": 1144,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "limit-epsilon-n",
+        "to": "limit-epsilon-delta",
+        "points": [
+          {
+            "x": 1144,
+            "y": 358
+          },
+          {
+            "x": 1144,
+            "y": 380
+          },
+          {
+            "x": 1144,
+            "y": 402
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "limit-function",
+        "to": "limit-one-sided",
+        "points": [
+          {
+            "x": 656,
+            "y": 56.97
+          },
+          {
+            "x": 494,
+            "y": 92
+          },
+          {
+            "x": 494,
+            "y": 114
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "limit-one-sided",
+        "to": "limit-infinitesimal",
+        "points": [
+          {
+            "x": 554,
+            "y": 152.63
+          },
+          {
+            "x": 722,
+            "y": 188
+          },
+          {
+            "x": 722,
+            "y": 210
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "limit-infinitesimal",
+        "to": "limit-rules",
+        "points": [
+          {
+            "x": 722,
+            "y": 262
+          },
+          {
+            "x": 722,
+            "y": 284
+          },
+          {
+            "x": 722,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "limit-rules",
+        "to": "limit-squeeze",
+        "points": [
+          {
+            "x": 782,
+            "y": 342.51
+          },
+          {
+            "x": 996,
+            "y": 380
+          },
+          {
+            "x": 996,
+            "y": 402
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "limit-rules",
+        "to": "limit-monotone",
+        "points": [
+          {
+            "x": 782,
+            "y": 354.86
+          },
+          {
+            "x": 848,
+            "y": 380
+          },
+          {
+            "x": 848,
+            "y": 402
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "limit-rules",
+        "to": "limit-important-sin",
+        "points": [
+          {
+            "x": 710.08,
+            "y": 358
+          },
+          {
+            "x": 700,
+            "y": 380
+          },
+          {
+            "x": 700,
+            "y": 402
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "limit-rules",
+        "to": "limit-important-e",
+        "points": [
+          {
+            "x": 662,
+            "y": 348.94
+          },
+          {
+            "x": 552,
+            "y": 380
+          },
+          {
+            "x": 552,
+            "y": 402
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "limit-rules",
+        "to": "limit-order",
+        "points": [
+          {
+            "x": 662,
+            "y": 339.91
+          },
+          {
+            "x": 358,
+            "y": 380
+          },
+          {
+            "x": 358,
+            "y": 402
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "limit-order",
+        "to": "limit-equivalent",
+        "points": [
+          {
+            "x": 358,
+            "y": 454
+          },
+          {
+            "x": 358,
+            "y": 476
+          },
+          {
+            "x": 368.08,
+            "y": 498
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "limit-important-sin",
+        "to": "limit-equivalent",
+        "points": [
+          {
+            "x": 700,
+            "y": 454
+          },
+          {
+            "x": 700,
+            "y": 476
+          },
+          {
+            "x": 440,
+            "y": 515
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "limit-important-e",
+        "to": "limit-equivalent",
+        "points": [
+          {
+            "x": 492,
+            "y": 453.26
+          },
+          {
+            "x": 438,
+            "y": 476
+          },
+          {
+            "x": 411.42,
+            "y": 498
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "limit-important-e",
+        "to": "limit-1-to-inf",
+        "points": [
+          {
+            "x": 588.83,
+            "y": 454
+          },
+          {
+            "x": 620,
+            "y": 476
+          },
+          {
+            "x": 620,
+            "y": 524
+          },
+          {
+            "x": 620,
+            "y": 572
+          },
+          {
+            "x": 566,
+            "y": 594.74
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "limit-equivalent",
+        "to": "limit-1-to-inf",
+        "points": [
+          {
+            "x": 380,
+            "y": 550
+          },
+          {
+            "x": 380,
+            "y": 572
+          },
+          {
+            "x": 446,
+            "y": 597.14
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "limit-one-sided",
+        "to": "limit-continuity",
+        "points": [
+          {
+            "x": 434,
+            "y": 149.73
+          },
+          {
+            "x": 198,
+            "y": 188
+          },
+          {
+            "x": 198,
+            "y": 236
+          },
+          {
+            "x": 198,
+            "y": 284
+          },
+          {
+            "x": 198,
+            "y": 332
+          },
+          {
+            "x": 198,
+            "y": 380
+          },
+          {
+            "x": 203.5,
+            "y": 402
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "limit-rules",
+        "to": "limit-continuity",
+        "points": [
+          {
+            "x": 662,
+            "y": 338.49
+          },
+          {
+            "x": 278,
+            "y": 380
+          },
+          {
+            "x": 246.83,
+            "y": 402
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "limit-continuity",
+        "to": "limit-discontinuity",
+        "points": [
+          {
+            "x": 150,
+            "y": 449.82
+          },
+          {
+            "x": 78,
+            "y": 476
+          },
+          {
+            "x": 78,
+            "y": 498
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "limit-continuity",
+        "to": "limit-zero-theorem",
+        "points": [
+          {
+            "x": 218.67,
+            "y": 454
+          },
+          {
+            "x": 226,
+            "y": 476
+          },
+          {
+            "x": 226,
+            "y": 498
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "limit-epsilon-delta",
+        "to": "limit-uniform",
+        "points": [
+          {
+            "x": 1144,
+            "y": 454
+          },
+          {
+            "x": 1144,
+            "y": 476
+          },
+          {
+            "x": 588,
+            "y": 519.32
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "limit-continuity",
+        "to": "limit-uniform",
+        "points": [
+          {
+            "x": 246.83,
+            "y": 454
+          },
+          {
+            "x": 278,
+            "y": 476
+          },
+          {
+            "x": 468,
+            "y": 512.48
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      }
+    ],
+    "external": []
+  },
+  {
+    "chapterId": "derivative",
+    "width": 544,
+    "height": 568,
+    "nodes": [
+      {
+        "id": "derivative-definition",
+        "x": 132,
+        "y": 18,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "derivative-tangent",
+        "x": 110,
+        "y": 210,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "derivative-piecewise",
+        "x": 18,
+        "y": 114,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "derivative-rules",
+        "x": 286,
+        "y": 114,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "derivative-chain",
+        "x": 258,
+        "y": 210,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "derivative-second",
+        "x": 98,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "derivative-higher",
+        "x": 18,
+        "y": 402,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "derivative-implicit",
+        "x": 212,
+        "y": 402,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "derivative-log",
+        "x": 246,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "derivative-parametric",
+        "x": 406,
+        "y": 402,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "derivative-related-rates",
+        "x": 212,
+        "y": 498,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "derivative-differential",
+        "x": 406,
+        "y": 210,
+        "width": 120,
+        "height": 52
+      }
+    ],
+    "edges": [
+      {
+        "from": "derivative-definition",
+        "to": "derivative-tangent",
+        "points": [
+          {
+            "x": 173.58,
+            "y": 70
+          },
+          {
+            "x": 158,
+            "y": 92
+          },
+          {
+            "x": 158,
+            "y": 140
+          },
+          {
+            "x": 158,
+            "y": 188
+          },
+          {
+            "x": 163.5,
+            "y": 210
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "derivative-rules",
+        "to": "derivative-tangent",
+        "points": [
+          {
+            "x": 286,
+            "y": 165.26
+          },
+          {
+            "x": 232,
+            "y": 188
+          },
+          {
+            "x": 203.58,
+            "y": 210
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "derivative-definition",
+        "to": "derivative-piecewise",
+        "points": [
+          {
+            "x": 132,
+            "y": 69.26
+          },
+          {
+            "x": 78,
+            "y": 92
+          },
+          {
+            "x": 78,
+            "y": 114
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "derivative-definition",
+        "to": "derivative-rules",
+        "points": [
+          {
+            "x": 252,
+            "y": 62.7
+          },
+          {
+            "x": 346,
+            "y": 92
+          },
+          {
+            "x": 346,
+            "y": 114
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "derivative-rules",
+        "to": "derivative-chain",
+        "points": [
+          {
+            "x": 330.83,
+            "y": 166
+          },
+          {
+            "x": 318,
+            "y": 188
+          },
+          {
+            "x": 318,
+            "y": 210
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "derivative-chain",
+        "to": "derivative-second",
+        "points": [
+          {
+            "x": 258,
+            "y": 254
+          },
+          {
+            "x": 158,
+            "y": 284
+          },
+          {
+            "x": 158,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "derivative-second",
+        "to": "derivative-higher",
+        "points": [
+          {
+            "x": 114.67,
+            "y": 358
+          },
+          {
+            "x": 78,
+            "y": 380
+          },
+          {
+            "x": 78,
+            "y": 402
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "derivative-chain",
+        "to": "derivative-implicit",
+        "points": [
+          {
+            "x": 354.83,
+            "y": 262
+          },
+          {
+            "x": 386,
+            "y": 284
+          },
+          {
+            "x": 386,
+            "y": 332
+          },
+          {
+            "x": 386,
+            "y": 380
+          },
+          {
+            "x": 332,
+            "y": 402.74
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "derivative-second",
+        "to": "derivative-implicit",
+        "points": [
+          {
+            "x": 158,
+            "y": 358
+          },
+          {
+            "x": 158,
+            "y": 380
+          },
+          {
+            "x": 212,
+            "y": 402.74
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "derivative-chain",
+        "to": "derivative-log",
+        "points": [
+          {
+            "x": 311.5,
+            "y": 262
+          },
+          {
+            "x": 306,
+            "y": 284
+          },
+          {
+            "x": 306,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "derivative-chain",
+        "to": "derivative-parametric",
+        "points": [
+          {
+            "x": 378,
+            "y": 254.7
+          },
+          {
+            "x": 472,
+            "y": 284
+          },
+          {
+            "x": 472,
+            "y": 332
+          },
+          {
+            "x": 472,
+            "y": 380
+          },
+          {
+            "x": 469.25,
+            "y": 402
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "derivative-second",
+        "to": "derivative-parametric",
+        "points": [
+          {
+            "x": 218,
+            "y": 344
+          },
+          {
+            "x": 398,
+            "y": 380
+          },
+          {
+            "x": 429.17,
+            "y": 402
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "derivative-implicit",
+        "to": "derivative-related-rates",
+        "points": [
+          {
+            "x": 272,
+            "y": 454
+          },
+          {
+            "x": 272,
+            "y": 476
+          },
+          {
+            "x": 272,
+            "y": 498
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "derivative-rules",
+        "to": "derivative-differential",
+        "points": [
+          {
+            "x": 406,
+            "y": 164
+          },
+          {
+            "x": 466,
+            "y": 188
+          },
+          {
+            "x": 466,
+            "y": 210
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      }
+    ],
+    "external": [
+      {
+        "from": "limit-rules",
+        "to": "derivative-definition",
+        "chapterId": "limit",
+        "label": "极限 · 极限运算"
+      },
+      {
+        "from": "limit-continuity",
+        "to": "derivative-piecewise",
+        "chapterId": "limit",
+        "label": "极限 · 分段连续"
+      }
+    ]
+  },
+  {
+    "chapterId": "application",
+    "width": 1204,
+    "height": 376,
+    "nodes": [
+      {
+        "id": "application-mvt",
+        "x": 338,
+        "y": 18,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "application-mvt-proof",
+        "x": 622,
+        "y": 114,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "application-cauchy",
+        "x": 622,
+        "y": 210,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "application-lhopital",
+        "x": 36,
+        "y": 18,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "application-lhopital-other",
+        "x": 36,
+        "y": 114,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "application-taylor-expand",
+        "x": 764,
+        "y": 18,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "application-taylor-limit",
+        "x": 770,
+        "y": 114,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "application-taylor-remainder",
+        "x": 474,
+        "y": 114,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "application-monotonic",
+        "x": 184,
+        "y": 114,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "application-inequality",
+        "x": 474,
+        "y": 210,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "application-convexity",
+        "x": 326,
+        "y": 210,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "application-extremum",
+        "x": 92,
+        "y": 210,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "application-optimization",
+        "x": 166,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "application-root-count",
+        "x": 18,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "application-asymptote",
+        "x": 770,
+        "y": 210,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "application-sketch",
+        "x": 388,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "application-curvature",
+        "x": 918,
+        "y": 18,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "application-curvature-center",
+        "x": 918,
+        "y": 114,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "application-newton",
+        "x": 1066,
+        "y": 18,
+        "width": 120,
+        "height": 52
+      }
+    ],
+    "edges": [
+      {
+        "from": "application-mvt",
+        "to": "application-mvt-proof",
+        "points": [
+          {
+            "x": 458,
+            "y": 54.14
+          },
+          {
+            "x": 682,
+            "y": 92
+          },
+          {
+            "x": 682,
+            "y": 114
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "application-mvt-proof",
+        "to": "application-cauchy",
+        "points": [
+          {
+            "x": 682,
+            "y": 166
+          },
+          {
+            "x": 682,
+            "y": 188
+          },
+          {
+            "x": 682,
+            "y": 210
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "application-lhopital",
+        "to": "application-lhopital-other",
+        "points": [
+          {
+            "x": 96,
+            "y": 70
+          },
+          {
+            "x": 96,
+            "y": 92
+          },
+          {
+            "x": 96,
+            "y": 114
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "application-taylor-expand",
+        "to": "application-taylor-limit",
+        "points": [
+          {
+            "x": 827.25,
+            "y": 70
+          },
+          {
+            "x": 830,
+            "y": 92
+          },
+          {
+            "x": 830,
+            "y": 114
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "application-taylor-expand",
+        "to": "application-taylor-remainder",
+        "points": [
+          {
+            "x": 787.17,
+            "y": 70
+          },
+          {
+            "x": 756,
+            "y": 92
+          },
+          {
+            "x": 594,
+            "y": 127.03
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "application-mvt",
+        "to": "application-taylor-remainder",
+        "points": [
+          {
+            "x": 458,
+            "y": 65.18
+          },
+          {
+            "x": 534,
+            "y": 92
+          },
+          {
+            "x": 534,
+            "y": 114
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "application-mvt",
+        "to": "application-monotonic",
+        "points": [
+          {
+            "x": 338,
+            "y": 62.7
+          },
+          {
+            "x": 244,
+            "y": 92
+          },
+          {
+            "x": 244,
+            "y": 114
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "application-monotonic",
+        "to": "application-inequality",
+        "points": [
+          {
+            "x": 304,
+            "y": 149.93
+          },
+          {
+            "x": 534,
+            "y": 188
+          },
+          {
+            "x": 534,
+            "y": 210
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "application-monotonic",
+        "to": "application-convexity",
+        "points": [
+          {
+            "x": 304,
+            "y": 160.28
+          },
+          {
+            "x": 386,
+            "y": 188
+          },
+          {
+            "x": 386,
+            "y": 210
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "application-monotonic",
+        "to": "application-extremum",
+        "points": [
+          {
+            "x": 194.17,
+            "y": 166
+          },
+          {
+            "x": 152,
+            "y": 188
+          },
+          {
+            "x": 152,
+            "y": 210
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "application-extremum",
+        "to": "application-optimization",
+        "points": [
+          {
+            "x": 212,
+            "y": 254.7
+          },
+          {
+            "x": 306,
+            "y": 284
+          },
+          {
+            "x": 269.33,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "application-extremum",
+        "to": "application-root-count",
+        "points": [
+          {
+            "x": 155.25,
+            "y": 262
+          },
+          {
+            "x": 158,
+            "y": 284
+          },
+          {
+            "x": 121.33,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "application-convexity",
+        "to": "application-sketch",
+        "points": [
+          {
+            "x": 386,
+            "y": 262
+          },
+          {
+            "x": 386,
+            "y": 284
+          },
+          {
+            "x": 414.42,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "application-extremum",
+        "to": "application-sketch",
+        "points": [
+          {
+            "x": 148.75,
+            "y": 262
+          },
+          {
+            "x": 146,
+            "y": 284
+          },
+          {
+            "x": 388,
+            "y": 322.46
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "application-asymptote",
+        "to": "application-sketch",
+        "points": [
+          {
+            "x": 830,
+            "y": 262
+          },
+          {
+            "x": 830,
+            "y": 284
+          },
+          {
+            "x": 508,
+            "y": 324.46
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "application-curvature",
+        "to": "application-curvature-center",
+        "points": [
+          {
+            "x": 978,
+            "y": 70
+          },
+          {
+            "x": 978,
+            "y": 92
+          },
+          {
+            "x": 978,
+            "y": 114
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      }
+    ],
+    "external": [
+      {
+        "from": "derivative-rules",
+        "to": "application-mvt",
+        "chapterId": "derivative",
+        "label": "导数 · 求导法则"
+      },
+      {
+        "from": "limit-continuity",
+        "to": "application-mvt",
+        "chapterId": "limit",
+        "label": "极限 · 分段连续"
+      },
+      {
+        "from": "derivative-chain",
+        "to": "application-lhopital",
+        "chapterId": "derivative",
+        "label": "导数 · 复合求导"
+      },
+      {
+        "from": "limit-equivalent",
+        "to": "application-lhopital",
+        "chapterId": "limit",
+        "label": "极限 · 等价替换"
+      },
+      {
+        "from": "derivative-higher",
+        "to": "application-taylor-expand",
+        "chapterId": "derivative",
+        "label": "导数 · 高阶导数"
+      },
+      {
+        "from": "limit-equivalent",
+        "to": "application-taylor-limit",
+        "chapterId": "limit",
+        "label": "极限 · 等价替换"
+      },
+      {
+        "from": "derivative-second",
+        "to": "application-convexity",
+        "chapterId": "derivative",
+        "label": "导数 · 二阶导数"
+      },
+      {
+        "from": "limit-zero-theorem",
+        "to": "application-root-count",
+        "chapterId": "limit",
+        "label": "极限 · 零点定理"
+      },
+      {
+        "from": "limit-rules",
+        "to": "application-asymptote",
+        "chapterId": "limit",
+        "label": "极限 · 极限运算"
+      },
+      {
+        "from": "derivative-second",
+        "to": "application-curvature",
+        "chapterId": "derivative",
+        "label": "导数 · 二阶导数"
+      },
+      {
+        "from": "derivative-tangent",
+        "to": "application-newton",
+        "chapterId": "derivative",
+        "label": "导数 · 切线法线"
+      },
+      {
+        "from": "limit-zero-theorem",
+        "to": "application-newton",
+        "chapterId": "limit",
+        "label": "极限 · 零点定理"
+      }
+    ]
+  },
+  {
+    "chapterId": "indefinite",
+    "width": 600,
+    "height": 376,
+    "nodes": [
+      {
+        "id": "indefinite-basic",
+        "x": 240,
+        "y": 18,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "indefinite-substitution-1",
+        "x": 240,
+        "y": 114,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "indefinite-root-sub",
+        "x": 462,
+        "y": 210,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "indefinite-trig-sub",
+        "x": 314,
+        "y": 210,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "indefinite-parts",
+        "x": 166,
+        "y": 210,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "indefinite-rational",
+        "x": 18,
+        "y": 210,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "indefinite-trig-rational",
+        "x": 18,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      }
+    ],
+    "edges": [
+      {
+        "from": "indefinite-basic",
+        "to": "indefinite-substitution-1",
+        "points": [
+          {
+            "x": 300,
+            "y": 70
+          },
+          {
+            "x": 300,
+            "y": 92
+          },
+          {
+            "x": 300,
+            "y": 114
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "indefinite-substitution-1",
+        "to": "indefinite-root-sub",
+        "points": [
+          {
+            "x": 360,
+            "y": 152.97
+          },
+          {
+            "x": 522,
+            "y": 188
+          },
+          {
+            "x": 522,
+            "y": 210
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "indefinite-substitution-1",
+        "to": "indefinite-trig-sub",
+        "points": [
+          {
+            "x": 340.08,
+            "y": 166
+          },
+          {
+            "x": 374,
+            "y": 188
+          },
+          {
+            "x": 374,
+            "y": 210
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "indefinite-substitution-1",
+        "to": "indefinite-parts",
+        "points": [
+          {
+            "x": 259.92,
+            "y": 166
+          },
+          {
+            "x": 226,
+            "y": 188
+          },
+          {
+            "x": 226,
+            "y": 210
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "indefinite-substitution-1",
+        "to": "indefinite-rational",
+        "points": [
+          {
+            "x": 240,
+            "y": 152.97
+          },
+          {
+            "x": 78,
+            "y": 188
+          },
+          {
+            "x": 78,
+            "y": 210
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "indefinite-rational",
+        "to": "indefinite-trig-rational",
+        "points": [
+          {
+            "x": 78,
+            "y": 262
+          },
+          {
+            "x": 78,
+            "y": 284
+          },
+          {
+            "x": 78,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      }
+    ],
+    "external": [
+      {
+        "from": "derivative-rules",
+        "to": "indefinite-basic",
+        "chapterId": "derivative",
+        "label": "导数 · 求导法则"
+      },
+      {
+        "from": "derivative-chain",
+        "to": "indefinite-substitution-1",
+        "chapterId": "derivative",
+        "label": "导数 · 复合求导"
+      }
+    ]
+  },
+  {
+    "chapterId": "definite",
+    "width": 1426,
+    "height": 568,
+    "nodes": [
+      {
+        "id": "definite-concept",
+        "x": 98,
+        "y": 18,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "definite-properties",
+        "x": 548,
+        "y": 114,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "definite-riemann-sum",
+        "x": 104,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "definite-mvt-proof",
+        "x": 622,
+        "y": 210,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "definite-ftc-derivative",
+        "x": 18,
+        "y": 114,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "definite-ftc-limit",
+        "x": 18,
+        "y": 210,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "definite-newton-leibniz",
+        "x": 474,
+        "y": 210,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "definite-substitution",
+        "x": 252,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "definite-symmetry",
+        "x": 400,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "definite-parts",
+        "x": 548,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "definite-reflection",
+        "x": 252,
+        "y": 402,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "definite-improper-inf",
+        "x": 696,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "definite-improper-unbounded",
+        "x": 696,
+        "y": 402,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "definite-improper-test",
+        "x": 696,
+        "y": 498,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "definite-area",
+        "x": 1066,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "definite-area-polar",
+        "x": 1288,
+        "y": 402,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "definite-volume",
+        "x": 1140,
+        "y": 402,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "definite-arc-length",
+        "x": 992,
+        "y": 402,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "definite-physics",
+        "x": 844,
+        "y": 402,
+        "width": 120,
+        "height": 52
+      }
+    ],
+    "edges": [
+      {
+        "from": "definite-concept",
+        "to": "definite-properties",
+        "points": [
+          {
+            "x": 218,
+            "y": 50.4
+          },
+          {
+            "x": 608,
+            "y": 92
+          },
+          {
+            "x": 608,
+            "y": 114
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "definite-concept",
+        "to": "definite-riemann-sum",
+        "points": [
+          {
+            "x": 158,
+            "y": 70
+          },
+          {
+            "x": 158,
+            "y": 92
+          },
+          {
+            "x": 158,
+            "y": 140
+          },
+          {
+            "x": 158,
+            "y": 188
+          },
+          {
+            "x": 158,
+            "y": 236
+          },
+          {
+            "x": 158,
+            "y": 284
+          },
+          {
+            "x": 160.75,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "definite-newton-leibniz",
+        "to": "definite-riemann-sum",
+        "points": [
+          {
+            "x": 474,
+            "y": 244.73
+          },
+          {
+            "x": 204,
+            "y": 284
+          },
+          {
+            "x": 185.67,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "definite-properties",
+        "to": "definite-mvt-proof",
+        "points": [
+          {
+            "x": 648.08,
+            "y": 166
+          },
+          {
+            "x": 682,
+            "y": 188
+          },
+          {
+            "x": 682,
+            "y": 210
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "definite-concept",
+        "to": "definite-ftc-derivative",
+        "points": [
+          {
+            "x": 114.67,
+            "y": 70
+          },
+          {
+            "x": 78,
+            "y": 92
+          },
+          {
+            "x": 78,
+            "y": 114
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "definite-ftc-derivative",
+        "to": "definite-ftc-limit",
+        "points": [
+          {
+            "x": 78,
+            "y": 166
+          },
+          {
+            "x": 78,
+            "y": 188
+          },
+          {
+            "x": 78,
+            "y": 210
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "definite-properties",
+        "to": "definite-newton-leibniz",
+        "points": [
+          {
+            "x": 567.92,
+            "y": 166
+          },
+          {
+            "x": 534,
+            "y": 188
+          },
+          {
+            "x": 534,
+            "y": 210
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "definite-newton-leibniz",
+        "to": "definite-substitution",
+        "points": [
+          {
+            "x": 474,
+            "y": 248.97
+          },
+          {
+            "x": 312,
+            "y": 284
+          },
+          {
+            "x": 312,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "definite-newton-leibniz",
+        "to": "definite-symmetry",
+        "points": [
+          {
+            "x": 493.92,
+            "y": 262
+          },
+          {
+            "x": 460,
+            "y": 284
+          },
+          {
+            "x": 460,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "definite-newton-leibniz",
+        "to": "definite-parts",
+        "points": [
+          {
+            "x": 574.08,
+            "y": 262
+          },
+          {
+            "x": 608,
+            "y": 284
+          },
+          {
+            "x": 608,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "definite-substitution",
+        "to": "definite-reflection",
+        "points": [
+          {
+            "x": 312,
+            "y": 358
+          },
+          {
+            "x": 312,
+            "y": 380
+          },
+          {
+            "x": 312,
+            "y": 402
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "definite-newton-leibniz",
+        "to": "definite-improper-inf",
+        "points": [
+          {
+            "x": 594,
+            "y": 248.97
+          },
+          {
+            "x": 756,
+            "y": 284
+          },
+          {
+            "x": 756,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "definite-improper-inf",
+        "to": "definite-improper-unbounded",
+        "points": [
+          {
+            "x": 756,
+            "y": 358
+          },
+          {
+            "x": 756,
+            "y": 380
+          },
+          {
+            "x": 756,
+            "y": 402
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "definite-improper-unbounded",
+        "to": "definite-improper-test",
+        "points": [
+          {
+            "x": 756,
+            "y": 454
+          },
+          {
+            "x": 756,
+            "y": 476
+          },
+          {
+            "x": 756,
+            "y": 498
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "definite-newton-leibniz",
+        "to": "definite-area",
+        "points": [
+          {
+            "x": 594,
+            "y": 240.86
+          },
+          {
+            "x": 1126,
+            "y": 284
+          },
+          {
+            "x": 1126,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "definite-area",
+        "to": "definite-area-polar",
+        "points": [
+          {
+            "x": 1186,
+            "y": 344.97
+          },
+          {
+            "x": 1348,
+            "y": 380
+          },
+          {
+            "x": 1348,
+            "y": 402
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "definite-area",
+        "to": "definite-volume",
+        "points": [
+          {
+            "x": 1166.08,
+            "y": 358
+          },
+          {
+            "x": 1200,
+            "y": 380
+          },
+          {
+            "x": 1200,
+            "y": 402
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "definite-area",
+        "to": "definite-arc-length",
+        "points": [
+          {
+            "x": 1085.92,
+            "y": 358
+          },
+          {
+            "x": 1052,
+            "y": 380
+          },
+          {
+            "x": 1052,
+            "y": 402
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "definite-area",
+        "to": "definite-physics",
+        "points": [
+          {
+            "x": 1066,
+            "y": 344.97
+          },
+          {
+            "x": 904,
+            "y": 380
+          },
+          {
+            "x": 904,
+            "y": 402
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      }
+    ],
+    "external": [
+      {
+        "from": "limit-rules",
+        "to": "definite-concept",
+        "chapterId": "limit",
+        "label": "极限 · 极限运算"
+      },
+      {
+        "from": "application-mvt",
+        "to": "definite-mvt-proof",
+        "chapterId": "application",
+        "label": "中值与应用 · 中值定理"
+      },
+      {
+        "from": "derivative-chain",
+        "to": "definite-ftc-derivative",
+        "chapterId": "derivative",
+        "label": "导数 · 复合求导"
+      },
+      {
+        "from": "application-lhopital",
+        "to": "definite-ftc-limit",
+        "chapterId": "application",
+        "label": "中值与应用 · 洛必达"
+      },
+      {
+        "from": "indefinite-basic",
+        "to": "definite-newton-leibniz",
+        "chapterId": "indefinite",
+        "label": "不定积分 · 基本积分"
+      },
+      {
+        "from": "indefinite-root-sub",
+        "to": "definite-substitution",
+        "chapterId": "indefinite",
+        "label": "不定积分 · 根式代换"
+      },
+      {
+        "from": "indefinite-parts",
+        "to": "definite-parts",
+        "chapterId": "indefinite",
+        "label": "不定积分 · 分部积分"
+      }
+    ]
+  },
+  {
+    "chapterId": "ode",
+    "width": 1044,
+    "height": 472,
+    "nodes": [
+      {
+        "id": "ode-concept",
+        "x": 536,
+        "y": 18,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "ode-separable",
+        "x": 240,
+        "y": 114,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "ode-homogeneous",
+        "x": 166,
+        "y": 210,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "ode-linear",
+        "x": 314,
+        "y": 210,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "ode-bernoulli",
+        "x": 18,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "ode-modeling",
+        "x": 166,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "ode-integral-equation",
+        "x": 314,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "ode-reduce-order",
+        "x": 462,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "ode-structure",
+        "x": 866,
+        "y": 114,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "ode-variation",
+        "x": 610,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "ode-const-homog",
+        "x": 906,
+        "y": 210,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "ode-nonhomog-exp",
+        "x": 758,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "ode-nonhomog-trig",
+        "x": 832,
+        "y": 402,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "ode-euler",
+        "x": 684,
+        "y": 402,
+        "width": 120,
+        "height": 52
+      },
+      {
+        "id": "ode-system",
+        "x": 906,
+        "y": 306,
+        "width": 120,
+        "height": 52
+      }
+    ],
+    "edges": [
+      {
+        "from": "ode-concept",
+        "to": "ode-separable",
+        "points": [
+          {
+            "x": 536,
+            "y": 53.73
+          },
+          {
+            "x": 300,
+            "y": 92
+          },
+          {
+            "x": 300,
+            "y": 114
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "ode-separable",
+        "to": "ode-homogeneous",
+        "points": [
+          {
+            "x": 259.92,
+            "y": 166
+          },
+          {
+            "x": 226,
+            "y": 188
+          },
+          {
+            "x": 226,
+            "y": 210
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "ode-separable",
+        "to": "ode-linear",
+        "points": [
+          {
+            "x": 340.08,
+            "y": 166
+          },
+          {
+            "x": 374,
+            "y": 188
+          },
+          {
+            "x": 374,
+            "y": 210
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "ode-linear",
+        "to": "ode-bernoulli",
+        "points": [
+          {
+            "x": 314,
+            "y": 245.73
+          },
+          {
+            "x": 78,
+            "y": 284
+          },
+          {
+            "x": 78,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "ode-linear",
+        "to": "ode-modeling",
+        "points": [
+          {
+            "x": 314,
+            "y": 255.46
+          },
+          {
+            "x": 226,
+            "y": 284
+          },
+          {
+            "x": 226,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "ode-linear",
+        "to": "ode-integral-equation",
+        "points": [
+          {
+            "x": 374,
+            "y": 262
+          },
+          {
+            "x": 374,
+            "y": 284
+          },
+          {
+            "x": 374,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "ode-linear",
+        "to": "ode-reduce-order",
+        "points": [
+          {
+            "x": 434,
+            "y": 255.46
+          },
+          {
+            "x": 522,
+            "y": 284
+          },
+          {
+            "x": 522,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "ode-concept",
+        "to": "ode-structure",
+        "points": [
+          {
+            "x": 656,
+            "y": 52.73
+          },
+          {
+            "x": 926,
+            "y": 92
+          },
+          {
+            "x": 926,
+            "y": 114
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "ode-structure",
+        "to": "ode-variation",
+        "points": [
+          {
+            "x": 866,
+            "y": 152.97
+          },
+          {
+            "x": 704,
+            "y": 188
+          },
+          {
+            "x": 704,
+            "y": 236
+          },
+          {
+            "x": 704,
+            "y": 284
+          },
+          {
+            "x": 688.42,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "ode-linear",
+        "to": "ode-variation",
+        "points": [
+          {
+            "x": 434,
+            "y": 247.25
+          },
+          {
+            "x": 630,
+            "y": 284
+          },
+          {
+            "x": 648.33,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "ode-structure",
+        "to": "ode-const-homog",
+        "points": [
+          {
+            "x": 947.67,
+            "y": 166
+          },
+          {
+            "x": 966,
+            "y": 188
+          },
+          {
+            "x": 966,
+            "y": 210
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "ode-const-homog",
+        "to": "ode-nonhomog-exp",
+        "points": [
+          {
+            "x": 906,
+            "y": 255.46
+          },
+          {
+            "x": 818,
+            "y": 284
+          },
+          {
+            "x": 818,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "ode-nonhomog-exp",
+        "to": "ode-nonhomog-trig",
+        "points": [
+          {
+            "x": 858.08,
+            "y": 358
+          },
+          {
+            "x": 892,
+            "y": 380
+          },
+          {
+            "x": 892,
+            "y": 402
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "ode-nonhomog-exp",
+        "to": "ode-euler",
+        "points": [
+          {
+            "x": 777.92,
+            "y": 358
+          },
+          {
+            "x": 744,
+            "y": 380
+          },
+          {
+            "x": 744,
+            "y": 402
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      },
+      {
+        "from": "ode-const-homog",
+        "to": "ode-system",
+        "points": [
+          {
+            "x": 966,
+            "y": 262
+          },
+          {
+            "x": 966,
+            "y": 284
+          },
+          {
+            "x": 966,
+            "y": 306
+          }
+        ],
+        "crossChapter": false,
+        "label": null
+      }
+    ],
+    "external": [
+      {
+        "from": "derivative-chain",
+        "to": "ode-concept",
+        "chapterId": "derivative",
+        "label": "导数 · 复合求导"
+      },
+      {
+        "from": "indefinite-basic",
+        "to": "ode-concept",
+        "chapterId": "indefinite",
+        "label": "不定积分 · 基本积分"
+      },
+      {
+        "from": "indefinite-substitution-1",
+        "to": "ode-separable",
+        "chapterId": "indefinite",
+        "label": "不定积分 · 凑微分"
+      },
+      {
+        "from": "derivative-tangent",
+        "to": "ode-modeling",
+        "chapterId": "derivative",
+        "label": "导数 · 切线法线"
+      },
+      {
+        "from": "definite-ftc-derivative",
+        "to": "ode-integral-equation",
+        "chapterId": "definite",
+        "label": "定积分 · 变限求导"
+      }
+    ]
+  }
+]

@@ -1,0 +1,83 @@
+/* 批改 (V4.2 G7; the look of V4.1 批改草稿): the tool card, then ✓ / ✗ per step. Shared look: components/tool-start. */
+.tl-type { display: inline-flex; margin-top: 20rpx; color: var(--link); font-size: 26rpx; }
+.tl-card { margin-top: 8rpx; padding: 28rpx; border-radius: 36rpx; background: var(--card); box-shadow: var(--shadow); }
+.tl-top { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; }
+.tl-top .link.off { color: var(--faint); text-decoration: none; }
+.tl-photo { display: block; width: 100%; height: 280rpx; margin-top: 20rpx; border-radius: var(--radius-s); background: var(--fill); }
+.tl-switch { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin-top: 20rpx; padding: 18rpx 24rpx; border-radius: var(--radius-s); background: var(--marker-wash); font-size: 26rpx; color: var(--ink); }
+.tl-go { flex: none; color: var(--link); font-weight: 600; }
+.tl-k { display: block; margin-top: 28rpx; font-size: 26rpx; color: var(--sub); }
+.tl-field { display: block; box-sizing: border-box; margin-top: 12rpx; }
+.tl-unclear { display: block; margin-top: 16rpx; font-size: 24rpx; color: var(--amber-ink); }
+.tl-verdict { display: inline-flex; align-items: center; min-height: 56rpx; padding: 0 22rpx; border-radius: 28rpx; font-size: 30rpx; font-weight: 700; }
+.tl-verdict.green { background: var(--green-wash); color: var(--green-ink); }
+.tl-verdict.red { background: var(--red-wash); color: var(--red-ink); }
+.tl-verdict.amber { background: var(--amber-wash); color: var(--amber-ink); }
+.tl-sum { display: block; margin-top: 16rpx; font-size: 28rpx; line-height: 1.7; color: var(--body); }
+.tl-steps { margin-top: 20rpx; }
+.st { padding: 18rpx 0; border-top: 2rpx solid var(--rule); }
+.st.first { margin: 0 -16rpx; padding: 18rpx 16rpx; border-radius: var(--radius-s); border-top-color: transparent; background: var(--red-wash); }
+.st-row { display: flex; align-items: flex-start; gap: 16rpx; }
+.st-mark { flex: none; width: 44rpx; height: 44rpx; margin-top: 6rpx; border-radius: 50%; font-size: 26rpx; font-weight: 700; line-height: 44rpx; text-align: center; }
+.st-mark.green { background: var(--green-wash); color: var(--green-ink); }
+.st-mark.red { background: var(--red); color: #ffffff; }
+.st-mark.amber { background: var(--amber-wash); color: var(--amber-ink); }
+.st-body { flex: 1; min-width: 0; font-size: 28rpx; line-height: 1.75; }
+.st-note { display: block; margin: 6rpx 0 0 60rpx; font-size: 24rpx; color: var(--sub); }
+.st-why { margin: 12rpx 0 0 60rpx; font-size: 27rpx; line-height: 1.7; color: var(--ink); }
+.st-k { display: block; margin-top: 8rpx; font-size: 24rpx; font-weight: 600; color: var(--red-ink); }
+.tl-again { display: flex; justify-content: center; margin-top: 12rpx; }
+.st-mark.grey { background: var(--fill); color: var(--faint); }
+
+/* A page of problems: one card each, the badge says how it went. */
+.line { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin-top: 20rpx; }
+.hw { margin-top: 24rpx; padding: 24rpx 28rpx 22rpx; background: var(--card); border: 2rpx solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.hw-top { display: flex; align-items: center; justify-content: space-between; gap: 12rpx; }
+.hw-no { font-size: 26rpx; font-weight: 700; color: var(--ink); }
+.problem { margin-top: 14rpx; font-size: 29rpx; line-height: 1.8; }
+.work { margin-top: 14rpx; padding: 14rpx 20rpx; border-radius: var(--radius-s); background: var(--chip); font-size: 27rpx; line-height: 1.75; }
+.work-k, .edit-k { display: block; margin-bottom: 6rpx; font-size: 24rpx; color: var(--pencil); }
+.edit-k { margin-top: 18rpx; }
+.slip { margin-top: 16rpx; padding: 14rpx 20rpx; border-radius: var(--radius-s); background: var(--chip); font-size: 26rpx; line-height: 1.7; color: var(--body); overflow-wrap: break-word; }
+.slip.red { background: var(--red-wash); color: var(--red-ink); }
+.slip.green { background: var(--green-wash); color: var(--green); }
+.slip.amber { background: var(--amber-wash); color: var(--ink); }
+.acts { display: flex; flex-wrap: wrap; align-items: center; gap: 14rpx; margin-top: 20rpx; }
+.act { padding: 12rpx 26rpx; border-radius: var(--radius-btn); background: var(--chip); font-size: 26rpx; font-weight: 600; color: var(--ink); }
+.act.main { background: var(--primary-fill); color: var(--on-primary); box-shadow: var(--btn-shadow); }
+.act.quiet { background: none; color: var(--link); font-weight: 500; }
+.hw-score { margin-top: 20rpx; padding: 24rpx 28rpx; border-radius: 28rpx; background: var(--card); box-shadow: var(--shadow); }
+.hw-score-n { font-size: 40rpx; font-weight: 700; color: var(--ink); }
+
+/* 批改 (V4.2 G7): waits, the problem on a result, past ones. */
+.gr-wait { margin-top: 24rpx; }
+.gr-full { display: block; margin-top: 12rpx; }
+.gr-problem { margin-top: 20rpx; padding: 16rpx 20rpx; border-radius: var(--radius-s); background: var(--fill); font-size: 27rpx; line-height: 1.7; }
+.gr-pk { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6rpx; font-size: 24rpx; color: var(--sub); }
+.gr-book { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin-top: 24rpx; padding: 20rpx 24rpx; border-radius: var(--radius-s); background: var(--fill); font-size: 26rpx; color: var(--ink); }
+.gr-list { margin-top: 36rpx; }
+.gr-row { display: flex; align-items: center; gap: 16rpx; min-height: 96rpx; padding: 16rpx 4rpx; border-bottom: 2rpx solid var(--rule); }
+.gr-copy { flex: 1; min-width: 0; }
+.gr-t { display: block; font-size: 28rpx; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gr-s { display: block; margin-top: 4rpx; font-size: 24rpx; color: var(--sub); }
+.gr-go { flex: none; color: var(--faint); font-size: 30rpx; }
+.tl-again { gap: 32rpx; flex-wrap: wrap; }
+
+/* V4.2 G4: the low-budget line under the AI line. */
+.usage {
+  margin: -12rpx 0 16rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--sub);
+}
+/* V4.2 G9: the per-question actions and the small links take taps over 44px. */
+.act, .link.small { position: relative; }
+.act::before, .link.small::before { content: ""; position: absolute; left: 50%; top: 50%; width: 100%; height: 100%; min-width: var(--hit); min-height: var(--hit); transform: translate(-50%, -50%); }
+
+/* V4.2 FX5b: 更早的记录 is a full row in the link colour (as on 错题本). */
+.more-line { display: flex; align-items: center; justify-content: center; min-height: 88rpx; margin-top: 8rpx; font-size: 26rpx; color: var(--link); }
+/* V4.2 FX5b (V5): the problem typeset, and its preview while edited (step-edit's look). */
+.gr-ptext { white-space: pre-wrap; word-break: break-all; }
+.pv-foot { display: flex; align-items: flex-start; gap: 16rpx; margin-top: 12rpx; padding-top: 12rpx; border-top: 2rpx dashed var(--rule-2); }
+.pv-rich { flex: 1; min-width: 0; }
+.pv-done { flex: none; margin-left: auto; font-size: 26rpx; line-height: 44rpx; }

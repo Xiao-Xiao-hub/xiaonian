@@ -1,0 +1,23 @@
+<wxs module="gesture" src="../stage/gesture.wxs" />
+<view class="viewport night" data-left="{{left}}" data-top="{{top}}" data-min="0.2" catchtouchstart="{{gesture.start}}" catchtouchmove="{{gesture.move}}" catchtouchend="{{gesture.end}}" catchtouchcancel="{{gesture.end}}">
+  <view class="map-plane far" change:motion="{{gesture.motionChanged}}" motion="{{motion}}" style="width:{{layout.width}}px;height:{{layout.height}}px">
+    <view class="far-layer" style="width:{{layout.farWidth}}px;height:{{layout.farHeight}}px">
+      <view wx:for="{{layout.farLines}}" wx:key="id" class="ln {{item.cls}}" style="left:{{item.x}}px;top:{{item.y}}px;width:{{item.len}}px;transform:rotate({{item.angle}}deg)" />
+      <view wx:for="{{layout.stars}}" wx:key="id" class="sn {{item.cls}} {{item.next?'is-next':''}} {{item.left?'lf':''}} {{item.fade?'fade':''}} {{item.later?'later':''}} {{pressed===item.id?'pressing':''}}" style="left:{{item.x}}px;top:{{item.y}}px" data-id="{{item.id}}" bindtap="starTap" hover-class="sn-press" hover-start-time="0" hover-stay-time="120" aria-role="button" aria-label="{{item.aria}}"><view class="dot" data-id="{{item.id}}" /><text class="nm" data-id="{{item.id}}"><text wx:if="{{item.mark}}" class="mark {{item.markCls}}">{{item.mark}}</text>{{item.name}}</text></view>
+      <text wx:if="{{layout.flag}}" class="tflag" style="left:{{layout.flag.left}}px;top:{{layout.flag.top}}px">课上</text>
+    </view>
+    <view class="near-layer">
+      <view wx:for="{{layout.nearLines}}" wx:key="id" class="ln near {{item.cls}}" style="left:{{item.x}}px;top:{{item.y}}px;width:{{item.len}}px;transform:rotate({{item.angle}}deg)" />
+      <view wx:for="{{layout.cards}}" wx:key="id" class="kc {{item.cls}} {{item.next?'is-next':''}} {{item.compact?'compact':''}} {{item.narrow?'narrow':''}} {{item.fade?'fade':''}} {{pressed===item.id&&pressAct==='node'?'pressing':''}}" style="left:{{item.left}}px;top:{{item.top}}px;width:{{item.width}}px;height:{{item.height}}px" data-id="{{item.id}}" bindtap="starTap" hover-class="kc-press" hover-start-time="0" hover-stay-time="120" aria-role="button" aria-label="{{item.name}}，{{item.stateText}}">
+        <view class="kc-h"><text wx:if="{{item.mark}}" class="mark {{item.markCls}}">{{item.mark}}</text><text class="kc-name">{{item.name}}</text><text wx:if="{{item.next}}" class="nx">下一步</text></view>
+        <view wx:if="{{!item.tight}}" class="kc-fx"><text wx:if="{{item.formulaLong}}" class="kc-formula-link">点开看完整公式</text><view wx:elif="{{item.formula}}" class="mk fx kc-chip"><rich blocks="{{item.formula}}" /></view><text wx:elif="{{item.formulaText}}" class="mk fx kc-chip">{{item.formulaText}}</text></view>
+        <view wx:if="{{!item.compact}}" class="kc-key"><rich blocks="{{item.key}}" /></view>
+        <!-- V4.1: 练一题 on every card; the state and 我的卡 share the rest of the row. -->
+        <view class="kc-foot">
+          <text class="kc-go {{item.ready?'':'wait'}} {{pressed===item.id&&pressAct==='practice'?'pressing':''}}" data-id="{{item.id}}" data-act="practice" catchtap="practiceTap" hover-class="go-press" hover-start-time="0" hover-stay-time="120" hover-stop-propagation aria-role="button" aria-label="{{item.name}}，练一题">练一题</text>
+          <view class="kc-meta"><text class="st {{item.cls}}">{{item.stateText}}</text><text wx:if="{{item.cardCount&&!item.narrow}}" class="mycards">我的卡 {{item.cardCount}}</text></view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

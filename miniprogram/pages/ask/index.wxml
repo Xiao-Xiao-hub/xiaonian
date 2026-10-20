@@ -1,0 +1,724 @@
+<view class="page" style="padding-bottom:calc(340rpx + {{kb}}px)" capture-bind:touchstart="studyTouch">
+  <guest-bar />
+  <block>
+    <!-- 解题 (D112): a page of its own, with the native title bar; 历史 · 新对话 sit here. -->
+    <view class="ph-acts">
+      <view class="tb" hover-class="pressed" bindtap="openHistory">
+        <image class="icon" src="/assets/icons/clock-ink.png" />
+        <text>历史</text>
+      </view>
+      <view
+        wx:if="{{thread}}"
+        class="tb"
+        hover-class="pressed"
+        bindtap="newChat"
+      >
+        <image class="icon" src="/assets/icons/plus-ink.png" />
+        <text>新对话</text>
+      </view>
+    </view>
+    <view class="ai-line">AI 生成可能有误，注意核实</view>
+    <view wx:if="{{usageText}}" class="usage">{{usageText}}</view>
+
+    <chat-panel
+      wx:if="{{thread}}"
+      part="header"
+      thread="{{thread}}"
+      messages="{{messages}}"
+      suggestions="{{suggestions}}"
+      scene-candidate="{{sceneCandidate}}"
+      break-reminder="{{breakReminder}}"
+      bindsuggestadd="suggestadd"
+      bindsuggestdismiss="suggestdismiss"
+      bindremovecard="removecard"
+      bindmoodaccept="moodaccept"
+      bindmooddecline="mooddecline"
+    />
+
+    <!-- A chat with nothing asked yet (讲一遍, cards): one line, then the input -->
+    <view wx:if="{{thread && !messages.length}}" class="start">
+      <text class="start-title"
+        >{{thread.mode === 'teach' ? '想讲讲什么？' : '想问什么？'}}</text
+      >
+      <text class="start-lede"
+        >{{thread.mode === 'teach' ? '像给同学讲题一样，讲一遍。' :
+        '直接打字就行。'}}</text
+      >
+    </view>
+
+    <!-- 拍一道题 (G5): the problem from the photo (or typed), checked and
+         editable, then how to go on: 没思路 / 做到一半卡住 / 直接看解法. -->
+    <view wx:elif="{{confirm}}" class="cf">
+      <view class="cf-card">
+        <view class="cf-top">
+          <text class="h3">{{confirm.again ? '上次拍的题' : confirm.title}}</text>
+          <text class="link small" bindtap="closeConfirm">{{confirm.typed ? '返回' : confirm.again ? '不要了' : '重新拍'}}</text>
+        </view>
+        <image wx:if="{{confirm.photo}}" class="cf-photo" src="{{confirm.photo}}" mode="aspectFill" bindtap="previewConfirm" binderror="confirmPhotoBroken" />
+        <view wx:if="{{confirm.suggest}}" class="cf-switch" hover-class="pressed" bindtap="switchTool" aria-role="button">
+          <text>{{confirm.suggest.text}}</text>
+          <text class="cf-go">{{confirm.suggest.go}} ›</text>
+        </view>
+        <view wx:if="{{confirm.problems.length > 1}}" class="chips cf-chips">
+          <view wx:for="{{confirm.problems}}" wx:key="index" class="chip {{confirm.index === item.index ? 'on' : ''}}" data-index="{{index}}" bindtap="pickConfirm">第 {{index + 1}} 题</view>
+        </view>
+        <block wx:if="{{confirm.problems.length}}">
+          <textarea wx:if="{{confirm.editing}}" class="field cf-field" auto-height maxlength="1500" placeholder="题目" placeholder-class="placeholder" value="{{confirm.text}}" bindinput="onConfirmText" />
+          <view wx:if="{{confirm.editing && !confirm.typed}}" class="pv-foot">
+            <view wx:if="{{confirm.pv}}" class="pv-rich"><rich blocks="{{confirm.pv}}" /></view>
+            <text wx:if="{{confirm.text}}" class="pv-done link tap-area" bindtap="confirmDone" aria-role="button">好了</text>
+          </view>
+          <view wx:if="{{!confirm.editing}}" class="cf-problem"><rich blocks="{{confirm.blocks}}" /></view>
+          <text wx:if="{{confirm.unclear}}" class="scan-unclear">可能没认清：{{confirm.unclear}}</text>
+          <text wx:if="{{!confirm.editing}}" class="link small cf-edit" bindtap="editConfirm">没认对？改一下</text>
+        </block>
+        <text wx:elif="{{confirm.notes}}" class="lede scan-notes">{{confirm.notes}}</text>
+        <text wx:elif="{{!confirm.suggest}}" class="lede">换个角度、拍清楚一点再试；也可以直接打字。</text>
+      </view>
+
+      <block wx:if="{{confirm.problems.length && !stuck}}">
+        <view class="sh"><text class="sh-t">想怎么做？</text></view>
+        <view class="ways">
+          <view class="way" hover-class="pressed" data-way="hint" bindtap="choose" aria-role="button">
+            <text class="way-t">没思路</text><text class="way-s">先给第一步提示</text>
+          </view>
+          <view class="way" hover-class="pressed" data-way="stuck" bindtap="choose" aria-role="button">
+            <text class="way-t">做到一半卡住</text><text class="way-s">从卡住的地方接着提示</text>
+          </view>
+          <view class="way" hover-class="pressed" data-way="solution" bindtap="choose" aria-role="button">
+            <text class="way-t">直接看解法</text><text class="way-s">完整步骤</text>
+          </view>
+        </view>
+      </block>
+
+      <view wx:if="{{stuck}}" class="cf-card">
+        <view class="cf-top">
+          <text class="h3">写到哪一步了？</text>
+          <text class="link small" bindtap="cancelStuck">返回</text>
+        </view>
+        <view class="cf-snap">
+          <view class="btn-soft" hover-class="btn-press" data-source="camera" bindtap="pickStuck">拍下我写的</view>
+          <view class="btn-soft" hover-class="btn-press" data-source="album" bindtap="pickStuck">从相册选</view>
+        </view>
+        <step-edit owner="{{confirm.key + '#' + confirm.index}}" lines="{{stuck.lines}}" placeholder="已经写的一步" bindchange="onStuckLines" />
+        <text class="cf-k">卡在哪</text>
+        <textarea class="field cf-field" auto-height maxlength="500" placeholder="比如：不知道下一步怎么化简" placeholder-class="placeholder" value="{{stuck.text}}" bindinput="onStuckText" />
+        <button class="btn" hover-class="btn-press" bindtap="sendStuck">从这里给我提示</button>
+      </view>
+    </view>
+
+    <!-- The empty page: the 拍一道题 start (拍照 / 相册 / 打字), an example,
+         recent solving chats. The other tools are on 学习. -->
+    <view wx:elif="{{!messages.length}}" class="home">
+      <tool-start icon="ic-camera-with-flash.webp" title="拍一道题" lede="拍照或打字，一步步带你做" bindpick="pickStart">
+        <view class="askbox typed">
+          <textarea
+            class="ask-in"
+            auto-height
+            disable-default-padding
+            maxlength="1500"
+            show-confirm-bar="{{false}}"
+            confirm-type="next"
+            placeholder="或者把题目打在这里"
+            placeholder-class="placeholder"
+            value="{{draft}}"
+            focus="{{focus}}"
+            bindinput="onDraft"
+            bindblur="onBlur"
+            bindconfirm="submit"
+          />
+          <view class="acts">
+            <view
+              wx:if="{{!thread}}"
+              class="tb more"
+              hover-class="pressed"
+              bindtap="moreChat"
+              >⋯</view
+            >
+            <view class="grow" />
+            <view
+              class="send {{draft && !sending ? 'on' : ''}}"
+              hover-class="btn-press"
+              bindtap="submit"
+              aria-role="button"
+              aria-label="下一步"
+            >
+              <image class="icon" src="/assets/icons/arrow-white.png" />
+            </view>
+          </view>
+        </view>
+      </tool-start>
+      <view class="sh"><text class="sh-t">试试问</text></view>
+      <view class="chips">
+        <view
+          wx:for="{{examples}}"
+          wx:key="index"
+          class="chip white"
+          hover-class="pressed"
+          data-index="{{index}}"
+          bindtap="useExample"
+          >{{item.show}}</view
+        >
+      </view>
+      <block wx:if="{{recent.length}}">
+        <view class="sh"><text class="sh-t">最近</text><text class="sh-more" bindtap="openHistory">全部</text></view>
+        <view class="recent">
+          <view
+            wx:for="{{recent}}"
+            wx:key="id"
+            class="rc"
+            hover-class="pressed"
+            data-id="{{item.id}}"
+            data-homework="{{item.homework}}"
+            data-tool="{{item.tool}}"
+            bindtap="openThread"
+          >
+            <image class="icon" src="/assets/icons/clock-ink.png" />
+            <text class="rc-t">{{item.title || '对话'}}</text>
+            <text class="rc-v">{{item.resume ? '继续上次' : item.when}}</text>
+          </view>
+        </view>
+      </block>
+    </view>
+
+    <!-- Chat -->
+    <view wx:else class="chat">
+      <block wx:for="{{messages}}" wx:key="id">
+        <view
+          wx:if="{{item.role === 'user'}}"
+          class="me {{item.kind === 'problem' ? 'me-problem' : ''}}"
+        >
+          <view
+            class="bubble"
+            data-id="{{item.id}}"
+            bindlongpress="holdMessage"
+          >
+            <view wx:if="{{item.kind === 'problem'}}" class="bubble-top">
+              <text class="tag blue">题目</text>
+              <text
+                wx:if="{{item.images.length}}"
+                class="link small"
+                data-id="{{item.images[0]}}"
+                bindtap="viewPhoto"
+                >看原图</text
+              >
+            </view>
+            <text wx:elif="{{item.kind === 'steps'}}" class="bubble-kind"
+              >帮我批改这段过程</text
+            >
+            <text wx:elif="{{item.kind === 'answer'}}" class="bubble-kind"
+              >我的答案</text
+            >
+            <text wx:if="{{item.quote}}" class="bubble-quote"
+              >{{item.quote}}</text
+            >
+            <view
+              wx:if="{{item.cards && item.cards.length}}"
+              class="message-cards"
+              ><text wx:for="{{item.cards}}" wx:key="id"
+                >卡 · {{item.title || '还没起名'}}</text
+              ></view
+            >
+            <rich blocks="{{item.blocks}}" />
+          </view>
+        </view>
+
+        <view wx:else class="ai">
+          <view
+            class="ai-card {{item.kind === 'judge' && item.verdict.tone ? 'judge-' + item.verdict.tone : ''}}"
+            data-id="{{item.id}}"
+            bindlongpress="holdMessage"
+          >
+            <view
+              wx:if="{{item.badge}}"
+              class="tick {{item.badge.tone}}"
+              hover-class="pressed"
+              data-id="{{item.id}}"
+              bindtap="showChecks"
+              >{{item.badge.mark}}</view
+            >
+            <text wx:if="{{num.lead(item, messages)}}" class="ai-lead"
+              >{{num.lead(item, messages)}}</text
+            >
+
+            <block wx:if="{{item.kind === 'judge'}}">
+              <view wx:if="{{item.verdict.pending}}" class="working">
+                <text class="h3">我在看你的答案</text>
+                <view class="bar" />
+              </view>
+              <text wx:elif="{{item.verdict.failed}}" class="quiet"
+                >{{item.verdict.text}}</text
+              >
+              <block wx:else>
+                <view class="judge">
+                  <image
+                    class="mark"
+                    src="/assets/marks/{{item.verdict.mark}}.png"
+                  />
+                  <view class="judge-copy">
+                    <text class="judge-title">{{item.verdict.title}}</text>
+                    <text class="small quiet"
+                      >你的答案：{{item.verdict.answer}}</text
+                    >
+                  </view>
+                </view>
+                <view
+                  wx:if="{{item.verdict.reference || item.verdict.cause}}"
+                  class="judge-ref"
+                >
+                  <block wx:if="{{item.verdict.reference}}">
+                    <text class="small quiet">参考答案</text>
+                    <text class="judge-ref-value"
+                      >{{item.verdict.reference}}</text
+                    >
+                    <text
+                      wx:if="{{item.verdict.sourceText}}"
+                      class="tag {{item.verdict.sourceTone}}"
+                      >{{item.verdict.sourceText}}</text
+                    >
+                  </block>
+                  <text wx:if="{{item.verdict.cause}}" class="tag red"
+                    >{{item.verdict.cause}}</text
+                  >
+                </view>
+                <rich blocks="{{item.blocks}}" />
+                <rich wx:if="{{item.steps}}" blocks="{{item.steps}}" />
+              </block>
+            </block>
+
+            <block wx:elif="{{item.kind === 'similar'}}">
+              <rich blocks="{{item.similar.question}}" />
+              <!-- Single choice (D112): the whole row is the option. -->
+              <block wx:if="{{item.similar.options && item.similar.options.length}}">
+                <view
+                  wx:for="{{item.similar.options}}"
+                  wx:for-item="option"
+                  wx:for-index="oi"
+                  wx:key="id"
+                  class="choice-option {{item.picked === oi ? 'selected' : ''}} {{item.similar.correct === option.id ? 'right' : ''}} {{item.similar.correct && item.picked === oi && item.similar.correct !== option.id ? 'wrong' : ''}}"
+                  hover-class="pressed"
+                  data-id="{{item.id}}"
+                  data-index="{{oi}}"
+                  bindtap="pickOption"
+                  aria-role="radio"
+                  aria-checked="{{item.picked === oi}}"
+                >
+                  <view class="option-id">{{option.id}}</view>
+                  <view class="option-content"><rich blocks="{{option.blocks}}" /></view>
+                </view>
+                <view wx:if="{{item.similar.revealed && item.picked < 0 && item.similar.steps}}" class="sim-key">
+                  <rich blocks="{{item.similar.steps}}" />
+                </view>
+              </block>
+              <view wx:elif="{{item.similar.revealed}}" class="sim-key">
+                <view class="sim-answer">
+                  <text class="tag green">答案 · 算过一遍，对得上</text>
+                  <rich blocks="{{item.similar.answer}}" />
+                </view>
+                <rich blocks="{{item.similar.solution}}" />
+              </view>
+              <view wx:if="{{!item.similar.revealed}}" class="sim-foot">
+                <text class="small quiet">答案算过一遍了，先自己做</text>
+                <view class="sim-acts">
+                  <text
+                    wx:if="{{!(item.similar.options && item.similar.options.length)}}"
+                    class="link small"
+                    data-id="{{item.id}}"
+                    bindtap="answerThis"
+                    >交答案</text
+                  >
+                  <text
+                    class="link small quiet"
+                    data-id="{{item.id}}"
+                    bindtap="revealSimilar"
+                    >看答案</text
+                  >
+                </view>
+              </view>
+            </block>
+
+            <block wx:else>
+              <view
+                wx:if="{{item.status === 'streaming' && !item.blocks.length && !item.tail}}"
+                class="dots"
+              >
+                <view class="dot" /><view class="dot" /><view class="dot" />
+                <text class="dots-text"
+                  >{{item.kind === 'recheck' ? '刚才的结果对不上，我再算一遍' :
+                  item.thinking ? '正在想' : '正在写'}}</text
+                >
+              </view>
+              <rich
+                blocks="{{item.blocks}}"
+                tail="{{item.tail}}"
+                tappable="{{item.status === 'done'}}"
+                data-id="{{item.id}}"
+                bindpick="pickBlock"
+              />
+              <view wx:if="{{item.status === 'failed'}}" class="failed"
+                >{{item.errorText || '这次没答完，可以再问一次'}}</view
+              >
+            </block>
+            <!-- V4.2 (G5): no echo of the student's words; one quiet link. -->
+            <view wx:if="{{item.guide && item.guide.spot}}" class="guide-spot"
+              ><text
+                class="spot-go"
+                data-id="{{item.id}}"
+                bindtap="collectSpot"
+                >记下刚才那句 ›</text
+              ></view
+            >
+            <text
+              wx:if="{{item.id === collectId}}"
+              class="collect-link"
+              data-id="{{item.id}}"
+              bindtap="collectMessage"
+              >＋ 存成卡</text
+            >
+          </view>
+          <chat-panel
+            wx:if="{{item.quote && thread && thread.mode === 'teach'}}"
+            part="teach"
+            thread="{{thread}}"
+            message="{{item}}"
+            bindteachsave="teachsave"
+            bindteachchange="teachchange"
+            bindteachpick="teachpick"
+          />
+        </view>
+      </block>
+
+      <view wx:if="{{busy === 'similar'}}" class="ai ask-wait">
+        <task-progress steps="{{waitSteps.make}}" startedAt="{{busyAt}}" expectSec="{{40}}" slowAfter="{{3600}}" vague="{{true}}" />
+      </view>
+
+      <chat-panel
+        part="actions"
+        thread="{{thread}}"
+        actions="{{actions}}"
+        sending="{{sending || busy !== ''}}"
+        wrap-due="{{wrapDue}}"
+        bindaction="act"
+        bindwrap="openWrap"
+      />
+
+      <view wx:if="{{busy === 'wrap'}}" class="ai ask-wait">
+        <task-progress steps="{{waitSteps.wrap}}" startedAt="{{busyAt}}" expectSec="{{30}}" slowAfter="{{3600}}" vague="{{true}}" />
+      </view>
+      <view wx:if="{{thread && thread.wrapReady && !busy && !sending}}" class="wrap-ready" hover-class="pressed" bindtap="openWrap" aria-role="button">理好的卡还没存<text class="go">去看看 ›</text></view>
+
+      <view
+        wx:if="{{thread && thread.mistake && !sending}}"
+        class="book-strip {{thread.mistake.status}}"
+      >
+        <image
+          class="icon"
+          src="{{thread.mistake.status === 'open' ? '/assets/icons/target-rose.png' : '/assets/marks/tick-green.png'}}"
+        />
+        <text class="book-strip-text"
+          >{{thread.mistake.status === 'open' ? '这题放进错题本了，' +
+          thread.mistakeText : '错题本里这题你已经会了'}}</text
+        >
+        <text class="link small" bindtap="openMistakes">打开</text>
+        <text
+          wx:if="{{thread.mistake.status === 'open'}}"
+          class="link small quiet"
+          bindtap="dropMistake"
+          >移出</text
+        >
+      </view>
+
+      <view
+        wx:if="{{thread && thread.mistake && thread.mistake.mapPoint && !sending}}"
+        class="map-link"
+        hover-class="pressed"
+        bindtap="openPoint"
+      >
+        <view class="map-link-copy"
+          ><text class="map-link-k">这题考的是</text
+          ><text class="map-link-title"
+            >{{thread.mistake.mapPoint.name}}</text
+          ></view
+        >
+        <text class="map-link-go">去看看 ›</text>
+      </view>
+
+      <view
+        wx:if="{{thread && thread.homeworkOf && !sending}}"
+        class="from-strip"
+      >
+        <text class="from-strip-text">这道题来自一页作业</text>
+        <text class="link small" bindtap="openHomework">回到这页作业</text>
+      </view>
+
+      <view
+        wx:if="{{thread && thread.pending.length && !sending}}"
+        class="pending"
+      >
+        <text class="small quiet"
+          >这张照片里还有 {{thread.pending.length}} 道题</text
+        >
+        <view class="pending-list">
+          <view
+            wx:for="{{thread.pendingShow}}"
+            wx:key="index"
+            class="chip"
+            hover-class="btn-press"
+            data-index="{{index}}"
+            bindtap="pickPending"
+            >问：{{item}}</view
+          >
+        </view>
+      </view>
+
+      <text
+        wx:if="{{tip && messages.length <= 2 && !sending && actions.length}}"
+        class="tip"
+        >哪段没看懂，点那段就能问</text
+      >
+    </view>
+
+    <view wx:if="{{busy === 'practice'}}" class="scan-working">
+      <task-progress steps="{{waitSteps.make}}" startedAt="{{busyAt}}" expectSec="{{40}}" slowAfter="{{3600}}" vague="{{true}}" />
+    </view>
+    <view wx:if="{{scanning}}" class="scan-working">
+      <task-progress steps="{{waitSteps.scan}}" startedAt="{{scanAt}}" expectSec="{{20}}" slowAfter="{{3600}}" vague="{{true}}" />
+    </view>
+    <view wx:if="{{notice}}" class="notice">{{notice}}</view>
+    <view wx:if="{{error && !scan}}" class="alert">{{error}}</view>
+
+    <view wx:if="{{thread || messages.length}}" class="composer {{kb ? 'kb-up' : ''}}" style="bottom:{{kb}}px">
+      <view wx:if="{{quote}}" class="hint-chip">
+        <text class="hint-text">问这段：{{quote}}</text>
+        <text class="hint-x" bindtap="clearQuote">取消</text>
+      </view>
+      <view wx:elif="{{answering}}" class="hint-chip answer">
+        <text class="hint-text">写下你算出的答案，我帮你看对不对</text>
+        <text class="hint-x" bindtap="cancelAnswer">取消</text>
+      </view>
+      <view class="input-row">
+        <view class="cam" hover-class="pressed" bindtap="photoMenu">
+          <image class="icon" src="/assets/icons/camera-ink.png" />
+        </view>
+        <textarea
+          class="input"
+          fixed
+          auto-height
+          disable-default-padding
+          maxlength="{{answering ? 500 : 2000}}"
+          cursor-spacing="28"
+          adjust-position="{{false}}"
+          show-confirm-bar="{{false}}"
+          confirm-type="send"
+          placeholder="{{answering ? '写结果就行，分数写成 a/b' : answerHint ? '写下你的答案' : thread && thread.mode === 'teach' ? '讲讲你的理解' : '想问什么都可以'}}"
+          placeholder-class="placeholder"
+          value="{{draft}}"
+          focus="{{focus}}"
+          bindinput="onDraft"
+          bindblur="onBlur"
+          bindkeyboardheightchange="keyboardHeight"
+          bindconfirm="submit"
+        />
+        <view
+          wx:if="{{thread}}"
+          class="tool"
+          hover-class="pressed"
+          bindtap="moreChat"
+          >⋯</view
+        >
+        <view
+          class="send {{draft && !sending ? 'on' : ''}}"
+          hover-class="btn-press"
+          bindtap="submit"
+        >
+          <image class="icon" src="/assets/icons/send-white.png" />
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view wx:if="{{scan}}" class="scrim" bindtap="closeScan">
+    <view class="pop" catchtap="noop">
+      <view class="pop-top">
+        <text class="h3">{{scan.title}}</text>
+        <text class="close" bindtap="closeScan">关闭</text>
+      </view>
+      <view wx:if="{{scan.mismatch}}" class="notice">{{scan.mismatch}}</view>
+      <!-- Refused (the allowance, the network): said here, the photo shown again. -->
+      <view wx:if="{{error}}" class="alert">{{error}}</view>
+
+      <block wx:if="{{scan.kind === 'problems'}}">
+        <view wx:if="{{scan.homework}}" class="hw-cta">
+          <button class="btn" hover-class="btn-press" bindtap="gradeHomework">
+            逐题批改这一页
+          </button>
+          <text class="small quiet block"
+            >看不清的我会先问你。也可以只挑一道：</text
+          >
+        </view>
+        <view wx:for="{{scan.problems}}" wx:key="index" class="scan-item">
+          <textarea
+            wx:if="{{scan.editing === index}}"
+            class="field"
+            auto-height
+            maxlength="1500"
+            value="{{scan.editText}}"
+            bindinput="onEditText"
+          />
+          <rich wx:else blocks="{{item.blocks}}" />
+          <text wx:if="{{item.unclear}}" class="scan-unclear"
+            >可能没认清：{{item.unclear}}</text
+          >
+          <view class="scan-actions">
+            <text
+              wx:if="{{scan.editing !== index}}"
+              class="link small"
+              data-index="{{index}}"
+              bindtap="editProblem"
+              >没认对？改一下</text
+            >
+            <text wx:else class="small quiet">改好了直接点“问这道”</text>
+            <view
+              class="chip primary"
+              hover-class="btn-press"
+              data-index="{{index}}"
+              bindtap="askProblem"
+              >问这道</view
+            >
+          </view>
+        </view>
+      </block>
+
+      <block wx:elif="{{scan.kind === 'solution'}}">
+        <view class="scan-item">
+          <rich blocks="{{scan.solution.blocks}}" />
+          <text wx:if="{{scan.solution.unclear}}" class="scan-unclear"
+            >可能没认清：{{scan.solution.unclear}}</text
+          >
+        </view>
+        <text
+          wx:if="{{!(thread && thread.problem) && !scan.problems.length}}"
+          class="lede small"
+          >没拍到题目，我只能看你每一步前后对不对得上。</text
+        >
+        <button class="btn" hover-class="btn-press" bindtap="gradeSteps">
+          去批改
+        </button>
+      </block>
+
+      <block wx:elif="{{scan.kind === 'notes'}}">
+        <text class="lede scan-notes">{{scan.notes}}</text>
+        <button class="btn" hover-class="btn-press" bindtap="useNotes">
+          问问这段讲的是什么
+        </button>
+      </block>
+
+      <view wx:else class="empty">
+        <text>换个角度、拍清楚一点再试；也可以直接打字问。</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{history}}" class="scrim" bindtap="closeHistory">
+    <view class="pop" catchtap="noop">
+      <view class="pop-top">
+        <text class="h3">历史对话</text>
+        <text class="close" bindtap="closeHistory">关闭</text>
+      </view>
+      <view wx:if="{{threads.length}}" class="rows flat">
+        <view
+          wx:for="{{threads}}"
+          wx:key="id"
+          class="item"
+          hover-class="pressed"
+          data-id="{{item.id}}"
+          data-homework="{{item.homework}}"
+          data-tool="{{item.tool}}"
+          bindtap="openThread"
+          bindlongpress="removeThread"
+        >
+          <view class="tile {{item.problem || item.homework ? '' : 'violet'}}"
+            ><image
+              class="icon"
+              src="/assets/icons/{{item.homework ? 'clipboard' : item.problem ? 'pen' : 'chat'}}-ink.png"
+          /></view>
+          <view class="copy">
+            <text class="title">{{item.title || '对话'}}</text>
+            <view class="meta"
+              ><text
+                >{{item.homework ? '作业 · ' : ''}}{{item.when}}</text
+              ></view
+            >
+          </view>
+        </view>
+      </view>
+      <view wx:else class="empty"><text>还没有对话</text></view>
+      <view wx:if="{{more}}" class="more-line" hover-class="pressed" bindtap="moreThreads" aria-role="button">{{moreBusy ? '打开中…' : '更早的记录'}}</view>
+      <text wx:if="{{threads.length}}" class="foot center"
+        >长按一条可以删掉</text
+      >
+    </view>
+  </view>
+
+  <view wx:if="{{checks}}" class="scrim" bindtap="closeChecks">
+    <view class="pop" catchtap="noop">
+      <view class="pop-top">
+        <text class="h3">我算了一遍</text>
+        <text class="close" bindtap="closeChecks">关闭</text>
+      </view>
+      <text wx:if="{{checks.text}}" class="check-sum {{checks.tone}}"
+        >{{checks.text}}</text
+      >
+      <view wx:for="{{checks.items}}" wx:key="index" class="check-item">
+        <view class="row">
+          <text class="tag {{item.tone}}">{{item.label}}</text>
+          <text wx:if="{{item.computed}}" class="small quiet"
+            >算出来是 {{item.computed}}</text
+          >
+        </view>
+        <rich wx:if="{{item.formula}}" blocks="{{item.formula}}" />
+        <text wx:elif="{{item.tex}}" class="mono small check-tex"
+          >{{item.tex}}</text
+        >
+        <text wx:if="{{item.detail}}" class="small check-detail"
+          >{{item.detail}}</text
+        >
+      </view>
+      <text wx:if="{{!checks.items.length}}" class="lede"
+        >这条没有能算的式子，你自己再想想对不对。</text
+      >
+    </view>
+  </view>
+</view>
+
+<wxs module="num">
+// Several similar problems in one conversation are numbered, and so is the
+// judge of an answer to one of them.
+function no(messages, id) {
+  var count = 0;
+  var found = 0;
+  for (var i = 0; i < messages.length; i++) {
+    var m = messages[i];
+    if (m.kind === "similar" && !m.practice) {
+      count++;
+      if (m.id === id) found = count;
+    }
+  }
+  return count > 1 ? found : 0;
+}
+// A short lead for replies that are not plain answers.
+function lead(item, messages) {
+  if (item.kind === "recheck") return "我又算了一遍：";
+  if (item.kind === "similar") {
+    if (item.practice) return "练一题：";
+    var k = no(messages, item.id);
+    return k ? "第 " + k + " 道同类题：" : "来一道同类题：";
+  }
+  if (item.kind === "judge" && item.similarOf) {
+    var j = no(messages, item.similarOf);
+    return j ? "第 " + j + " 道同类题：" : "";
+  }
+  return "";
+}
+module.exports = { lead: lead };
+</wxs>

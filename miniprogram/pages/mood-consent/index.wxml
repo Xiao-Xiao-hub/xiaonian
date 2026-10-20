@@ -1,0 +1,13 @@
+<view class="page mood-consent">
+  <view class="consent-head"><view class="moon">☾</view><text class="h1">聊心情之前</text></view>
+  <view class="consent-list">
+    <view class="consent-item">你写的心情会发给我们委托的大模型服务方来回复你，也会发给判断服务方，用来看有没有安全风险、推荐相关的卡等（见<text class="link" bindtap="openPrivacy">《隐私政策》</text>）。</view>
+    <view class="consent-item">AI 生成，不是心理咨询或医疗建议；有困扰，找专业人士帮忙。</view>
+    <view class="consent-item">心情卡也会出现在随心记里，聊别的时可能被推荐带进来（在“我的”里能关）。</view>
+    <view class="consent-item">换成聊心情后，这整段都算心情记录；之前存好的卡不变。</view>
+    <view class="consent-item">随时能在“我的 › 心情记录”一键删除全部心情内容，带进过心情卡的对话和头脑风暴也一起删；撤回同意也会全删。</view>
+  </view>
+  <view wx:if="{{child}}" class="guardian" bindtap="toggleGuardian"><view class="box {{guardian ? 'on' : ''}}">{{guardian ? '✓' : ''}}</view><text class="g-text">我是监护人，已阅读以上内容和<text class="link" catchtap="openChildren">《儿童隐私政策》</text>，同意孩子使用心情记录</text></view>
+  <text wx:if="{{error}}" class="form-error">{{error}}</text>
+  <view class="consent-actions"><button class="btn" loading="{{saving}}" disabled="{{saving}}" bindtap="agree">同意并继续</button><button class="btn-line" disabled="{{saving}}" bindtap="cancel">不用了</button></view>
+</view>

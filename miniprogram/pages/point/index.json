@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "练一题",
+  "usingComponents": {
+    "rich": "/components/rich/index",
+    "numpad": "/components/numpad/index",
+    "task-progress": "/components/task-progress/index"
+  }
+}

@@ -1,0 +1,168 @@
+<view class="page tool-page" capture-bind:touchstart="studyTouch">
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+  <view wx:if="{{usageText}}" class="usage">{{usageText}}</view>
+  <guest-bar />
+
+  <block wx:if="{{stage === 'start'}}">
+    <tool-start icon="ic-memo.webp" title="批改" lede="拍下你写的解答，一道题或一页都行；一页最多批 {{pageMax}} 道" bindpick="pick">
+      <view class="tl-type" hover-class="pressed" bindtap="typeIn" aria-role="button">没拍照？直接打字 ›</view>
+    </tool-start>
+    <view wx:if="{{scanning || scanError}}" class="gr-wait">
+      <task-progress steps="{{scanSteps}}" startedAt="{{scanAt}}" expectSec="{{20}}" slowAfter="{{3600}}" vague="{{true}}" error="{{scanError}}" retryText="再认一次" busy="{{scanning}}" bind:retry="rescan" />
+    </view>
+    <view wx:if="{{suggest}}" class="tl-switch" hover-class="pressed" bindtap="switchTool" aria-role="button">
+      <text>{{suggest.text}}</text><text class="tl-go">{{suggest.go}} ›</text>
+    </view>
+    <view wx:if="{{error}}" class="alert">{{error}}<text wx:if="{{retryPage}}" class="link" bindtap="retryStart">再试一次</text></view>
+
+    <view wx:if="{{resume || history.length}}" class="gr-list">
+      <text class="h3">批改记录</text>
+      <view wx:if="{{resume}}" class="gr-row" hover-class="pressed" bindtap="resumeEdit" aria-role="button">
+        <view class="gr-copy"><text class="gr-t">{{resume.text || '没写完的一道'}}</text><text class="gr-s">还没批，接着核对</text></view>
+        <text class="tag amber">继续</text>
+      </view>
+      <view wx:for="{{history}}" wx:key="id" class="gr-row" hover-class="pressed" data-id="{{item.id}}" data-kind="{{item.kind}}" bindtap="openPast" bindlongpress="removePast" aria-role="button">
+        <view class="gr-copy"><text class="gr-t">{{item.title}}</text><text class="gr-s">{{item.kind}} · {{item.when}}</text></view>
+        <text wx:if="{{item.open}}" class="tag amber">没批完</text>
+        <text wx:else class="gr-go">›</text>
+      </view>
+      <view wx:if="{{historyMore}}" class="more-line" hover-class="pressed" bindtap="moreHistory" aria-role="button">{{historyBusy ? '打开中…' : '更早的记录'}}</view>
+    </view>
+    <view wx:if="{{historyFailed}}" class="alert">记录没打开<text class="link" bindtap="retryHistory">再试一次</text></view>
+  </block>
+
+  <block wx:elif="{{stage === 'edit'}}">
+    <view class="tl-card">
+      <view class="tl-top">
+        <text class="h3">{{photo || imageId ? '认出来的，核对一下' : '写下题目和过程'}}</text>
+        <text class="link small {{grading ? 'off' : ''}}" bindtap="again">{{photo ? '重新拍' : '返回'}}</text>
+      </view>
+      <image wx:if="{{photo}}" class="tl-photo" src="{{photo}}" mode="aspectFill" bindtap="viewPhoto" binderror="photoBroken" />
+      <view wx:if="{{suggest}}" class="tl-switch" hover-class="pressed" bindtap="switchTool" aria-role="button">
+        <text>{{suggest.text}}</text><text class="tl-go">{{suggest.go}} ›</text>
+      </view>
+      <text class="tl-k">题目</text>
+      <view wx:if="{{problemTex && !problemEditing}}" class="gr-problem" hover-class="pressed" bindtap="editProblem" aria-role="button" aria-label="改题目">
+        <rich wx:if="{{problemView}}" blocks="{{problemView}}" />
+        <text wx:else class="gr-ptext">{{problem}}</text>
+      </view>
+      <block wx:else>
+        <textarea class="field tl-field" auto-height maxlength="1500" placeholder="把题目写在这里" placeholder-class="placeholder" value="{{problem}}" focus="{{problemEditing}}" bindinput="onProblem" />
+        <view wx:if="{{problemEditing && problemTex}}" class="pv-foot">
+          <view wx:if="{{problemView}}" class="pv-rich"><rich blocks="{{problemView}}" /></view>
+          <text class="pv-done link tap-area" bindtap="problemDone" aria-role="button">好了</text>
+        </view>
+      </block>
+      <text class="tl-k">你的过程（一行一步）</text>
+      <step-edit lines="{{lines}}" bindchange="onLines" />
+      <text wx:if="{{unclear}}" class="tl-unclear">可能没认清：{{unclear}}</text>
+    </view>
+    <view wx:if="{{error}}" class="alert">{{error}}</view>
+    <view wx:if="{{grading || gradeError}}" class="gr-wait">
+      <task-progress steps="{{draftSteps}}" startedAt="{{gradeAt}}" expectSec="{{45}}" slowAfter="{{3600}}" vague="{{true}}" error="{{gradeError}}" retryText="再批一次" busy="{{grading}}" leaveText="{{grading ? '先去做别的，回来接着看' : ''}}" bind:retry="grade" bind:leave="leave" />
+    </view>
+    <button wx:if="{{!grading && !gradeError}}" class="btn" hover-class="btn-press" bindtap="grade">开始批改</button>
+  </block>
+
+  <block wx:elif="{{stage === 'draft' && result}}">
+    <view class="tl-card">
+      <view class="tl-verdict {{result.tone}}">{{result.head}}</view>
+      <text wx:if="{{result.summary}}" class="tl-sum">{{result.summary}}</text>
+      <view wx:if="{{result.problem.length}}" class="gr-problem">
+        <view class="gr-pk"><text>题目</text><text wx:if="{{result.imageId}}" class="link small" bindtap="viewOriginal">看原图</text></view>
+        <rich blocks="{{result.problem}}" />
+      </view>
+      <view class="tl-steps">
+        <view wx:for="{{result.steps}}" wx:key="no" class="st {{item.first ? 'first' : ''}}">
+          <view class="st-row">
+            <text class="st-mark {{item.tone}}">{{item.mark}}</text>
+            <view class="st-body"><rich blocks="{{item.blocks}}" /></view>
+          </view>
+          <text wx:if="{{item.note && !item.first}}" class="st-note">{{item.note}}</text>
+          <view wx:if="{{item.first && result.first}}" class="st-why">
+            <text class="st-k">错在哪</text>
+            <rich blocks="{{result.first.why}}" />
+            <block wx:if="{{result.first.fix.length}}">
+              <text class="st-k">怎么改</text>
+              <rich blocks="{{result.first.fix}}" />
+            </block>
+          </view>
+        </view>
+      </view>
+    </view>
+    <block wx:if="{{result.verdict === 'wrong'}}">
+      <button class="btn" hover-class="btn-press" bindtap="solution">看正确做法</button>
+      <view wx:if="{{result.inBook}}" class="gr-book" hover-class="pressed" bindtap="openMistakes"><text>这题已放进错题本</text><text class="link small">去错题本 ›</text></view>
+      <button wx:else class="btn-line" hover-class="pressed" bindtap="addMistake">放进错题本</button>
+    </block>
+    <block wx:elif="{{result.verdict === 'unsure'}}">
+      <button class="btn" hover-class="btn-press" bindtap="fix">核对题目和过程，再批一次</button>
+      <button class="btn-line" hover-class="pressed" disabled="{{result.inBook}}" bindtap="addMistake">{{result.inBook ? '已在错题本' : '放进错题本'}}</button>
+    </block>
+    <view class="tl-again">
+      <text wx:if="{{result.verdict !== 'unsure' && result.lines.length}}" class="btn-text grey" bindtap="fix">认错了？改一下再批</text>
+      <text wx:if="{{result.verdict !== 'wrong'}}" class="btn-text grey" bindtap="solution">看参考做法</text>
+      <text class="btn-text grey" bindtap="again">再批一份</text>
+    </view>
+  </block>
+
+  <block wx:elif="{{stage === 'page'}}">
+    <view class="head">
+      <text class="h2">{{title || '作业'}}</text>
+    </view>
+    <view wx:if="{{score}}" class="hw-score"><text class="hw-score-n">{{score}}</text></view>
+    <view wx:if="{{job}}" class="gr-wait">
+      <task-progress steps="{{pageSteps}}" job="{{job}}" unit="题" expectSec="{{90}}" slowAfter="{{3600}}" leaveText="先去做别的，批完在批改记录里看" bind:leave="leave" />
+    </view>
+    <view wx:if="{{summary || pageImageId}}" class="line">
+      <text class="small quiet">{{summary}}</text>
+      <text wx:if="{{pageImageId}}" class="link small" bindtap="viewOriginal">看原图</text>
+    </view>
+    <text wx:if="{{full}}" class="small quiet gr-full">一页最多批 {{pageMax}} 道，后面的题可以再拍一张</text>
+    <view wx:if="{{error && !items.length}}" class="alert">{{error}}<text class="link" bindtap="load">再试一次</text></view>
+    <view wx:elif="{{error}}" class="alert">{{error}}</view>
+
+    <view wx:for="{{items}}" wx:key="index" class="hw">
+      <view class="hw-top">
+        <text class="hw-no">第 {{item.no}} 题</text>
+        <text class="tag {{item.badge.tone}}">{{item.badge.text}}</text>
+      </view>
+      <block wx:if="{{editing === item.index}}">
+        <text class="edit-k">题目</text>
+        <textarea class="field" auto-height maxlength="1500" value="{{editText}}" bindinput="onEditText" />
+        <text class="edit-k">你的步骤（一行一步；看不清的打了 ？，改成你写的）</text>
+        <textarea class="field" auto-height maxlength="6000" value="{{editSteps}}" bindinput="onEditSteps" />
+        <view class="acts">
+          <view class="act main" hover-class="btn-press" bindtap="submitEdit">{{sending ? '正在批…' : '改好了，再批'}}</view>
+          <view class="act quiet" hover-class="pressed" bindtap="cancelEdit">取消</view>
+        </view>
+      </block>
+      <block wx:else>
+        <view class="problem"><rich blocks="{{item.problem}}" /></view>
+        <view wx:if="{{item.status !== 'grading'}}" class="work">
+          <text class="work-k">认出的步骤</text>
+          <rich wx:if="{{item.work.length}}" blocks="{{item.work}}" />
+          <text wx:else class="small quiet">（没看清你的步骤）</text>
+        </view>
+        <view wx:if="{{item.status === 'unclear'}}" class="slip amber">{{item.held ? item.unclear : '可能没看清：' + item.unclear}}</view>
+        <view wx:if="{{item.status === 'done' && item.cause}}" class="slip {{item.badge.tone}}">{{item.cause}}</view>
+        <view class="acts">
+          <view wx:if="{{item.status === 'done' && item.threadId}}" class="act main" hover-class="btn-press" data-index="{{index}}" bindtap="openItem">{{item.verdict === 'wrong' ? '看哪一步错了' : '看看怎么批的'}}</view>
+          <view wx:if="{{item.status === 'unclear' && item.canConfirm && !item.waiting}}" class="act main" hover-class="btn-press" data-index="{{index}}" bindtap="confirm">{{item.held ? '现在批这道' : '没错，就是这样'}}</view>
+          <view wx:if="{{item.status === 'failed'}}" class="act main" hover-class="btn-press" data-index="{{index}}" bindtap="confirm">再批一次</view>
+          <view wx:if="{{item.status !== 'grading'}}" class="act {{item.status === 'unclear' && !item.canConfirm ? 'main' : 'quiet'}}" hover-class="pressed" data-index="{{index}}" bindtap="edit">{{item.status === 'done' ? '认错了？改一下' : '改一下'}}</view>
+          <view wx:if="{{item.status === 'done' && item.threadId && item.verdict !== 'correct'}}" class="act {{item.inBook ? 'quiet' : ''}}" hover-class="pressed" data-index="{{index}}" bindtap="addItemMistake">{{item.inBook ? '已在错题本' : '放进错题本'}}</view>
+        </view>
+      </block>
+    </view>
+
+    <view wx:if="{{counts && counts.wrong && !counts.grading}}" class="gr-book" hover-class="pressed" bindtap="openMistakes">
+      <text>做错的题放进错题本了</text>
+      <text class="link small">去错题本 ›</text>
+    </view>
+    <view class="tl-again"><text class="btn-text grey" bindtap="again">再批一份</text></view>
+  </block>
+
+  <view wx:if="{{loading}}" class="working"><text class="h3">打开中…</text><view class="bar" /></view>
+  <view wx:if="{{error && loadFailed && stage !== 'page'}}" class="alert">{{error}}<text class="link" bindtap="load">再试一次</text></view>
+</view>

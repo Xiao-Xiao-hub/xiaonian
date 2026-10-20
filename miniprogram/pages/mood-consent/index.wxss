@@ -1,0 +1,16 @@
+.mood-consent { display: flex; flex-direction: column; min-height: calc(100vh - 96rpx); padding-top: 28rpx; }
+.consent-head { display: flex; flex-direction: column; align-items: center; gap: 20rpx; padding: 12rpx 0 36rpx; }
+.consent-head .h1 { font-size: 44rpx; }
+.moon { display: flex; align-items: center; justify-content: center; width: 88rpx; height: 88rpx; border-radius: 28rpx; background: var(--primary-wash); color: var(--primary); font-size: 58rpx; line-height: 1; }
+.consent-list { padding: 4rpx 30rpx; background: var(--card); border-radius: 32rpx; box-shadow: var(--shadow); }
+.consent-item { position: relative; padding: 22rpx 0 22rpx 26rpx; font-size: 30rpx; line-height: 1.7; color: var(--ink); }
+.consent-item + .consent-item { border-top: 2rpx solid var(--rule); }
+.consent-item::before { content: ""; position: absolute; left: 0; top: 42rpx; width: 10rpx; height: 10rpx; border-radius: 50%; background: var(--faint); }
+.consent-item .link { color: var(--link); text-decoration: underline; }
+.consent-actions { margin-top: auto; padding-top: 32rpx; }
+.consent-actions .btn { margin-top: 0; }
+.guardian { display: flex; align-items: flex-start; gap: 16rpx; margin-top: 28rpx; padding: 0 8rpx; }
+.guardian .box { flex: none; display: flex; align-items: center; justify-content: center; width: 36rpx; height: 36rpx; margin-top: 6rpx; border: 3rpx solid var(--rule-2); border-radius: 8rpx; color: #ffffff; font-size: 24rpx; line-height: 1; box-sizing: border-box; }
+.guardian .box.on { border-color: var(--primary); background: var(--primary); }
+.guardian .g-text { flex: 1; color: var(--body); font-size: 28rpx; line-height: 1.7; }
+.guardian .link { color: var(--link); }

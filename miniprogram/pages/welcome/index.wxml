@@ -1,0 +1,40 @@
+<view class="root">
+<page-head />
+<view class="welcome">
+  <view class="stage">
+    <view class="bubble">Hi～欢迎来到晓念。
+点击下方「<text class="b">同意</text>」我们就开始学习吧！</view>
+    <image wx:if="{{hi.src}}" class="xl" src="{{hi.src}}" webp="{{hi.webp}}" mode="aspectFit" binderror="hiError" />
+  </view>
+  <view class="pv">
+    <text class="ttl">用户隐私协议</text>
+    <scroll-view class="ptext" scroll-y="{{true}}">
+      <view class="pp">感谢你使用晓念！我们非常重视你的个人信息和隐私保护。为了更好地保障你的权益，请你认真阅读<text class="lk" data-doc="user-agreement" bindtap="openDoc">《用户协议》</text>、<text class="lk" data-doc="privacy-policy" bindtap="openDoc">《隐私政策》</text>和<text class="lk" data-doc="children-privacy" bindtap="openDoc">《儿童隐私政策》</text>的全部内容，同意并接受全部条款后开始使用我们的产品和服务。并特向你说明以下信息：</view>
+      <view class="pp">1. 我们只处理你主动写下、拍下、选择或导入的内容，以及由此生成的卡片、对话和学习记录；不获取你的微信昵称、头像、手机号、位置和通讯录。</view>
+      <view class="pp">2. 使用 AI 功能时，相关内容会发给我们委托的大模型服务方处理。大模型生成的内容可能有误，请注意核实。</view>
+      <view class="pp">3. 你可以在“我的”里导出数据、删除内容、撤回同意或注销账号。</view>
+      <view class="pp">4. 未满 14 周岁的，需要监护人阅读并同意<text class="lk" data-doc="children-privacy" bindtap="openDoc">《儿童隐私政策》</text>后才能使用。</view>
+    </scroll-view>
+  </view>
+  <view class="acts">
+    <button class="btn" hover-class="btn-press" open-type="agreePrivacyAuthorization" bindagreeprivacyauthorization="agree" bindtap="agree">同意并继续</button>
+    <text class="no" bindtap="refuse">不同意，先看看</text>
+  </view>
+</view>
+</view>
+
+<view wx:if="{{youth}}" class="scrim youth" catchtouchmove="noop">
+  <view class="yhead">
+    <text class="yt">青少年守护</text>
+    <view class="yx-hit" bindtap="closeYouth" aria-role="button" aria-label="关闭"><view class="yx" /></view>
+  </view>
+  <view class="ysheet">
+    <view class="yp">如果你未满 14 周岁，请告知家长共同阅读晓念<text class="lk" data-doc="privacy-policy" bindtap="openDoc">《隐私政策》</text>和<text class="lk" data-doc="children-privacy" bindtap="openDoc">《儿童隐私政策》</text>，取得同意后，再使用晓念进行学习，点击“监护人同意”即表示你和你的家长同意并接受全部条款。</view>
+    <text wx:if="{{error}}" class="err">{{error}}</text>
+    <view class="two">
+      <button class="btn-line" hover-class="btn-press" disabled="{{busy}}" data-age="child" bindtap="pick">{{busy && age === 'child' ? '稍等…' : '监护人同意'}}</button>
+      <button class="btn" hover-class="btn-press" disabled="{{busy}}" data-age="adult" bindtap="pick">{{busy && age === 'adult' ? '稍等…' : '已满14岁'}}</button>
+    </view>
+    <text class="guest" bindtap="guest">游客模式</text>
+  </view>
+</view>

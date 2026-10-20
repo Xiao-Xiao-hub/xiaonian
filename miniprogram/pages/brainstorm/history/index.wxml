@@ -1,0 +1,14 @@
+<view class="page bs-history">
+  <view wx:if="{{error}}" class="alert">{{error}}<text class="link tap-area" bindtap="load" aria-role="button">再试一次</text></view>
+  <view wx:if="{{rows.length}}" class="rows">
+    <view wx:for="{{rows}}" wx:key="id" class="item" hover-class="pressed" data-url="{{item.url}}" bindtap="open" aria-role="button" aria-label="{{item.text}}，{{item.state}}">
+      <view class="copy">
+        <text class="title">{{item.text}}</text>
+        <view class="meta"><text>{{item.when}}</text><text class="bh-state {{item.retry ? 'retry' : ''}}">{{item.state}}</text></view>
+      </view>
+      <text class="bh-chev">›</text>
+    </view>
+  </view>
+  <text wx:elif="{{loaded && !error}}" class="empty">还没有做过头脑风暴</text>
+  <text wx:if="{{loading && !rows.length}}" class="foot center">打开中…</text>
+</view>

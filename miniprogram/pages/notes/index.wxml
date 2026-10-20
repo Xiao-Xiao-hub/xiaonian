@@ -1,0 +1,40 @@
+<page-head title="随心记" tint="blue" />
+<view wx:if="{{ready}}" class="page ph-body">
+  <guest-bar />
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+
+  <task-strip wx:if="{{consent}}" />
+  <resume-card wx:if="{{consent}}" id="resume" quiet tidy="{{tidy}}" bind:state="resumeState" bind:tidylater="tidyLater" bind:changed="resumeChanged" bind:compose="focusCompose"/>
+  <view wx:if="{{consent && chatBack}}" class="chat-back" hover-class="pressed" bindtap="goOnChat"><text class="cb-label">上次没聊完</text><text class="cb-title">{{chatBack.title}}</text><text class="cb-go">接着聊 ›</text></view>
+  <view wx:if="{{cardsLoaded && !allTotal && !helloClosed && (!consent || (resumeKnown && !resumeShown))}}" class="sticky hi">
+    <image wx:if="{{!helloFail}}" class="xl" src="{{helloImg}}" webp="{{true}}" mode="aspectFit" binderror="helloError"/>
+    <view class="tx"><text class="b">你好，我是小狸</text><text class="s">想到什么就写在下面，我帮你整理成卡片。以后我会在这里提醒你回顾。</text></view>
+    <view class="close tap-area" bindtap="closeHello" aria-role="button" aria-label="关闭">×</view>
+  </view>
+
+  <view class="compose">
+    <view wx:if="{{context}}" class="context"><text>放进「{{context.name}}」</text><view class="ctx-x tap-area" bindtap="clearContext">取消</view></view>
+    <textarea value="{{text}}" bindinput="onText" maxlength="2000" placeholder="想到什么，写一句就行" placeholder-class="compose-ph" focus="{{composeFocus}}" bindblur="composeBlur"/>
+    <view class="acts">
+      <button class="ibtn tap-area" data-pick="photo" bindtap="openImport" aria-label="拍照"><image src="/assets/icons/camera-ink.png" mode="aspectFit"/></button>
+      <button class="ibtn tap-area" data-pick="screenshot" bindtap="openImport" aria-label="相册图片"><image src="/assets/icons/image-ink.png" mode="aspectFit"/></button>
+      <button class="ibtn tap-area" data-pick="file" bindtap="openImport" aria-label="聊天里的文件"><view class="ico ico-file"/></button>
+      <view class="grow"/>
+      <button class="btn-text" bindtap="save" loading="{{saving}}" disabled="{{saving}}">先记下</button>
+      <button class="btn sm" bindtap="chat" disabled="{{saving}}">聊一聊</button>
+    </view>
+    <text wx:if="{{error}}" class="error">{{error}}</text>
+  </view>
+  <view wx:if="{{saved}}" class="receipt"><text>记下了</text><text class="link" data-saved="true" bindtap="chat">聊一聊 ›</text></view>
+  <text wx:if="{{firstHint}}" class="first-hint">过几天会在这里问你一句。</text>
+
+  <block wx:if="{{cardsLoaded && !allTotal && !text}}">
+  <view class="sec-head"><text class="h">试试这样写</text></view>
+  <view class="tries"><view wx:for="{{tries}}" wx:key="text" class="try t-{{item.type}}" data-text="{{item.text}}" bindtap="starter"><view class="tl"><image class="tl-ic" src="/assets/icons/card-{{item.type}}.svg" mode="aspectFit"/><text>{{item.name}}</text></view><text class="tt">{{item.text}}</text><text class="chev">›</text></view></view>
+  </block>
+
+  <block wx:if="{{recent.length}}">
+    <view class="sec-head"><text class="h">{{guest ? '示例卡' : '最近'}}</text><view wx:if="{{!guest}}" class="all tap-area" bindtap="openDeck">全部 ›</view></view>
+    <view class="recent"><card-tile wx:for="{{recent}}" wx:key="id" row card="{{item}}" bind:tap="onTileTap"/></view>
+  </block>
+</view>

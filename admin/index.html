@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="color-scheme" content="light" />
+    <title>晓念 · 运营管理台</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/admin/styles.css" />
+    <script type="module" src="/admin/app.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳转到主要内容</a>
+    <section
+      class="login-screen"
+      id="login-screen"
+      aria-labelledby="login-title"
+    >
+      <div class="login-intro">
+        <a class="brand" href="/admin/"
+          ><span class="brand-symbol" aria-hidden="true">晓</span
+          ><span>晓念<span class="brand-caption">管理台</span></span></a
+        >
+        <div class="login-copy">
+          <p class="eyebrow">晓念 / OPERATIONS</p>
+          <h1>学习在发生，<br /><span>服务有照应。</span></h1>
+          <p>
+            从一次模型调用，到每天的稳定运行。<br />在这里，看清晓念的每一步。
+          </p>
+          <div class="login-capabilities">
+            <span>反馈处理</span><span>AI 接口</span><span>用户与额度</span><span>运行维护</span>
+          </div>
+        </div>
+        <div class="login-illustration" aria-hidden="true">
+          <div class="paper-sheet paper-back"></div>
+          <div class="paper-sheet paper-front">
+            <span class="paper-sticker">晓</span><span class="paper-line"></span
+            ><span class="paper-line short"></span
+            ><span class="paper-line"></span><span class="paper-check">✓</span>
+          </div>
+          <span class="orbit-dot"></span>
+        </div>
+        <p class="login-footnote">晓念 · 给学习一点晴空</p>
+      </div>
+      <div class="login-panel">
+        <form id="login-form" class="login-card">
+          <p class="eyebrow">WELCOME BACK</p>
+          <h2 id="login-title">欢迎回到管理台</h2>
+          <p class="muted">连接你的服务，开始今天的运营巡检。</p>
+          <label for="admin-token">管理员访问密钥</label>
+          <input
+            id="admin-token"
+            name="admin-token"
+            type="password"
+            autocomplete="off"
+            required
+            spellcheck="false"
+            minlength="32"
+            maxlength="256"
+            placeholder="请输入访问密钥"
+            aria-describedby="login-hint"
+            disabled
+          />
+          <p class="field-hint" id="login-hint">
+            访问密钥仅用于验证，不保存在浏览器存储中。管理会话闲置 15
+            分钟或登录满 8 小时后失效。
+          </p>
+          <p id="login-error" class="inline-error" role="alert" hidden></p>
+          <button
+            id="login-submit"
+            class="button primary"
+            type="submit"
+            disabled
+          >
+            正在检查会话…
+          </button>
+          <p class="login-security">
+            <span aria-hidden="true">◇</span>
+            笔记、资料原文和问 AI 对话不在管理台展示
+          </p>
+        </form>
+      </div>
+    </section>
+
+    <div class="workspace" id="workspace" hidden>
+      <aside class="sidebar" aria-label="主导航">
+        <a class="brand" href="/admin/"
+          ><span class="brand-symbol" aria-hidden="true">晓</span
+          ><span>晓念<span class="brand-caption">管理台</span></span></a
+        >
+        <nav id="navigation">
+          <p class="nav-caption">工作台</p>
+          <button
+            type="button"
+            class="nav-item active"
+            data-page="overview"
+            aria-current="page"
+          >
+            <span class="nav-icon" aria-hidden="true">◫</span>工作台
+          </button>
+          <p class="nav-caption">处理</p>
+          <button type="button" class="nav-item" data-page="feedback">
+            <span class="nav-icon" aria-hidden="true">✎</span>反馈处理
+          </button>
+          <button type="button" class="nav-item" data-page="users">
+            <span class="nav-icon" aria-hidden="true">☺</span>用户管理
+          </button>
+          <button type="button" class="nav-item" data-page="jobs">
+            <span class="nav-icon" aria-hidden="true">◷</span>任务总览
+          </button>
+          <p class="nav-caption">配置</p>
+          <button type="button" class="nav-item" data-page="ai">
+            <span class="nav-icon" aria-hidden="true">◈</span>AI 接口
+          </button>
+          <button type="button" class="nav-item" data-page="settings">
+            <span class="nav-icon" aria-hidden="true">⚙</span>额度设置
+          </button>
+          <p class="nav-caption">内容</p>
+          <button type="button" class="nav-item" data-page="bank">
+            <span class="nav-icon" aria-hidden="true">▤</span>题库
+          </button>
+          <button type="button" class="nav-item" data-page="quality">
+            <span class="nav-icon" aria-hidden="true">◎</span>材料与质量
+          </button>
+          <p class="nav-caption">运维</p>
+          <button type="button" class="nav-item" data-page="usage">
+            <span class="nav-icon" aria-hidden="true">▥</span>用量与维护
+          </button>
+          <button type="button" class="nav-item" data-page="audit">
+            <span class="nav-icon" aria-hidden="true">≡</span>操作记录
+          </button>
+          <button type="button" class="nav-item" data-page="operations">
+            <span class="nav-icon" aria-hidden="true">⌁</span>运行状态
+          </button>
+        </nav>
+        <div class="sidebar-bottom">
+          <span class="connection-dot" aria-hidden="true"></span
+          ><span id="connection-label">管理会话已连接</span
+          ><button id="logout" class="text-button" type="button">退出</button>
+        </div>
+      </aside>
+      <div class="workspace-body">
+        <header class="topbar">
+          <div>
+            <span class="breadcrumb">晓念管理台</span
+            ><span class="breadcrumb-separator">/</span
+            ><span id="breadcrumb-current">工作台</span>
+          </div>
+          <div class="topbar-meta">
+            <span id="updated-at" role="status">等待同步</span
+            ><button type="button" id="refresh" class="button small">
+              刷新数据
+            </button>
+          </div>
+        </header>
+        <main id="main" tabindex="-1">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow" id="page-kicker">WORKBENCH</p>
+              <h1 id="page-title">工作台</h1>
+              <p class="muted" id="page-description">
+                先处理待办，再看学习、消耗与服务。
+              </p>
+            </div>
+            <span id="mode-tag" class="mode-tag">管理员会话</span>
+          </div>
+          <div
+            id="notice"
+            class="notice"
+            role="status"
+            aria-live="polite"
+            hidden
+          ></div>
+          <div id="page-content" aria-busy="false"></div>
+        </main>
+        <footer>
+          <span>晓念 · 运营管理台</span
+          ><span>统计按北京时间 · 仅展示运营所需数据</span>
+        </footer>
+      </div>
+    </div>
+  </body>
+</html>

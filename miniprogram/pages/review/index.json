@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "资料复习",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "rich": "/components/rich/index"
+  }
+}

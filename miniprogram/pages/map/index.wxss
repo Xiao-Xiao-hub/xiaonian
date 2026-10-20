@@ -1,0 +1,121 @@
+/* v4 knowledge map (docs/design/v4-final-ui/preview/pages/40-map.html). Night sky;
+   the pops stay white. Sizes follow the preview (px). */
+page { height:100%; overflow:hidden; background:#060b20; }
+button::after { border:0; }
+.map-page { position:relative; display:flex; flex-direction:column; box-sizing:border-box; height:100vh; overflow:hidden; background:linear-gradient(180deg,#060b20 0%,#0b1a45 55%,#142a5f 100%); color:#e8eefc; }
+/* The sky behind the map (V4.1): z-index 0 under .stage-wrap (1), no touches. */
+.sky-back { position:absolute; z-index:0; left:0; top:0; width:100%; height:100%; overflow:hidden; pointer-events:none; }
+.sky-stars { position:absolute; left:0; top:0; width:100%; height:100%; opacity:.75; }
+.meteor { position:absolute; width:120px; height:2px; border-radius:1px; background:linear-gradient(90deg,rgba(255,255,255,.9),rgba(160,200,255,0)); opacity:0; transform:rotate(146deg); transform-origin:0 50%; animation:meteor 9s linear infinite; }
+.meteor.m1 { left:82%; top:16%; }
+.meteor.m2 { left:96%; top:38%; animation-delay:3.2s; animation-duration:11s; }
+.meteor.m3 { left:68%; top:6%; animation-delay:6.5s; animation-duration:13s; }
+@keyframes meteor { 0% { opacity:0; transform:rotate(146deg) translateX(0); } 2% { opacity:1; } 10% { opacity:0; transform:rotate(146deg) translateX(320px); } 100% { opacity:0; transform:rotate(146deg) translateX(320px); } }
+.custom-nav { position:relative; z-index:4; display:flex; align-items:center; justify-content:center; box-sizing:content-box; font-size:17px; font-weight:700; color:#fff; }
+.nav-back { position:absolute; left:6px; bottom:0; display:flex; align-items:center; justify-content:center; width:40px; height:100%; font-size:30px; font-weight:300; }
+.map-page guest-bar { position:relative; z-index:4; }
+
+.chtabs { position:relative; z-index:4; flex:none; height:38px; padding-top:6px; white-space:nowrap; }
+.ct { position:relative; display:inline-block; margin-left:20px; padding-bottom:8px; font-size:15px; line-height:1.3; color:rgba(214,224,248,.62); }
+.ct:first-child { margin-left:16px; }
+.ct:last-child { margin-right:16px; }
+.ct.on { color:#fff; font-weight:700; }
+.ct.on::after { content:""; position:absolute; left:50%; bottom:0; width:16px; height:3px; margin-left:-8px; border-radius:2px; background:#4fb2ff; }
+.msub { position:relative; z-index:4; flex:none; display:flex; align-items:center; gap:10px; height:36px; padding:0 16px; }
+.score { font-size:13px; color:rgba(214,224,248,.78); white-space:nowrap; }
+.score .b { margin:0 1px; font-size:15px; font-weight:700; color:#ffd36e; }
+.pbar { width:64px; height:4px; overflow:hidden; border-radius:2px; background:rgba(255,255,255,.14); }
+.pbar view { height:100%; border-radius:2px; background:linear-gradient(90deg,#ffcf5a,#ffb800); }
+.zoom { display:flex; align-items:center; gap:2px; margin-left:auto; height:30px; padding:0 4px; border:1px solid rgba(160,190,255,.2); border-radius:15px; background:rgba(20,36,84,.6); box-sizing:border-box; }
+.zb { position:relative; display:flex; align-items:center; justify-content:center; width:24px; height:28px; font-size:18px; line-height:1; color:#dbe6ff; }
+/* The tap area is larger than the key (V4.2): about 40×44px. */
+.zb::before { content:""; position:absolute; left:-8px; right:-8px; top:-8px; bottom:-8px; }
+.zd { display:flex; gap:3px; padding:0 3px; }
+.zd view { width:5px; height:5px; border-radius:50%; background:rgba(214,224,248,.3); }
+.zd view.on { background:#4fb2ff; box-shadow:0 0 6px #4fb2ff; }
+.mbtn { display:flex; flex:none; align-items:center; justify-content:center; box-sizing:border-box; width:30px; height:30px; border:1px solid rgba(160,190,255,.2); border-radius:50%; background:rgba(20,36,84,.6); color:#dbe6ff; font-size:16px; font-weight:700; }
+.mbtn { position:relative; }
+.mbtn::before { content:""; position:absolute; left:-7px; right:-7px; top:-7px; bottom:-7px; }
+.msub .zoom + .mbtn { margin-left:0; }
+.msub .mbtn:first-child, .msub .score + .mbtn, .msub .pbar + .mbtn { margin-left:auto; }
+
+.map-alert { position:relative; z-index:25; margin:4px 16px; padding:8px 11px; border-radius:10px; background:rgba(255,107,107,.16); color:#ffb4b4; font-size:13px; }
+.map-alert text { float:right; color:#9ad6ff; }
+.map-loading { position:absolute; left:0; right:0; top:45%; color:rgba(214,224,248,.62); text-align:center; font-size:14px; }
+
+.stage-wrap { position:relative; z-index:1; flex:1; min-height:0; overflow:hidden; }
+.chapter-disabled { position:absolute; z-index:8; left:12px; right:12px; top:12px; bottom:12px; display:flex; align-items:center; justify-content:center; padding:12px; border-radius:12px; background:rgba(8,16,42,.88); color:#fff; font-size:14px; }
+.chapter-disabled text { margin-left:9px; padding:6px 0; color:#ffd36e; }
+.edge-next { position:absolute; z-index:9; display:flex; align-items:center; justify-content:center; box-sizing:border-box; width:96px; height:34px; border-radius:17px; background:#3d8bff; color:#fff; font-size:13px; font-weight:700; box-shadow:0 4px 14px rgba(61,139,255,.5); }
+
+/* 下一步 + 图例: floats over the bottom of the stage in the far view only, so the
+   stage keeps its size when the cards view drops it (pages/map/index.js farHeight). */
+.nextp { position:absolute; z-index:3; left:12px; right:12px; bottom:calc(10px + env(safe-area-inset-bottom)); padding:12px 14px 10px; border:1px solid rgba(125,170,255,.24); border-radius:18px; background:rgba(14,26,66,.92); box-shadow:0 -6px 30px rgba(0,0,0,.3); }
+.np { display:flex; align-items:center; gap:12px; }
+.np-main { flex:1; min-width:0; }
+.np-k { display:flex; align-items:center; gap:6px; }
+.np-tag { display:inline-flex; align-items:center; height:18px; padding:0 6px; border-radius:4px; background:#3d8bff; color:#fff; font-size:12px; font-weight:600; line-height:1; }
+.np-kt { font-size:12px; color:#ffcf5a; }
+.np-name { display:block; margin-top:4px; overflow:hidden; font-size:18px; font-weight:700; line-height:1.3; color:#fff; white-space:nowrap; text-overflow:ellipsis; }
+.np-why { display:block; margin-top:1px; overflow:hidden; font-size:12px; color:#a9b8de; white-space:nowrap; text-overflow:ellipsis; }
+.np .np-go { flex:none; width:auto !important; min-height:36px; margin:0; padding:4px 18px; font-size:15px; }
+.np-none { display:block; padding:2px 0 4px; font-size:13px; color:#a9b8de; }
+.legend { display:flex; margin-top:10px; padding-top:9px; border-top:1px solid rgba(160,190,255,.14); font-size:12px; line-height:1.2; color:#a9b8de; }
+.legend + .legend { margin-top:8px; padding-top:0; border-top:0; }
+.legend .lg { flex:1; }
+.lg { display:inline-flex; align-items:center; gap:5px; white-space:nowrap; }
+.lg::before { content:""; flex:none; width:9px; height:9px; border-radius:50%; }
+.lg.ok::before { background:#ffd86b; box-shadow:0 0 6px 1px rgba(255,200,70,.7); }
+.lg.pend::before { box-sizing:border-box; width:8px; height:8px; border:1.5px solid #ffc04d; }
+.lg.stuck::before { background:#ff6b6b; }
+.lg.none::before { width:7px; height:7px; background:#5d6c98; }
+.lg.due::before { box-sizing:border-box; border:1.5px solid #ffb84d; background:#ffc85a; }
+.lg.practice::before { box-sizing:border-box; width:8px; height:8px; border:1.5px solid #8ccaff; }
+.lg.seen::before { box-sizing:border-box; width:8px; height:8px; border:1.5px solid #b6c4e6; }
+.lg.nx::before { background:#4fb2ff; box-shadow:0 0 6px #4fb2ff; }
+.lg.k::before, .lg.h::before { content:"★"; width:auto; height:auto; border-radius:0; color:#ffcf5a; font-size:12px; }
+.lg.h::before { content:"◆"; color:#ffffff; }
+.lg.up::before, .lg.opt::before { width:16px; height:0; border-radius:0; border-top:1.5px solid rgba(223,230,241,.7); }
+.lg.opt::before { border-top-style:dashed; }
+
+/* 全书 */
+.book-view { position:relative; z-index:2; flex:1; min-height:0; box-sizing:border-box; padding:6px 12px 20px; }
+.book-row { margin-bottom:9px; padding:11px 12px; border:1px solid rgba(125,170,255,.24); border-radius:13px; background:rgba(15,29,72,.9); }
+.book-row.hidden { opacity:.55; }
+.book-row-head { display:flex; align-items:center; gap:7px; }
+.book-no { font-size:12px; color:#8ccaff; }
+.book-name { font-size:16px; font-weight:700; color:#fff; }
+.hidden-label { margin-left:auto; color:#8a97bd; font-size:12px; }
+.book-dots { display:flex; flex-wrap:wrap; gap:5px; margin-top:9px; }
+.book-dot { width:8px; height:8px; border-radius:50%; background:#5d6c98; }
+.book-dot.ok { background:#ffd86b; box-shadow:0 0 5px rgba(255,200,70,.6); }
+.book-dot.pend { box-sizing:border-box; border:1.5px solid #ffc04d; background:transparent; }
+.book-dot.stuck { background:#ff6b6b; }
+.book-dot.due { background:#ffc85a; box-shadow:0 0 0 1.5px #ffb84d; }
+.book-dot.practice { box-sizing:border-box; border:1.5px solid #8ccaff; background:transparent; }
+.book-dot.seen { box-sizing:border-box; border:1.5px solid #b6c4e6; background:transparent; }
+.book-count { display:block; margin-top:7px; color:#a9b8de; font-size:12px; }
+
+/* 知识卡里的公式和要点：rich 默认 30rpx 墨色，这里压小并跟着卡片的浅色走 */
+.kc-chip .rich { font-size:16px; line-height:22px; color:#cfe0ff; }
+.kc-chip .r-p { margin:0; }
+.kc-key .rich { font-size:12.5px; line-height:1.45; color:#b6c4e6; }
+.kc-key .r-p { margin:0; }
+
+/* 白色弹层（图例、老师讲到哪）：根节点是 .night，文字改回白底那套；知识点详情是单独的页面了（V4.1 G4） */
+.scrim { z-index:30; }
+.pop { box-sizing:border-box; color:var(--body); }
+.pop .h3 { font-size:17px; font-weight:700; color:var(--ink); }
+.legend-grid { display:flex; flex-direction:column; gap:10px; margin-top:12px; font-size:13px; line-height:1.5; color:var(--body); }
+.legend-pop .lg.none::before { background:#9aa6c4; }
+.legend-pop .lg.seen::before { border-color:#7f8aa6; }
+.legend-pop .lg.h::before { color:var(--ink); }
+.legend-pop .lg.up::before, .legend-pop .lg.opt::before { border-top-color:#7f8aa6; }
+.taught-chapters { margin-top:10px; white-space:nowrap; }
+.taught-chapters text { display:inline-block; margin-right:16px; padding:6px 0; font-size:14px; color:var(--faint); }
+.taught-chapters text.on { color:var(--ink); font-weight:700; }
+.section-grid, .taught-other { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+.section-grid .chip, .taught-other .chip { width:auto !important; margin:0; }
+/* V4.2 G9: every legend row has its swatch (the ★/◆ rows draw theirs, so the text no longer repeats it). */
+.lg.main::before { width:16px; height:0; border-radius:0; border-top:2px solid #4fb2ff; box-shadow:0 0 4px rgba(79,178,255,.8); }
+.lg.dim::before { background:#ffd86b; opacity:.4; }

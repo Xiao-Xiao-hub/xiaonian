@@ -1,0 +1,4 @@
+{
+  "navigationBarTitleText": "挑卡",
+  "usingComponents": { "card-tile": "/components/card-tile/index" }
+}

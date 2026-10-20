@@ -1,0 +1,92 @@
+/* v4 learn home (docs/design/v4-final-ui/preview/pages/30-learn.html). */
+.page { padding-top:24rpx; padding-bottom:calc(120rpx + env(safe-area-inset-bottom)); }
+/* 知识地图: a plain link, not a search box (the map has no search). */
+.map-entry { display:flex; align-items:center; gap:6rpx; margin-left:auto; padding:12rpx 4rpx 12rpx 20rpx; color:var(--ink); font-size:28rpx; font-weight:500; white-space:nowrap; }
+.map-entry-go { color:var(--faint); }
+
+/* 接着学：蓝卡，右边一小片星座 */
+.hero { position:relative; overflow:hidden; padding:28rpx 32rpx 32rpx; border-radius:40rpx; background:linear-gradient(135deg,#2f6bf6 0%,#4a86ff 100%); box-shadow:0 20rpx 48rpx rgba(47,107,246,.28); color:#fff; }
+.hero-cons { position:absolute; right:0; top:12rpx; width:340rpx; height:240rpx; pointer-events:none; }
+.hero-cons .c { position:absolute; border-radius:50%; background:#fff; }
+.c1 { left:40rpx; top:184rpx; width:10rpx; height:10rpx; opacity:.6; }
+.c2 { left:124rpx; top:140rpx; width:12rpx; height:12rpx; opacity:.8; }
+.c3 { left:192rpx; top:168rpx; width:10rpx; height:10rpx; opacity:.7; }
+.c4 { left:260rpx; top:80rpx; width:16rpx; height:16rpx; opacity:.95; box-shadow:0 0 12rpx rgba(255,255,255,.9); }
+.hero-top { position:relative; display:flex; align-items:center; justify-content:space-between; }
+.hero-label { font-size:26rpx; color:rgba(255,255,255,.82); }
+.hero-map { display:inline-flex; align-items:center; height:52rpx; padding:0 20rpx; border-radius:26rpx; background:rgba(255,255,255,.18); font-size:24rpx; color:#fff; }
+.hero-name { position:relative; display:block; margin-top:12rpx; font-size:48rpx; font-weight:800; line-height:1.3; }
+.hero-sub { position:relative; display:block; margin-top:4rpx; font-size:26rpx; color:rgba(255,255,255,.85); }
+.hero-pb { position:relative; display:flex; align-items:center; gap:24rpx; margin-top:28rpx; }
+.hero-bar { flex:1; height:12rpx; overflow:hidden; border-radius:6rpx; background:rgba(255,255,255,.25); }
+.hero-bar view { height:100%; border-radius:6rpx; background:#ffd34d; }
+.hero-count { font-size:24rpx; opacity:.9; white-space:nowrap; }
+.grow { flex:1; }
+.hero .hero-go { flex:none; width:auto !important; min-height:80rpx; margin:0; padding:12rpx 44rpx; background:#fff; color:var(--primary); box-shadow:none; }
+.hero-resume { position:relative; display:flex; align-items:center; gap:8rpx; margin-top:20rpx; font-size:26rpx; color:rgba(255,255,255,.9); }
+.hero-resume-name { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+
+/* 解题 (D112)：一行输入，30-learn 的三块（拍一道题、错题本、练一题），40-ask 的三块 */
+.ask-row { display:flex; align-items:center; justify-content:space-between; min-height:96rpx; margin-top:24rpx; padding:0 16rpx 0 28rpx; border-radius:48rpx; background:var(--card); box-shadow:var(--shadow); font-size:30rpx; color:var(--faint); }
+.ask-row .icon { width:64rpx; height:64rpx; padding:13rpx; box-sizing:border-box; border-radius:50%; background:var(--primary-fill); }
+.tiles { display:flex; gap:20rpx; margin-top:24rpx; }
+.tiles > .ftile, .tile-col { flex:1; min-width:0; }
+.tile-col { display:flex; flex-direction:column; gap:20rpx; }
+.ftile.big { min-height:388rpx; box-sizing:border-box; background:linear-gradient(160deg,#ffa24a 0%,#ff7d2a 100%); box-shadow:0 16rpx 40rpx rgba(255,125,42,.26); }
+.ftile.big .t { font-size:36rpx; color:#fff; }
+.ftile.big .s { color:rgba(255,255,255,.9); }
+.ftile.big .ic3d { right:12rpx; bottom:16rpx; width:168rpx; height:168rpx; }
+.tile-go { position:absolute; left:28rpx; bottom:28rpx; display:inline-flex; align-items:center; height:52rpx; padding:0 20rpx; border-radius:26rpx; background:rgba(255,255,255,.26); color:#fff; font-size:24rpx; font-weight:600; }
+.ftile.small { flex:1; box-sizing:border-box; box-shadow:none; }
+.ftile.small .ic3d { width:92rpx; height:92rpx; }
+.ftile.pink { background:#fff1f1; }
+.ftile.green { background:#eaf8f2; }
+.ftile .s .red { color:var(--red-ink); }
+.grid2 { display:flex; flex-wrap:wrap; gap:20rpx; margin-top:20rpx; }
+.grid2 .ftile { width:calc((100% - 20rpx) / 2); min-height:168rpx; box-sizing:border-box; }
+.grid2 .ftile .s { padding-right:80rpx; }
+.grid2 .ftile .ic3d { width:88rpx; height:88rpx; }
+.grid2 .ftile.wide { width:100%; }
+
+/* 段位贴纸、我的资料、学习记录 (moved from 我的) */
+.sticker-grid { display:flex; flex-wrap:wrap; gap:14rpx; }
+.chapter-sticker { display:flex; flex-direction:column; align-items:center; gap:8rpx; width:calc((100% - 28rpx) / 3); box-sizing:border-box; border:2rpx dashed var(--rule-2); border-radius:20rpx; padding:14rpx 4rpx; background:var(--card); font-size:24rpx; }
+.chapter-sticker.earned { border-color:var(--green-ink); background:var(--green-wash); }
+.chapter-sticker image { width:80rpx; height:80rpx; }
+.chapter-sticker .meta { color:var(--faint); }
+.menu { padding:0 28rpx; border-radius:36rpx; background:var(--card); box-shadow:var(--shadow); }
+.li { display:flex; align-items:center; gap:16rpx; min-height:104rpx; border-bottom:2rpx solid var(--rule); font-size:30rpx; color:var(--ink); }
+.li:last-child { border:0; }
+.li-l { flex:1; min-width:0; }
+.li-l .hint { display:block; }
+.chev { color:var(--faint); }
+.nums { display:flex; margin-bottom:20rpx; padding:24rpx 12rpx; border-radius:36rpx; background:var(--card); box-shadow:var(--shadow); }
+.num { display:flex; flex:1; flex-direction:column; align-items:center; min-width:0; }
+.num + .num { border-left:2rpx solid var(--line); }
+.num-v { font-size:38rpx; font-weight:800; line-height:1.3; color:var(--ink); }
+.num-k { font-size:24rpx; color:var(--sub); white-space:nowrap; }
+
+/* 今天：左边的小星星和地图一样；标题右边紧跟灰字 */
+.sh { display:flex; align-items:baseline; margin-bottom:20rpx; }
+.sh-t { font-size:34rpx; font-weight:700; line-height:1.4; color:var(--ink); }
+.sh-s { margin-left:12rpx; font-size:26rpx; font-weight:500; color:var(--faint); }
+.block { margin-top:32rpx; }
+.today-card { overflow:hidden; border-radius:var(--radius); background:var(--card); box-shadow:var(--shadow); }
+.today-row { display:flex; align-items:center; gap:24rpx; min-height:124rpx; padding:20rpx 28rpx; box-sizing:border-box; }
+.today-row + .today-row, .today-more, .today-more + .today-row { border-top:2rpx solid var(--rule); }
+.today-more { justify-content:center; }
+.today-copy { flex:1; min-width:0; }
+.today-name, .today-meta { display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.today-name { font-size:30rpx; font-weight:600; line-height:1.35; color:var(--ink); }
+.today-meta { font-size:24rpx; line-height:1.4; color:var(--faint); }
+.today-act { flex:none; min-width:112rpx; padding:10rpx 20rpx; box-sizing:border-box; border:2rpx solid var(--rule-2); border-radius:var(--radius-btn); font-size:26rpx; color:var(--ink); text-align:center; }
+.today-act.blue { border-color:transparent; background:var(--primary-wash); color:var(--primary-ink); }
+.today-done { font-size:26rpx; }
+.star { position:relative; flex:none; width:60rpx; height:60rpx; border-radius:50%; background:#10204f; }
+.star::after { content:""; position:absolute; left:50%; top:50%; width:20rpx; height:20rpx; margin:-10rpx 0 0 -10rpx; border-radius:50%; box-sizing:border-box; }
+.star.ok::after { background:radial-gradient(circle,#fffbe8 0 30%,#ffd86b 60%,#ffb800 100%); box-shadow:0 0 16rpx 4rpx rgba(255,200,70,.6); }
+.star.pend::after { width:18rpx; height:18rpx; margin:-9rpx 0 0 -9rpx; border:4rpx solid #ffc04d; background:transparent; }
+.star.due::after { border:4rpx solid #ffb84d; background:#ffc85a; box-shadow:0 0 12rpx 2rpx rgba(255,184,77,.5); }
+.star.stuck::after { background:#ff6b6b; box-shadow:0 0 16rpx 4rpx rgba(255,107,107,.5); }
+.star.next::after { background:radial-gradient(circle,#fff 0 28%,#8ccaff 62%,#3d9bff 100%); box-shadow:0 0 16rpx 4rpx rgba(110,185,255,.7); }
+.alert .link { display:inline-block; margin:-22rpx -24rpx -22rpx 0; padding:22rpx 24rpx; }

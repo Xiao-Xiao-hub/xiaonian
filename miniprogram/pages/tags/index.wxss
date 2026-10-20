@@ -1,0 +1,114 @@
+.tags-page {
+  padding-bottom: 80rpx;
+}
+.tag-create {
+  margin-top: 24rpx;
+  padding: 28rpx;
+  background: var(--card);
+  border: 2rpx solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 18rpx;
+}
+.swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto !important;
+  min-height: 54rpx;
+  margin: 0;
+  padding: 6rpx 16rpx;
+  border: 4rpx solid transparent;
+  border-radius: 14rpx;
+  font-size: 24rpx;
+  line-height: 1.4;
+}
+.swatch.on {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2rpx var(--card);
+}
+.tag-row {
+  margin-top: 20rpx;
+  padding: 20rpx 24rpx;
+  background: var(--card);
+  border: 2rpx solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.tag-copy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+.tag-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16rpx;
+  min-width: 0;
+}
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 54rpx;
+  padding: 0 18rpx;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+.tag-meta {
+  color: var(--pencil);
+  font-size: 24rpx;
+}
+.tag-copy .btn-text,
+.row-actions button {
+  flex: none;
+  width: auto !important;
+  margin: 0;
+}
+.row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8rpx;
+  margin-top: 18rpx;
+}
+.row-actions .save-btn {
+  min-height: 66rpx;
+  padding: 8rpx 32rpx;
+  font-size: 26rpx;
+}
+.btn-text.danger {
+  padding-left: 0;
+  color: var(--red-ink);
+}
+.grow {
+  flex: 1;
+}
+.edit-name {
+  height: 76rpx !important;
+}
+.limit-line {
+  display: block;
+  margin-top: 18rpx;
+  color: var(--pencil);
+  font-size: 24rpx;
+  text-align: center;
+}
+.fav-chip {
+  background: #fff3d1;
+  color: #8a5a00;
+}
+.tag-main {
+  flex: 1;
+}
+.chevron {
+  color: var(--faint);
+  font-size: 34rpx;
+}

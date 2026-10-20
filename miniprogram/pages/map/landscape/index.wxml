@@ -1,0 +1,7 @@
+<view class="landscape-page night">
+  <image class="stars" src="/pages/map/stars.png" mode="aspectFill" />
+  <view class="land-nav"><text bindtap="back">‹ 返回</text><text class="land-title">知识地图</text><scroll-view scroll-x class="land-chapters"><text wx:for="{{chapters}}" wx:key="id" class="{{chapterId===item.id?'on':''}}" data-id="{{item.id}}" bindtap="selectChapter">{{item.short}}</text></scroll-view><view wx:if="{{showRelation}}" class="switch"><text class="{{view==='task'?'on':''}}" data-view="task" bindtap="switchView">路线</text><text class="{{view==='relation'?'on':''}}" data-view="relation" bindtap="switchView">关系</text></view></view>
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+  <text wx:if="{{loading}}" class="status">地图打开中…</text><text wx:if="{{error}}" class="status error" bindtap="retry">{{error}}</text>
+  <view wx:if="{{chapter}}" class="land-stage"><map-stage view="{{view}}" layout="{{layout}}" motion="{{motion}}" landscape="{{true}}" detail="{{detail}}" bindnode="nodeTap" bindgroup="groupTap" bindsettle="stageSettle" bindready="stageReady"/></view>
+</view>

@@ -1,0 +1,107 @@
+/* v4 star map (docs/design/v4-final-ui/preview/base.css .sn/.kc, gen_map.py). Sizes in px:
+   the far layer is drawn at far size and scaled by 2.3 inside the plane (pages/map/stars.js). */
+:host { display:block; width:100%; height:100%; }
+.viewport { position:relative; width:100%; height:100%; overflow:hidden; }
+.map-plane { position:absolute; left:0; top:0; transform-origin:0 0; transform:scale(.4348); }
+.far-layer { position:absolute; left:0; top:0; transform:scale(2.3); transform-origin:0 0; transition:opacity .2s; }
+.near-layer { position:absolute; left:0; top:0; right:0; bottom:0; transition:opacity .2s; }
+.map-plane.far .near-layer, .map-plane.near .far-layer { opacity:0; visibility:hidden; }
+
+/* 连线：只用蓝色系。主线亮 / 发亮（汇进下一步）/ 暗；拔高实线、选学虚线，都淡 */
+.ln { position:absolute; height:1.8px; margin-top:-0.9px; border-radius:1px; background:#4fb2ff; opacity:.85; transform-origin:0 50%; box-shadow:0 0 3px rgba(79,178,255,.8); }
+.ln.glow { height:2.4px; margin-top:-1.2px; background:#9ad6ff; opacity:1; box-shadow:0 0 5px rgba(154,214,255,.95); }
+.ln.dim { height:1.4px; margin-top:-0.7px; opacity:.32; box-shadow:none; }
+.ln.up { height:1.4px; margin-top:-0.7px; background:#cfe0ff; opacity:.5; box-shadow:none; }
+.ln.opt { height:0; margin-top:-0.7px; border-top:1.4px dashed #cfe0ff; background:none; opacity:.5; box-shadow:none; }
+.ln.near { height:2.4px; margin-top:-1.2px; }
+.ln.near.glow { height:3px; margin-top:-1.5px; }
+.ln.near.dim, .ln.near.up { height:2px; margin-top:-1px; }
+.ln.near.opt { height:0; border-top-width:2px; }
+.ln.fade { opacity:.12; }
+
+/* 星：状态就是样子 */
+.sn { position:absolute; display:flex; flex-direction:column; align-items:center; gap:6px; white-space:nowrap; transform:translate(-50%, -7px); }
+.sn.lf { flex-direction:row-reverse; transform:translate(calc(-100% + 7px), -50%); }
+.sn .dot { position:relative; flex:none; width:14px; height:14px; border-radius:50%; }
+.sn .nm { font-size:12px; font-weight:600; line-height:1.2; color:rgba(232,238,252,.92); text-shadow:0 1px 4px rgba(0,0,0,.6); }
+.sn .mark, .kc .mark { margin-right:2px; font-style:normal; }
+.mark.k { color:#ffcf5a; }
+.mark.h { color:#ffffff; }
+.sn.ok .dot { background:radial-gradient(circle, #fffbe8 0 30%, #ffd86b 60%, #ffb800 100%); box-shadow:0 0 0 4px rgba(255,210,90,.16), 0 0 16px 5px rgba(255,200,70,.55); }
+.sn.pend .dot { border:2px solid #ffc04d; background:rgba(255,192,77,.22); box-shadow:0 0 10px 2px rgba(255,192,77,.35); }
+.sn.stuck .dot { background:radial-gradient(circle, #ffd9d9 0 25%, #ff6b6b 70%); box-shadow:0 0 12px 3px rgba(255,107,107,.5); }
+.sn.due .dot { border:2px solid #ffb84d; background:radial-gradient(circle, #fff3d6 0 30%, #ffc85a 100%); box-shadow:0 0 0 3px rgba(255,170,60,.25); }
+.sn.practice .dot { width:12px; height:12px; margin:1px; border:2px solid #8ccaff; background:rgba(140,202,255,.28); }
+.sn.seen .dot { width:11px; height:11px; margin:1.5px; border:2px solid #b6c4e6; background:rgba(182,196,230,.18); }
+/* 没碰过 is told by the star alone (V4.2): the name stays easy to read. */
+.sn.none .dot { width:10px; height:10px; margin:2px; background:#5d6c98; box-shadow:0 0 0 3px rgba(93,108,152,.18); }
+.sn.none .nm { color:rgba(222,230,248,.9); }
+.sn.side .dot { width:9px; height:9px; margin:2.5px; border:1.5px dashed rgba(223,230,241,.7); background:transparent; }
+.sn.side .nm { color:rgba(214,223,244,.86); font-weight:500; }
+/* 下一步 is a mark on top of the state: a ping ring; an untouched star also
+   turns blue. */
+.sn.is-next.none .dot, .sn.is-next.side .dot, .sn.is-next.seen .dot { width:14px; height:14px; margin:0; border:none; background:radial-gradient(circle, #ffffff 0 28%, #8ccaff 62%, #3d9bff 100%); box-shadow:0 0 14px 4px rgba(110,185,255,.7); }
+.sn.is-next .dot::before, .sn.is-next .dot::after { content:""; position:absolute; left:-6px; top:-6px; right:-6px; bottom:-6px; border:2px solid rgba(127,193,255,.8); border-radius:50%; animation:ping 2s ease-out infinite; }
+.sn.is-next .dot::after { animation-delay:-1s; }
+.sn.is-next .nm { color:#bfe0ff; }
+/* 老师还没讲到: the dot is paler, the name stays readable. */
+.sn.later .dot { opacity:.55; }
+.sn.fade { opacity:.3; }
+/* 课上：老师讲到这里 (40-map.html .tflag) */
+.tflag { position:absolute; display:inline-flex; align-items:center; gap:3px; height:18px; padding:0 6px; border-radius:9px; background:rgba(255,255,255,.12); color:#e8eefc; font-size:12px; line-height:1; white-space:nowrap; pointer-events:none; }
+.tflag::before { content:""; width:8px; height:10px; background:#ff9a6b; clip-path:polygon(0 0,100% 30%,0 60%); }
+@keyframes ping { 0% { transform:scale(.6); opacity:.9; } 100% { transform:scale(1.9); opacity:0; } }
+
+/* 知识卡 */
+.kc { position:absolute; box-sizing:border-box; overflow:hidden; padding:10px 11px; transition:transform .08s; border:1px solid rgba(125,170,255,.26); border-radius:13px; background:#0f1d48; box-shadow:0 10px 26px rgba(0,0,0,.35); color:#eaf0ff; }
+.kc::after { content:""; position:absolute; top:-1px; right:-1px; width:16px; height:16px; border-bottom-left-radius:5px; background:linear-gradient(225deg, #0b1740 0 50%, rgba(125,170,255,.38) 50%); }
+.kc.ok { border-color:rgba(255,214,102,.45); box-shadow:0 10px 26px rgba(0,0,0,.35), 0 0 18px rgba(255,200,70,.22); }
+.kc.is-next { border-color:#7fc1ff; box-shadow:0 0 0 1px #7fc1ff, 0 0 26px rgba(127,193,255,.5), 0 10px 26px rgba(0,0,0,.35); }
+/* 没碰过 (V4.2): a dashed border, not a dimmed card, so the text stays clear. */
+.kc.none, .kc.side { border-style:dashed; border-color:rgba(160,185,240,.4); }
+.kc.fade { opacity:.25; }
+.kc-h { display:flex; align-items:center; padding-right:12px; font-size:16px; font-weight:700; line-height:21px; color:#ffffff; white-space:nowrap; }
+.kc-name { overflow:hidden; text-overflow:ellipsis; }
+.nx { flex:none; display:inline-flex; align-items:center; height:18px; margin-left:8px; padding:0 7px; border-radius:9px; background:#3d8bff; color:#fff; font-size:12px; font-weight:600; line-height:1; box-shadow:0 2px 8px rgba(61,139,255,.5); }
+/* Formula chip: the preview's night .mk.fx (pale blue wash, #cfe0ff); the
+   formula images are drawn at 16px so they come out about 18–22px tall. */
+.kc-fx { display:flex; flex-wrap:wrap; gap:4px; margin-top:7px; overflow:hidden; max-height:60px; }
+.kc-chip { display:inline-block; max-width:100%; overflow:hidden; padding:2px 6px; border-radius:6px; background:rgba(140,180,255,.2); color:#cfe0ff; font-size:12px; font-weight:500; line-height:22px; white-space:nowrap; text-overflow:ellipsis; }
+.kc-key { margin-top:6px; max-height:38px; overflow:hidden; color:#b6c4e6; }
+.kc-formula-link { color:#cfe0ff; font-size:13px; line-height:24px; text-decoration:underline; }
+/* V4.1: 练一题 (28px) is on every card, so the name, formula and key stop
+   above the footer (padding-bottom 10 + 28 + 3). A row that does not fit
+   whole wraps into a second column outside the card (hidden), instead of
+   showing half a line or running under the footer. The key keeps one line,
+   two on 下一步's taller card. */
+.kc { display:flex; flex-direction:column; flex-wrap:wrap; align-content:flex-start; column-gap:24px; padding-bottom:41px; }
+.kc-h, .kc-fx, .kc-key { flex:none; width:100%; }
+.kc-key { max-height:18px; }
+.kc.is-next .kc-key { max-height:37px; }
+.kc-foot { position:absolute; left:11px; right:11px; bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:6px; font-size:12px; line-height:1.2; }
+.kc-go { flex:none; display:inline-flex; align-items:center; height:28px; padding:0 14px; border-radius:14px; background:#2f6bf6; color:#fff; font-size:13px; font-weight:600; box-shadow:0 4px 12px rgba(47,107,246,.45); }
+/* A larger tap area than the 28px button (V4.2), inside the card's padding. */
+.kc-go { position:relative; }
+.kc-go::before { content:""; position:absolute; left:-6px; right:-6px; top:-8px; bottom:-8px; }
+.kc-go.wait { background:rgba(47,107,246,.45); color:rgba(255,255,255,.8); box-shadow:none; }
+.kc-meta { flex:1; min-width:0; display:flex; align-items:center; justify-content:flex-end; gap:6px; overflow:hidden; }
+.kc-meta text { overflow:hidden; text-overflow:ellipsis; }
+/* A card under 150px (stars.js NARROW): 98px inside, so a smaller 练一题
+   (about 52px) and a three-character state fit whole; 我的卡 is left out. */
+.kc.narrow .kc-foot { gap:4px; }
+.kc.narrow .kc-go { padding:0 9px; font-size:12px; }
+.kc.narrow .st { font-size:11px; }
+/* Pressed (V4.1): at once, from hover-class or from the WXS tap (.pressing). */
+.kc.kc-press, .kc.pressing { transform:scale(.97); border-color:#9ad6ff; }
+.kc-go.go-press, .kc-go.pressing { transform:scale(.94); background:#2559d6; }
+.sn.sn-press .dot, .sn.pressing .dot { transform:scale(1.35); }
+.sn.sn-press .nm, .sn.pressing .nm { color:#ffffff; }
+.st { flex:none; font-weight:600; white-space:nowrap; }
+.st.ok { color:#ffd36e; }
+.st.pend { color:#ffc56b; }
+.st.stuck { color:#ff8f8f; }
+.st.due { color:#ffc85a; }
+.st.practice { color:#9ad6ff; }
+.st.seen { color:#c8d3ef; }
+.st.none, .st.side { color:#b4c0e0; font-weight:500; }
+.mycards { display:inline-flex; align-items:center; gap:3px; color:#c8d6ff; white-space:nowrap; }

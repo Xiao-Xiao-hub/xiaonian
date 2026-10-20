@@ -1,0 +1,10 @@
+<view class="ph">
+  <view wx:if="{{tint}}" class="ph-tint {{tint}}" style="height: {{tintHeight}}px;" />
+  <view wx:if="{{tint}}" class="ph-space" style="height: {{statusTop + rowHeight}}px;" />
+  <view class="ph-bar {{tint ? 'ph-fixed ' + tint : ''}}" style="padding-top: {{statusTop}}px; padding-right: {{rightGap}}px;{{tint ? ' background-size: 100% ' + tintHeight + 'px;' : ''}}">
+    <view class="ph-row" style="height: {{rowHeight}}px;">
+      <text wx:if="{{title}}" class="ptitle">{{title}}</text>
+      <view class="ph-side"><slot /></view>
+    </view>
+  </view>
+</view>

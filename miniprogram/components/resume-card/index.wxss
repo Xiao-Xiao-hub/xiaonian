@@ -1,0 +1,33 @@
+/* 回顾卡（v4 样张 10-notes）：便利贴，小狸头像。.xl-av、.tl、.t-* 是 app.wxss 的公共类。
+   V4.1 起回到随心记最上面（样张的位置），没有要问的事时什么都不画，间距也在这里。 */
+.rs { position: relative; margin: 16rpx 0 24rpx; padding: 28rpx 28rpx 24rpx; border-radius: 8rpx 8rpx 32rpx 32rpx; background: #fff7d6; box-shadow: 0 12rpx 32rpx rgba(170, 130, 20, 0.1); color: var(--ink); }
+.rs::before { content: ""; position: absolute; top: -16rpx; left: 50%; width: 144rpx; height: 36rpx; margin-left: -72rpx; border-radius: 4rpx; background: rgba(196, 214, 255, 0.78); transform: rotate(-3deg); }
+.rs .chip { flex: none; display: inline-flex; align-items: center; justify-content: center; width: auto !important; min-height: 60rpx; margin: 0 !important; padding: 0 24rpx; border: 2rpx solid #ecdcae; border-radius: 30rpx; background: #fffdf3; color: #5c4a1c; font-size: 26rpx; font-weight: 500; line-height: 1.4; box-sizing: border-box; }
+.rs .chip::after { border: 0; }
+.who { display: flex; align-items: center; gap: 16rpx; }
+.who .xl-av { width: 60rpx; height: 60rpx; }
+.kick { font-size: 26rpx; color: #92742a; }
+.x { margin-left: auto; padding: 0 4rpx 0 32rpx; color: #b9a46a; font-size: 34rpx; line-height: 44rpx; }
+.head { display: flex; align-items: center; gap: 12rpx; margin-top: 16rpx; font-size: 28rpx; }
+.what { display: flex; align-items: center; gap: 12rpx; min-width: 0; margin-top: 20rpx; color: var(--body); font-size: 28rpx; }
+.what .title { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: 600; }
+.quote { margin-top: 10rpx; padding-left: 18rpx; border-left: 6rpx solid #ecdcae; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--body); font-size: 26rpx; line-height: 1.5; }
+.ask { margin-top: 14rpx; font-size: 30rpx; font-weight: 600; line-height: 1.5; }
+.ask.q { margin-top: 8rpx; font-size: 34rpx; font-weight: 700; line-height: 1.45; }
+.opts { display: flex; flex-wrap: wrap; align-items: center; gap: 16rpx; margin-top: 20rpx; }
+.later { margin-left: auto; padding: 8rpx 0 8rpx 16rpx; color: #a58d4e; font-size: 26rpx; }
+.foot { display: flex; align-items: center; gap: 16rpx; margin-top: 22rpx; padding-top: 20rpx; border-top: 2rpx solid #f1e3b8; color: #8a7340; font-size: 26rpx; }
+.foot .end { margin-left: auto; }
+.ok { width: 40rpx; height: 40rpx; border-radius: 50%; background: var(--green-wash); color: var(--green-ink); line-height: 40rpx; text-align: center; }
+.receipt-title { flex: 1; font-weight: 600; }
+.link { flex: none; color: var(--primary); }
+.write { display: flex; align-items: center; gap: 12rpx; margin-top: 18rpx; }
+.write input, .write textarea { flex: 1; min-width: 0; padding: 14rpx 16rpx; border-radius: 16rpx; background: #fffdf3; font-size: 28rpx; }
+.error, .hint { display: block; margin-top: 12rpx; color: var(--sub); font-size: 24rpx; }
+.error { color: var(--red-ink); }
+.fold { display: flex; flex-wrap: wrap; gap: 12rpx; margin: 16rpx 4rpx 24rpx; color: var(--sub); font-size: 26rpx; line-height: 1.5; }
+.nudge .ask { margin-top: 0; }
+.rs .chip.primary { border-color: var(--primary); background: var(--card); color: var(--primary-ink); font-weight: 600; }
+/* V4.2 G9: the greys on the yellow read at about 4.9:1; ×, 稍后 and 收起 take taps over 44px (.tap-area in app.wxss). */
+.x, .later { color: #7d6a2e; }
+.kick, .foot { color: #7d6a2e; }

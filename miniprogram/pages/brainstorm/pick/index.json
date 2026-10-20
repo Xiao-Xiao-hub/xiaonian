@@ -1,0 +1,4 @@
+{
+  "navigationBarTitleText": "头脑风暴",
+  "usingComponents": { "card-tile": "../../../components/card-tile/index" }
+}

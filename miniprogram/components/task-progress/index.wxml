@@ -1,0 +1,10 @@
+<view class="tp {{failed ? 'tp-failed' : ''}}">
+  <view class="tp-steps">
+    <view wx:for="{{rows}}" wx:key="key" class="tp-step {{item.state}}"><view class="tp-dot"></view><text class="tp-label">{{item.label}}</text><text wx:if="{{item.note}}" class="tp-note">{{item.note}}</text></view>
+  </view>
+  <view wx:if="{{!failed}}" class="prg tp-prg {{done ? 'done' : ''}}"><view class="track"><view class="val" style="width: {{percent}}%;" /></view><text wx:if="{{!vague}}" class="st">{{percent}}%</text></view>
+  <text wx:if="{{elapsed}}" class="tp-time">{{elapsed}}</text>
+  <text wx:if="{{slow}}" class="tp-slow">还在弄，可以先去做别的，回来在随心记顶部接着看</text>
+  <view wx:if="{{failed}}" class="tp-fail"><text class="tp-msg">{{message}}</text><button class="btn sm tp-retry" disabled="{{busy}}" bindtap="retry">{{retryText}}</button></view>
+  <text wx:if="{{leaveText && !done}}" class="tp-leave" bindtap="leave">{{leaveText}}</text>
+</view>

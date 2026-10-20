@@ -1,0 +1,230 @@
+.collect {
+  min-height: calc(100vh - 160rpx);
+  padding-bottom: 60rpx;
+  border-radius: 34rpx 34rpx 0 0;
+  background: var(--card);
+}
+.sheet-handle {
+  width: 72rpx;
+  height: 8rpx;
+  margin: -16rpx auto 30rpx;
+  border-radius: 999rpx;
+  background: var(--rule-2);
+}
+.ai-line {
+  margin-bottom: 18rpx;
+  color: var(--pencil);
+  font-size: 24rpx;
+  text-align: center;
+}
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28rpx;
+}
+.head .close {
+  padding: 8rpx 0 8rpx 32rpx;
+  color: var(--pencil);
+  font-size: 26rpx;
+}
+.label {
+  display: block;
+  margin: 26rpx 0 12rpx;
+  color: var(--pencil);
+  font-size: 24rpx;
+  font-weight: 600;
+}
+.summary,
+.candidate,
+input,
+textarea,
+.next,
+.source-quote {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 18rpx 20rpx;
+  border: 2rpx solid var(--line);
+  border-radius: 16rpx;
+  background: var(--card);
+  font-size: 27rpx;
+}
+.summary,
+.source-quote {
+  color: var(--body);
+  line-height: 1.65;
+}
+.summary {
+  margin-bottom: 20rpx;
+}
+.source-quote {
+  background: var(--bg);
+}
+.candidate {
+  display: grid;
+  grid-template-columns: 38rpx auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 12rpx;
+}
+.candidate.on {
+  border-color: var(--link);
+  background: var(--ai-wash);
+}
+.candidate-type,
+.candidate-title {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.candidate-type {
+  gap: 7rpx;
+  color: var(--type-ink);
+  font-size: 24rpx;
+  font-weight: 700;
+}
+.candidate-type image,
+.types image {
+  width: 30rpx;
+  height: 30rpx;
+}
+.candidate-title input {
+  flex: 1;
+  min-width: 0;
+  padding: 6rpx;
+  border: 0;
+  background: transparent;
+}
+.candidate-tags {
+  display: flex;
+  gap: 6rpx;
+}
+.candidate-tags text {
+  padding: 5rpx 10rpx;
+  border-radius: 8rpx;
+  background: var(--chip);
+  color: var(--pencil);
+  font-size: 24rpx;
+}
+.check {
+  width: 30rpx;
+  color: var(--link);
+  font-weight: 700;
+}
+.ai-dot {
+  color: var(--violet-ink);
+}
+textarea {
+  min-height: 120rpx;
+}
+.fold-row {
+  border-top: 2rpx solid var(--rule);
+}
+.filled {
+  margin-left: 8rpx;
+  color: var(--faint);
+  font-size: 24rpx;
+}
+.type-row {
+  display: flex;
+  align-items: center;
+  min-height: 80rpx;
+  margin-top: 20rpx;
+  color: var(--pencil);
+  font-size: 27rpx;
+}
+.type-name {
+  color: var(--ink);
+  font-weight: 600;
+}
+.types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+.types button,
+.quotes button {
+  width: auto !important;
+  margin: 0 10rpx 0 0;
+  padding: 10rpx 18rpx;
+  border: 2rpx solid var(--line);
+  border-radius: 999rpx;
+  background: var(--card);
+  font-size: 24rpx;
+}
+.types button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+}
+.types .on {
+  border-color: var(--type-main);
+  background: var(--type-wash);
+  color: var(--type-ink);
+  font-weight: 700;
+}
+.quotes {
+  margin-top: 14rpx;
+  white-space: nowrap;
+}
+.quote-label {
+  display: block;
+  margin-top: 18rpx;
+  color: var(--pencil);
+  font-size: 24rpx;
+}
+.next {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+.next input {
+  flex: 1;
+  padding: 8rpx;
+}
+.binding {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-top: 18rpx;
+  color: var(--body);
+  font-size: 25rpx;
+}
+.binding .off {
+  color: var(--faint);
+  text-decoration: line-through;
+}
+.buttons {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 34rpx;
+}
+.buttons button {
+  flex: 1;
+  min-width: 0;
+  width: auto !important;
+}
+.drop {
+  display: flex;
+  justify-content: center;
+  margin-top: 12rpx;
+}
+.drop .btn-text {
+  width: auto !important;
+  color: var(--pencil);
+}
+.error {
+  display: block;
+  margin-top: 18rpx;
+  color: var(--red-ink);
+}
+
+/* v4 (D112): AI title and one-line summary shown as is; reminder chips. */
+.candidate-name { flex: 1; min-width: 0; padding: 6rpx; font-weight: 600; color: var(--ink); }
+.candidate-sum { grid-column: 2 / -1; color: var(--pencil); font-size: 26rpx; line-height: 1.5; }
+.remind-row { display: flex; align-items: center; gap: 20rpx; min-height: 80rpx; margin-top: 20rpx; border-top: 2rpx solid var(--rule); font-size: 27rpx; }
+.remind-label { flex: none; color: var(--pencil); }
+.chips { display: flex; flex-wrap: wrap; gap: 12rpx; }
+.chip { padding: 8rpx 22rpx; border-radius: 28rpx; background: var(--chip); color: var(--pencil); font-size: 26rpx; }
+.chip.on { background: var(--link); color: #fff; font-weight: 600; }

@@ -1,0 +1,42 @@
+{
+  "name": "zhiye-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env --watch --import tsx src/index.ts",
+    "build": "npm run build:map-graph && tsc -p tsconfig.json && npm run validate:map",
+    "build:map-graph": "tsx ../scripts/build-map-graph.ts",
+    "start": "node --env-file-if-exists=.env dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "validate:map": "tsx ../scripts/validate-map.ts",
+    "test": "node --test --import tsx ../tests/*.test.ts",
+    "format": "prettier --write src ../tests/*.test.ts"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.2",
+    "@fastify/helmet": "^13.0.1",
+    "@fastify/multipart": "^10.1.2",
+    "@fastify/rate-limit": "^10.1.0",
+    "@resvg/resvg-js": "2.6.2",
+    "@xmldom/xmldom": "0.8.15",
+    "fastify": "^5.4.0",
+    "jszip": "3.10.2",
+    "mammoth": "1.13.0",
+    "marked": "18.0.14",
+    "mathjax": "4.1.3",
+    "mathjs": "^15.2.0",
+    "unpdf": "1.8.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@dagrejs/dagre": "3.1.1",
+    "@types/node": "^24.13.6",
+    "prettier": "3.6.2",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

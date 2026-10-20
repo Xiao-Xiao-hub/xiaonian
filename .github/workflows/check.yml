@@ -1,0 +1,71 @@
+name: Source and behavior checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        timezone: [Asia/Shanghai, America/New_York]
+    env:
+      TZ: ${{ matrix.timezone }}
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Install verified Gitleaks CLI
+        run: |
+          archive="$RUNNER_TEMP/gitleaks_8.30.1_linux_x64.tar.gz"
+          curl --fail --location --retry 3 \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz \
+            --output "$archive"
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  $archive" | sha256sum --check --strict
+          mkdir -p "$RUNNER_TEMP/gitleaks-bin"
+          tar -xzf "$archive" -C "$RUNNER_TEMP/gitleaks-bin" gitleaks
+          echo "$RUNNER_TEMP/gitleaks-bin" >> "$GITHUB_PATH"
+      - name: Scan source and all public history
+        run: |
+          gitleaks dir . --redact=100 --no-banner
+          gitleaks git . --redact=100 --no-banner --log-opts=--all
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
+      - name: Install locked dependencies
+        run: npm ci --prefix server
+      - name: Backend, frontend, admin, static and operations checks
+        run: bash scripts/check.sh --skip-native
+      - name: Public source and documentation checks
+        run: python3 scripts/check-public.py
+      - name: Whitespace
+        run: |
+          if git rev-parse --verify HEAD^ >/dev/null 2>&1; then
+            git diff --check HEAD^ HEAD
+          else
+            git show --format= --check HEAD
+          fi
+      - name: Report native compilation boundary
+        if: always()
+        run: |
+          echo "### Native compilation not verified in this job" >> "$GITHUB_STEP_SUMMARY"
+          echo "Before release, run bash scripts/compile_miniprogram.sh --required with the WeChat SDK." >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,142 @@
+.card-pick {
+  padding-bottom: 180rpx;
+}
+.pick-hint {
+  display: block;
+  margin: 8rpx 0 18rpx;
+  color: var(--pencil);
+  font-size: 25rpx;
+  text-align: center;
+}
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+.search {
+  flex: 1;
+  min-width: 0;
+  height: 78rpx;
+  padding: 0 22rpx;
+  border: 2rpx solid var(--rule-2);
+  border-radius: 18rpx;
+  background: var(--card);
+}
+.filter-btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: auto !important;
+  height: 78rpx;
+  margin: 0;
+  padding: 0 24rpx;
+  border: 2rpx solid var(--rule-2);
+  border-radius: 18rpx;
+  background: var(--card);
+  color: var(--body);
+  font-size: 26rpx;
+}
+.filter-btn.on {
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+.filter-panel {
+  margin-top: 16rpx;
+  padding: 8rpx 24rpx 12rpx;
+  border: 2rpx solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+.filter-label {
+  display: block;
+  margin: 16rpx 0 10rpx;
+  color: var(--pencil);
+  font-size: 24rpx;
+  font-weight: 600;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  width: auto !important;
+  margin: 0;
+  padding: 10rpx 18rpx;
+  border-radius: 999rpx;
+  background: var(--chip);
+  color: var(--pencil);
+  font-size: 24rpx;
+}
+.chip.on {
+  background: var(--primary-wash);
+  color: var(--primary);
+}
+.filter-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8rpx;
+  margin-top: 8rpx;
+}
+.filter-foot button {
+  width: auto !important;
+  margin: 0;
+}
+.select-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12rpx;
+  margin: 16rpx 0 12rpx;
+  color: var(--pencil);
+  font-size: 24rpx;
+}
+.select-actions {
+  display: flex;
+  align-items: center;
+}
+.select-row button {
+  width: auto !important;
+  margin: 0;
+  padding: 8rpx 12rpx;
+  background: transparent;
+  color: var(--link);
+  font-size: 24rpx;
+}
+.select-row button::after {
+  border: 0;
+}
+.wall {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20rpx;
+  margin-top: 20rpx;
+}
+.empty {
+  display: block;
+  margin-top: 64rpx;
+  text-align: center;
+  color: var(--pencil);
+}
+.more {
+  display: flex;
+  width: auto !important;
+  margin: 26rpx auto;
+}
+.pick-bar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 5;
+  padding: 16rpx 32rpx calc(16rpx + env(safe-area-inset-bottom));
+  border-top: 2rpx solid var(--rule);
+  background: var(--card);
+}
+.pick-bar .btn {
+  margin: 0;
+}

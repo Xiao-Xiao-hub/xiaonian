@@ -1,0 +1,11 @@
+{
+  "navigationBarTitleText": "解题",
+  "usingComponents": {
+    "rich": "/components/rich/index",
+    "chat-panel": "/components/chat-panel/index",
+    "guest-bar": "/components/guest-bar/index",
+    "tool-start": "/components/tool-start/index",
+    "step-edit": "/components/step-edit/index",
+    "task-progress": "/components/task-progress/index"
+  }
+}

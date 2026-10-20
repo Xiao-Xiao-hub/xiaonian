@@ -1,0 +1,35 @@
+<wxs module="gesture" src="./gesture.wxs" />
+<!-- Zoomed in (V4.1 G4): a point's first formula and up to two keys. -->
+<template name="lx"><view wx:if="{{p.formulaBlocks.length}}" class="lx-fx"><rich blocks="{{p.formulaBlocks[0]}}" /></view><view wx:if="{{p.keyBlocks.length}}" class="lx-keys"><view class="lx-key"><rich blocks="{{p.keyBlocks[0]}}" /></view><view wx:if="{{p.keyBlocks.length>1}}" class="lx-key"><rich blocks="{{p.keyBlocks[1]}}" /></view></view></template>
+<view class="viewport {{landscape?'landscape':''}} {{detail?'detail':''}}" data-left="{{left}}" data-top="{{top}}" catchtouchstart="{{gesture.start}}" catchtouchmove="{{gesture.move}}" catchtouchend="{{gesture.end}}" catchtouchcancel="{{gesture.end}}">
+  <view class="map-plane mid" change:motion="{{gesture.motionChanged}}" motion="{{motion}}" style="width:{{layout.width}}px;height:{{layout.height}}px">
+    <block wx:if="{{view==='task'}}">
+      <view wx:for="{{layout.edges}}" wx:key="id" class="map-edge {{item.cls}}" style="left:{{item.x}}px;top:{{item.y}}px;width:{{item.width}}px;transform:rotate({{item.angle}}deg)" />
+      <view wx:for="{{layout.nodes}}" wx:key="id" class="task-node {{item.statusCls}} {{item.group?'group':'one'}} {{item.expanded?'expanded':''}} {{item.taught?'':'later'}} {{item.next?'is-next':''}} {{pressed===item.id?'pressing':''}}" style="left:{{item.baseX}}px;top:{{item.y}}px;width:{{item.width}}px;height:{{item.height}}px;transform:translateX({{item.shiftX}}px)" data-id="{{item.id}}" data-group="{{item.group}}" bindtap="groupTap" hover-class="node-press" hover-start-time="0" hover-stay-time="120" aria-role="button" aria-label="{{item.name}}{{item.next?'，下一步':''}}">
+        <block wx:if="{{!item.expanded}}">
+          <text wx:if="{{item.next}}" class="next-tag">下一步</text>
+          <text class="node-name">{{item.name}}</text>
+          <block wx:if="{{detail&&!item.group}}"><template is="lx" data="{{p: item.members[0]}}" /></block>
+        </block>
+        <block wx:else>
+          <view class="group-head"><text>{{item.name}}</text><text wx:if="{{!item.fixed}}">收起</text></view>
+          <view wx:for="{{item.innerEdges}}" wx:for-item="edge" wx:key="id" class="inner-edge" style="left:{{edge.x}}px;top:{{edge.y}}px;width:{{edge.width}}px;transform:rotate({{edge.angle}}deg)"/>
+          <view wx:for="{{item.memberViews}}" wx:for-item="p" wx:key="id" class="inner-node {{p.statusCls}} {{p.taught?'':'later'}} {{p.next?'is-next':''}} {{pressed===p.id?'pressing':''}}" style="left:{{p.x}}px;top:{{p.y}}px;width:{{p.width}}px;{{p.height?'height:'+p.height+'px':''}}" data-id="{{p.id}}" catchtap="nodeTap" hover-class="node-press" hover-start-time="0" hover-stay-time="120" hover-stop-propagation aria-role="button" aria-label="{{p.aria}}">
+            <text wx:if="{{p.next}}" class="next-tag">下一步</text>
+            <text class="node-name">{{p.short||p.name}}</text>
+            <block wx:if="{{detail}}"><template is="lx" data="{{p: p}}" /></block>
+          </view>
+        </block>
+      </view>
+      <view wx:for="{{layout.sides}}" wx:key="id" class="task-node branch {{item.side}} {{item.statusCls}} {{item.group?'group':''}} {{item.expanded?'expanded':''}} {{item.taught?'':'later'}} {{item.next?'is-next':''}} {{pressed===item.id?'pressing':''}}" style="left:{{item.x}}px;top:{{item.y}}px;width:{{item.width}}px;height:{{item.height}}px" data-id="{{item.id}}" data-group="{{item.group}}" bindtap="groupTap" hover-class="node-press" hover-start-time="0" hover-stay-time="120" aria-role="button" aria-label="{{item.name}}，{{item.sideText}}">
+        <block wx:if="{{!item.expanded}}"><text wx:if="{{item.next}}" class="next-tag">下一步</text><text class="node-name">{{item.name}}</text><block wx:if="{{detail&&!item.group}}"><template is="lx" data="{{p: item.members[0]}}" /></block><text wx:if="{{!detail||item.group}}" class="branch-label">{{item.sideText}}</text></block>
+        <block wx:else><view class="group-head"><text>{{item.sideText}}</text><text wx:if="{{!item.fixed}}">收起</text></view><view wx:for="{{item.innerEdges}}" wx:for-item="edge" wx:key="id" class="inner-edge" style="left:{{edge.x}}px;top:{{edge.y}}px;width:{{edge.width}}px;transform:rotate({{edge.angle}}deg)"/><view wx:for="{{item.memberViews}}" wx:for-item="p" wx:key="id" class="inner-node {{p.statusCls}} {{p.taught?'':'later'}} {{p.next?'is-next':''}} {{pressed===p.id?'pressing':''}}" style="left:{{p.x}}px;top:{{p.y}}px;width:{{p.width}}px;{{p.height?'height:'+p.height+'px':''}}" data-id="{{p.id}}" catchtap="nodeTap" hover-class="node-press" hover-start-time="0" hover-stay-time="120" hover-stop-propagation aria-role="button" aria-label="{{p.aria}}"><text wx:if="{{p.next}}" class="next-tag">下一步</text><text class="node-name">{{p.short||p.name}}</text><block wx:if="{{detail}}"><template is="lx" data="{{p: p}}" /></block></view></block>
+      </view>
+    </block>
+    <block wx:else>
+      <view wx:for="{{layout.edges}}" wx:key="id" class="relation-edge {{item.cls}}" style="left:{{item.x}}px;top:{{item.y}}px;width:{{item.width}}px;transform:rotate({{item.angle}}deg)" />
+      <view wx:for="{{layout.external}}" wx:key="label" class="external-link">用到「{{item.label}}」</view>
+      <view wx:for="{{layout.nodes}}" wx:key="id" class="relation-node {{item.statusCls}} {{item.relation}} {{pressed===item.id?'pressing':''}}" style="left:{{item.x}}px;top:{{item.y}}px;width:{{item.width}}px;height:{{item.height}}px" data-id="{{item.id}}" bindtap="nodeTap" hover-class="node-press" hover-start-time="0" hover-stay-time="120" aria-role="button" aria-label="{{item.aria}}"><text>{{item.name}}</text></view>
+    </block>
+  </view>
+</view>

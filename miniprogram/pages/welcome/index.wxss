@@ -1,0 +1,36 @@
+/* 01-welcome.html：欢迎和青少年守护（样张 px × 2 = rpx） */
+page { height: 100%; background: #ffffff; }
+.root { display: flex; flex-direction: column; height: 100vh; }
+.welcome { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-bottom: env(safe-area-inset-bottom); }
+.stage { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 16rpx; }
+.bubble { position: relative; width: 564rpx; padding: 30rpx 36rpx; border: 2rpx solid #dcdfe5; border-radius: 44rpx; background: #ffffff; color: var(--ink); font-size: 32rpx; line-height: 1.75; white-space: pre-line; box-sizing: border-box; }
+.bubble .b { font-weight: 700; }
+.bubble::after { content: ""; position: absolute; left: 50%; bottom: -16rpx; width: 28rpx; height: 28rpx; margin-left: -14rpx; border-right: 2rpx solid #dcdfe5; border-bottom: 2rpx solid #dcdfe5; background: #ffffff; transform: rotate(45deg); }
+.xl { display: block; width: 300rpx; height: 300rpx; margin-top: 28rpx; }
+
+.pv { flex: none; position: relative; padding: 0 44rpx 0 56rpx; }
+.pv .ttl { display: block; color: var(--ink); font-size: 28rpx; line-height: 1.5; }
+/* V4.2: body colour and a taller box, no fade over the last line. */
+.ptext { height: 300rpx; margin-top: 8rpx; color: var(--body); font-size: 27rpx; line-height: 1.75; }
+.ptext .pp { padding-right: 16rpx; }
+.lk { color: var(--primary); }
+
+.acts { flex: none; padding: 28rpx 48rpx 24rpx; }
+.acts .btn { min-height: 100rpx; margin-top: 0; font-size: 34rpx; }
+.acts .no { display: block; margin-top: 12rpx; padding: 24rpx 0; color: var(--sub); font-size: 30rpx; text-align: center; }
+
+/* 青少年守护：标题在遮罩上，底部是直角白板 */
+.youth { flex-direction: column; justify-content: flex-end; align-items: stretch; }
+.yhead { display: flex; align-items: center; justify-content: space-between; padding: 0 32rpx 24rpx 40rpx; }
+.yt { color: #ffffff; font-size: 46rpx; font-style: italic; font-weight: 800; letter-spacing: 1rpx; }
+.yx-hit { flex: none; margin: -22rpx; padding: 22rpx; }
+.yx { position: relative; flex: none; width: 44rpx; height: 44rpx; border: 3rpx solid #ffffff; border-radius: 50%; box-sizing: border-box; }
+.yx::before, .yx::after { content: ""; position: absolute; left: 50%; top: 50%; width: 18rpx; height: 3rpx; margin: -1.5rpx 0 0 -9rpx; background: #ffffff; transform: rotate(45deg); }
+.yx::after { transform: rotate(-45deg); }
+.ysheet { padding: 48rpx 40rpx calc(32rpx + env(safe-area-inset-bottom)); background: #ffffff; }
+.yp { color: var(--body); font-size: 30rpx; line-height: 1.85; }
+.err { display: block; margin-top: 20rpx; color: var(--red-ink); font-size: 26rpx; line-height: 1.6; }
+.two { display: flex; gap: 28rpx; margin-top: 44rpx; }
+.two .btn, .two .btn-line { flex: 1; min-height: 92rpx; margin-top: 0; padding: 0 12rpx; font-size: 34rpx; }
+.two .btn-line { border-color: #c9ccd3; }
+.ysheet .guest { display: block; margin-top: 12rpx; padding: 24rpx 0; color: var(--body); font-size: 30rpx; text-align: center; }

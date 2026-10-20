@@ -1,0 +1,39 @@
+/* 纸页卡（v4 样张 10-notes）：.pc、.t-*、.tl、.prg、.mk 是 app.wxss 的公共类 */
+.pc { box-sizing: border-box; height: 100%; }
+.tl-ic { width: 26rpx; height: 26rpx; }
+.mood { flex: none; font-size: 22rpx; line-height: 1.5; color: var(--sub); }
+.fav { color: var(--gold); font-size: 26rpx; line-height: 1; }
+/* 摘要最多 3 行（D113：2–3 行） */
+.sum { display: -webkit-box; -webkit-line-clamp: 3 !important; }
+/* 到期待回顾：右上角琥珀色小角标，卡片描一道淡琥珀边 */
+.due { flex: none; margin-left: auto; padding: 2rpx 12rpx 2rpx 30rpx; border-radius: 18rpx; background: var(--amber-wash); color: var(--amber-ink); font-size: 20rpx; font-weight: 700; line-height: 32rpx; position: relative; }
+.due::before { content: ""; position: absolute; left: 12rpx; top: 11rpx; width: 10rpx; height: 10rpx; border-radius: 50%; background: var(--red); }
+/* 收藏、心情、待回顾和多选的勾一起出现时，顶行可以折到第二行 */
+.pc .top { flex-wrap: wrap; row-gap: 8rpx; }
+.pc.is-due { box-shadow: 0 0 0 2rpx var(--amber-soft), var(--shadow); }
+.pc.is-due.sel { box-shadow: 0 0 0 4rpx var(--primary), var(--shadow); }
+/* 多选：右上角圆圈，选中描蓝边打勾 */
+.ck { position: absolute; z-index: 2; top: 20rpx; right: 20rpx; width: 40rpx; height: 40rpx; box-sizing: border-box; border: 3rpx solid #c9cdd4; border-radius: 50%; background: #ffffff; }
+.pc.sel { box-shadow: 0 0 0 4rpx var(--primary), var(--shadow); }
+.pc.sel .ck { border: 0; background: var(--primary); }
+.pc.sel .ck::after { content: ""; position: absolute; left: 14rpx; top: 7rpx; width: 10rpx; height: 20rpx; border-right: 4rpx solid #ffffff; border-bottom: 4rpx solid #ffffff; transform: rotate(45deg); }
+.pc.has-ck::after { display: none; }
+.pc.has-ck .top { padding-right: 52rpx; }
+/* 一行一张（卡片 tab、随心记“最近”，D112）：名称 + 一句，类型色只是左边一道细条 */
+.crow { position: relative; display: flex; align-items: center; gap: 20rpx; padding: 24rpx 28rpx 24rpx 40rpx; border-radius: 24rpx; background: var(--card); box-shadow: var(--shadow); }
+.crow::before { content: ""; position: absolute; left: 16rpx; top: 30rpx; bottom: 30rpx; width: 6rpx; border-radius: 3rpx; background: var(--strip, var(--rule-2)); opacity: 0.5; }
+.crow .ck { position: relative; top: auto; right: auto; flex: none; }
+.crow.sel { box-shadow: 0 0 0 4rpx var(--primary), var(--shadow); }
+.crow.sel .ck { border: 0; background: var(--primary); }
+.crow.sel .ck::after { content: ""; position: absolute; left: 14rpx; top: 7rpx; width: 10rpx; height: 20rpx; border-right: 4rpx solid #ffffff; border-bottom: 4rpx solid #ffffff; transform: rotate(45deg); }
+/* 已完成：字照常清楚，只淡掉左边细条（V4.2） */
+.crow.done::before { opacity: 0.2; }
+.rtx { flex: 1; min-width: 0; }
+.rtl { display: flex; align-items: center; gap: 10rpx; min-width: 0; }
+.rname { flex: 0 1 auto; min-width: 0; overflow: hidden; color: var(--ink); font-size: 30rpx; font-weight: 600; line-height: 1.45; white-space: nowrap; text-overflow: ellipsis; }
+.rsum { display: block; margin-top: 4rpx; overflow: hidden; color: var(--sub); font-size: 26rpx; line-height: 1.5; white-space: nowrap; text-overflow: ellipsis; }
+.rst { flex: none; color: var(--faint); font-size: 24rpx; }
+.rst.ok { color: var(--green-ink); }
+/* 阶段词（V4.2 不再画百分比进度条）：一行小字，完成后绿色 */
+.stg { display: block; margin-top: 16rpx; color: var(--faint); font-size: 24rpx; line-height: 1.2; }
+.stg.ok { color: var(--green-ink); }

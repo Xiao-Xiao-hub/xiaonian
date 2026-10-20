@@ -1,0 +1,10 @@
+<view class="page bank-page">
+  <guest-bar />
+  <scroll-view scroll-x class="bank-tabs" enhanced show-scrollbar="{{false}}">
+    <text class="chip {{!chapterId?'on':''}}" data-id="" bindtap="selectChapter" aria-role="button">全部</text>
+    <text wx:for="{{tabs}}" wx:key="id" class="chip {{chapterId===item.id?'on':''}}" data-id="{{item.id}}" bindtap="selectChapter" aria-role="button">{{item.short}}</text>
+  </scroll-view>
+  <view wx:if="{{error}}" class="alert">{{error}}<text class="link" bindtap="load">再试一次</text></view>
+  <view wx:if="{{loading&&!chapters.length}}" class="working"><text class="h3">打开中…</text><view class="bar" /></view>
+  <point-list chapters="{{chapters}}" chapter-id="{{chapterId}}" show-items="{{true}}" bindpick="pick" binditem="pickItem" />
+</view>

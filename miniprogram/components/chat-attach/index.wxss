@@ -1,0 +1,121 @@
+/* Photos as square thumbnails, documents as a block with name and size. */
+.ca-att {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+.ca-att.ca-right {
+  justify-content: flex-end;
+}
+.ca-item {
+  position: relative;
+}
+.ca-thumb {
+  display: block;
+  width: 168rpx;
+  height: 168rpx;
+  border-radius: 20rpx;
+  background: var(--fill);
+}
+.ca-tray .ca-thumb {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 16rpx;
+}
+.ca-file {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  box-sizing: border-box;
+  width: 420rpx;
+  padding: 18rpx 22rpx;
+  border-radius: 20rpx;
+  border: 2rpx solid var(--rule);
+  background: var(--card);
+}
+.ca-tray .ca-file {
+  width: 360rpx;
+  padding: 14rpx 18rpx;
+  border-color: transparent;
+  background: var(--fill);
+}
+.ca-badge {
+  flex: none;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 14rpx;
+  background: var(--primary-wash);
+  color: var(--primary-ink);
+  font-size: 22rpx;
+  font-weight: 700;
+  line-height: 72rpx;
+  text-align: center;
+}
+.ca-copy {
+  flex: 1;
+  min-width: 0;
+}
+.ca-name {
+  display: block;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 28rpx;
+  line-height: 1.4;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ca-size {
+  display: block;
+  margin-top: 4rpx;
+  color: var(--faint);
+  font-size: 22rpx;
+  line-height: 1.4;
+}
+.ca-veil {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16rpx;
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  font-size: 22rpx;
+}
+.ca-x {
+  position: absolute;
+  top: -14rpx;
+  right: -14rpx;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--card);
+  font-size: 28rpx;
+  line-height: 38rpx;
+  text-align: center;
+}
+/* V4.2 (G5): a failed upload stays, to try again; a long document says what was read. */
+.ca-bad {
+  color: var(--red-ink);
+}
+.ca-more {
+  display: block;
+  margin-top: 8rpx;
+  color: var(--primary-ink);
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+/* V4.2 G9: the remove × stays 40rpx but takes taps over 44px (88rpx). */
+.ca-x::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 88rpx;
+  height: 88rpx;
+  transform: translate(-50%, -50%);
+}

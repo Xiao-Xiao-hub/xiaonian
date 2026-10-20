@@ -1,0 +1,172 @@
+<view class="page brainstorm">
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+  <view wx:if="{{item}}" class="head"
+    ><view wx:if="{{titleEditing}}" class="title-edit"
+      ><input
+        value="{{item.titleView.text}}"
+        maxlength="16"
+        focus
+        placeholder="起个标题"
+        placeholder-class="placeholder"
+        bindinput="titleInput"
+        bindconfirm="titleDone"
+        bindblur="titleDone"
+    /></view
+    ><view wx:else class="title-text"
+      ><text wx:if="{{item.titleView.ai}}" class="ai-dot">•</text
+      ><text>{{item.titleView.text}}</text></view
+    ><button wx:if="{{!titleEditing}}" class="btn-text edit" bindtap="editTitle">改</button></view
+  >
+  <view wx:if="{{item}}" class="steps"
+    ><text>① 分一分</text><view class="step-line"></view><text>② 比一比</text
+    ><view class="step-line"></view><text class="bold">③ 想明白</text></view
+  >
+  <view wx:if="{{item}}" class="box conclude">
+    <text class="label">你现在怎么想？</text>
+    <textarea
+      value="{{item.conclusion}}"
+      maxlength="200"
+      focus="{{focusConclusion}}"
+      placeholder="用自己的话写一句"
+      placeholder-class="placeholder"
+      bindinput="conclusionInput"
+      bindblur="conclusionBlur"
+    />
+  </view>
+  <view wx:if="{{item&&item.drafts.length}}" class="box fold"
+    ><view class="fold-row {{draftsOpen?'open':''}}" bindtap="toggleDrafts"
+      ><text>看看 AI 怎么说</text></view
+    ><block wx:if="{{draftsOpen}}"
+      ><view class="fold-tools"
+        ><button class="btn-text edit" bindtap="toggleListEdit">{{listEditing?'好了':'改'}}</button></view
+      ><view wx:for="{{item.drafts}}" wx:key="id" class="draft-row"
+        ><block wx:if="{{listEditing}}"
+          ><input
+            value="{{item.textView.text}}"
+            maxlength="40"
+            placeholder="AI 写的这句"
+            placeholder-class="placeholder"
+            data-kind="draft"
+            data-index="{{index}}"
+            data-field="text"
+            bindinput="editList"
+          /><text
+            class="remove" aria-role="button" aria-label="删掉这条"
+            data-kind="draft"
+            data-index="{{index}}"
+            bindtap="removeList"
+            >×</text
+          ></block
+        ><block wx:else
+          ><text class="draft-text"
+            ><text wx:if="{{item.textView.ai}}" class="ai-dot">•</text
+            >{{item.textView.text}}</text
+          ><button class="use" data-index="{{index}}" bindtap="useDraft">用这句</button></block
+        ></view
+      ></block
+    ></view
+  >
+  <view wx:if="{{item&&(item.ifViews.length||item.directions.length)}}" class="box fold"
+    ><view class="fold-row {{moreOpen?'open':''}}" bindtap="toggleMore"
+      ><text>更多</text></view
+    ><block wx:if="{{moreOpen}}"
+      ><view class="fold-tools"
+        ><button class="btn-text edit" bindtap="toggleListEdit">{{listEditing?'好了':'改'}}</button></view
+      ><block wx:if="{{item.ifViews.length}}"
+        ><text class="label">加个条件</text
+        ><view wx:for="{{item.ifViews}}" wx:key="id" class="if-row"
+          ><text>如果</text
+          ><input
+            wx:if="{{listEditing}}"
+            value="{{item.ifView.text}}"
+            maxlength="20"
+            placeholder="什么情况下"
+            placeholder-class="placeholder"
+            data-index="{{index}}"
+            bindinput="conditionInput"
+          /><text wx:else class="if-text"
+            ><text wx:if="{{item.ifView.ai}}" class="ai-dot">•</text
+            >{{item.ifView.text}}</text
+          ><text>就</text
+          ><input
+            value="{{item.then || ''}}"
+            maxlength="100"
+            placeholder="那你会…"
+            placeholder-class="placeholder"
+            data-index="{{index}}"
+            bindinput="thenInput"
+          /><text
+            wx:if="{{listEditing}}"
+            class="remove" aria-role="button" aria-label="删掉这条"
+            data-index="{{index}}"
+            bindtap="removeIf"
+            >×</text
+          ></view
+        ></block
+      ><block wx:if="{{item.directions.length}}"
+        ><text class="label">接下来可以试试</text>
+        <view wx:for="{{item.directions}}" wx:key="id" class="direction"
+          ><block wx:if="{{listEditing}}"
+            ><view class="direction-edit"
+              ><input
+                value="{{item.titleView.text}}"
+                maxlength="16"
+                placeholder="试试什么"
+                placeholder-class="placeholder"
+                data-kind="direction"
+                data-index="{{index}}"
+                data-field="title"
+                bindinput="editList"
+              /><text
+                class="remove" aria-role="button" aria-label="删掉这条"
+                data-kind="direction"
+                data-index="{{index}}"
+                bindtap="removeList"
+                >×</text
+              ></view
+            ><textarea
+              value="{{item.whyView.text}}"
+              maxlength="40"
+              placeholder="为什么"
+              placeholder-class="placeholder"
+              data-kind="direction"
+              data-index="{{index}}"
+              data-field="why"
+              bindinput="editList"
+          /></block
+          ><block wx:else
+            ><text class="direction-title"
+              ><text class="ai-dot" wx:if="{{item.titleView.ai}}">•</text
+              >{{item.titleView.text}}</text
+            ><text class="direction-why"
+              ><text class="ai-dot" wx:if="{{item.whyView.ai}}">•</text
+              >{{item.whyView.text}}</text
+            ></block
+          ><view class="refs"
+            ><text wx:for="{{item.fromCards}}" wx:key="id"
+              >{{item.titleView.text || item.title}}</text
+            ></view
+          ></view
+        >
+      </block></block
+    ></view
+  >
+  <text wx:if="{{error}}" class="alert">{{error}}</text
+  ><text wx:if="{{loading}}" class="empty">打开中…</text>
+  <view wx:if="{{item}}" class="footer"
+    ><view class="footer-links"
+      ><button class="btn-text type-pick" bindtap="pickType">存成：{{conclusionTypeName}} ▾</button
+      ><view class="spacer"></view
+      ><button class="btn-text" disabled="{{saving}}" bindtap="pause">先存到这</button
+      ><button class="btn-text" data-mode="chat" disabled="{{saving}}" bindtap="save">带去对话 ›</button></view
+    ><button
+      class="btn"
+      data-mode="result"
+      loading="{{saving}}"
+      disabled="{{saving}}"
+      bindtap="save"
+    >
+      存下来
+    </button></view
+  >
+</view>

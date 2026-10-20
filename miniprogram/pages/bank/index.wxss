@@ -1,0 +1,4 @@
+.bank-page { padding-bottom:calc(48rpx + env(safe-area-inset-bottom)); }
+.bank-tabs { margin:8rpx -32rpx 0; padding:0 32rpx; white-space:nowrap; }
+.bank-tabs .chip { display:inline-flex; margin-right:16rpx; }
+.bank-tabs .chip:last-child { margin-right:32rpx; }

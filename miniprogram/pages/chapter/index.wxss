@@ -1,0 +1,49 @@
+/* 章节页（Chapter 画板），颜色只用 app.wxss 的令牌 */
+/* 顶行：本章菜单，点击区不小于 88rpx；返回用系统导航栏 */
+.top { display: flex; align-items: center; justify-content: flex-end; }
+.menu { display: flex; align-items: center; justify-content: center; width: 88rpx; height: 88rpx; margin-right: -16rpx; font-size: 40rpx; font-weight: 700; line-height: 1; color: var(--body); }
+/* 错误条、提示条里的链接：点击区四边都不小于 88rpx */
+.alert .link, .notice .link { display: inline-block; padding: 22rpx 24rpx; margin: -22rpx -24rpx -22rpx 0; }
+.hidden-bar { margin: 8rpx 0 0; }
+
+.head { display: flex; flex-direction: column; gap: 8rpx; padding-top: 8rpx; }
+.head .kicker { color: var(--map-muted); }
+.head .h1 { font-size: 42rpx; }
+.head-rank { display: flex; align-items: center; flex-wrap: wrap; gap: 20rpx; padding-top: 4rpx; }
+.idle { font-size: 26rpx; color: var(--map-muted); }
+.head-count { font-size: 26rpx; color: var(--body); }
+
+.card { margin-top: 24rpx; padding: 24rpx 32rpx 12rpx; background: var(--card); border: 2rpx solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+
+/* 下一段 */
+.up { padding-top: 28rpx; padding-bottom: 20rpx; }
+.up-top { display: flex; align-items: center; flex-wrap: wrap; gap: 16rpx; }
+.up-k { font-size: 26rpx; color: var(--body); }
+.up-gap { font-size: 30rpx; font-weight: 700; line-height: 1.5; color: var(--ink); }
+.up .list { padding-top: 8rpx; }
+.up-note { display: block; padding-top: 4rpx; font-size: 24rpx; line-height: 1.6; color: var(--map-muted); }
+
+/* 一层：标签、计数、达标或还差；整行点开或收起 */
+.tier-top { display: flex; align-items: center; gap: 16rpx; min-height: 72rpx; padding-bottom: 8rpx; }
+.tier-top.fold::after { content: "›"; flex: none; color: var(--faint); font-size: 30rpx; }
+.tier-top.fold.open::after { transform: rotate(90deg); }
+.tier-count { flex: 1; min-width: 0; font-size: 26rpx; color: var(--body); }
+.tier-side { flex: none; font-size: 24rpx; font-weight: 700; color: var(--map-next); }
+.tier-side.ok { color: var(--green-ink); }
+
+/* 知识点行：格子、名称、状态、节号；整行能点 */
+.pt { display: flex; align-items: center; gap: 20rpx; min-height: 88rpx; padding: 12rpx 0; font-size: 28rpx; line-height: 1.5; color: var(--ink); }
+.pt + .pt { border-top: 2rpx solid var(--rule); }
+.pt .map-cell { width: 36rpx; height: 36rpx; }
+.pt-name { flex: 1; min-width: 0; }
+.pt-state { flex: none; font-size: 24rpx; color: var(--map-muted); }
+.pt-push { flex: none; padding: 2rpx 16rpx; border-radius: 12rpx; background: var(--primary-wash); color: var(--map-next); font-size: 24rpx; }
+.notebook .pt-push { border: 2rpx solid var(--rule-2); }
+.pt-sec { flex: none; width: 64rpx; font-size: 28rpx; font-weight: 600; text-align: right; color: var(--map-muted); }
+
+/* 本章操作 */
+.actions { padding-bottom: 24rpx; }
+.actions .btn-line { margin-top: 4rpx; }
+.actions-note { display: block; margin-top: 16rpx; font-size: 24rpx; line-height: 1.6; text-align: center; color: var(--map-muted); }
+.undo { display: flex; justify-content: center; margin-top: 12rpx; }
+.undo-link { display: inline-block; padding: 26rpx 24rpx; font-size: 26rpx; color: var(--pencil); }

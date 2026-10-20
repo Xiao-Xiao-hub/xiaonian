@@ -1,0 +1,47 @@
+<view class="page">
+  <view class="head">
+    <text class="h2">{{kind === 'problem' ? '放一道题进来' : '学一份资料'}}</text>
+    <text class="lede">{{kind === 'problem' ? '拍下整道题，或者把题打出来。' : '拍一页笔记、课本或讲义，也可以直接粘贴文字。'}}</text>
+  </view>
+
+  <view class="tabs">
+    <view class="tab {{mode === 'image' ? 'on' : ''}}" bindtap="useImage">拍照 / 相册</view>
+    <view class="tab {{mode === 'text' ? 'on' : ''}}" bindtap="useText">打字</view>
+  </view>
+
+  <block wx:if="{{mode === 'image'}}">
+    <view wx:if="{{!image}}" class="drop" hover-class="pressed" bindtap="chooseImage">
+      <image class="drop-icon" src="/assets/icons/camera-ink.png" />
+      <text class="drop-title">拍照，或从相册选一张</text>
+      <text class="drop-sub">一次一张（5MB 以内）</text>
+    </view>
+    <block wx:else>
+      <view class="frame"><image class="preview" src="{{image}}" mode="aspectFit" bindtap="previewImage" /></view>
+      <view class="frame-actions">
+        <text class="link" bindtap="previewImage">看大图</text>
+        <text class="link" bindtap="chooseImage">换一张</text>
+      </view>
+    </block>
+    <text class="hint center tip-line">拍清楚一点，认错了下一步能改</text>
+    <text wx:if="{{kind === 'note'}}" class="link center import-link" bindtap="openImport">好几张图或文件，用导入 ›</text>
+  </block>
+
+  <block wx:else>
+    <textarea class="field tall" placeholder-class="placeholder" maxlength="-1" auto-height placeholder="{{kind === 'problem' ? '把题目完整地打进来，数字和条件都别漏' : '粘贴或输入要学的内容'}}" value="{{text}}" bindinput="onText" />
+    <view wx:if="{{kind === 'problem' || chars > limit * 0.8}}" class="field-meta">
+      <text>{{kind === 'problem' ? '一次只放一道题' : ''}}</text>
+      <text wx:if="{{chars > limit * 0.8}}" class="tnum {{chars > limit ? 'over' : ''}}">{{chars}} / {{limit}}</text>
+    </view>
+    <block wx:if="{{kind === 'problem'}}">
+      <view class="label">参考答案<text class="opt">有就填，按它来对</text></view>
+      <input class="field short" placeholder-class="placeholder" maxlength="500" placeholder="例如：1/2" value="{{answer}}" bindinput="onAnswer" />
+    </block>
+  </block>
+
+  <view wx:if="{{error}}" class="alert">{{error}}</view>
+  <text wx:if="{{kind === 'note' && mode === 'text' && chars > limit}}" class="link center import-link" bindtap="openImport">用导入整理这段 ›</text>
+  <button class="btn" hover-class="btn-press" disabled="{{busy || (mode === 'image' ? !image : !chars)}}" bindtap="submit">
+    <text>{{busy ? (mode === 'image' ? '正在上传…' : '正在存…') : '下一步'}}</text>
+    <image wx:if="{{!busy}}" class="icon" src="/assets/icons/arrow-white.png" />
+  </button>
+</view>

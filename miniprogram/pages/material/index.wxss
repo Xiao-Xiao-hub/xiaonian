@@ -1,0 +1,21 @@
+.source { margin-top: 36rpx; padding-bottom: 20rpx; }
+.source .gutter { line-height: 56rpx; }
+.source-head { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; min-height: 56rpx; }
+.source-label { font-size: 24rpx; color: var(--pencil); letter-spacing: 1rpx; }
+.source-toggle { font-size: 24rpx; color: var(--link); text-decoration: underline; text-decoration-color: var(--link-line); text-underline-offset: 6rpx; }
+.peek { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin-top: 6rpx; font-size: 28rpx; line-height: 1.8; color: var(--body); }
+.para { position: relative; }
+.para-no { position: absolute; left: -92rpx; top: 0; width: 66rpx; font-size: 24rpx; line-height: 56rpx; text-align: center; color: var(--pencil); }
+.para .lined { font-size: 28rpx; line-height: 56rpx; background-image: linear-gradient(to bottom, transparent 54rpx, var(--ruling) 54rpx); background-size: 100% 56rpx; }
+
+.ask { display: flex; align-items: center; gap: 16rpx; margin-top: 28rpx; }
+.ask-input { flex: 1; height: 88rpx; padding: 0 24rpx; background: var(--card); border: 2rpx solid var(--rule-2); border-radius: var(--radius-btn); font-size: 28rpx; }
+.ask-send { display: flex; align-items: center; justify-content: center; flex: none; width: 88rpx !important; height: 88rpx; border-radius: var(--radius-btn); background: var(--primary-fill); }
+.ask-send .icon { width: 36rpx; height: 36rpx; }
+.ask-send[disabled] { background: var(--disabled) !important; }
+
+.head-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16rpx; }
+.head-copy { flex: 1; min-width: 0; }
+.quiz { margin-top: 36rpx; }
+.limits { margin-top: 16rpx; }
+.sheet .btn { margin-top: 24rpx; }

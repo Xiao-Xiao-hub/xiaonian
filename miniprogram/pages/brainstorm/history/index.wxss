@@ -1,0 +1,4 @@
+.bs-history .empty { display: block; }
+.bs-history .bh-state { color: var(--faint); }
+.bs-history .bh-state.retry { color: var(--amber-ink); }
+.bs-history .bh-chev { flex: none; color: var(--faint); font-size: 32rpx; }

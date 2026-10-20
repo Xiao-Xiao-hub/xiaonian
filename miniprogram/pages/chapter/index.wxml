@@ -1,0 +1,74 @@
+<view class="page" capture-bind:touchstart="studyTouch">
+  <view wx:if="{{chapter}}" class="top">
+    <view class="menu" hover-class="pressed" aria-role="button" aria-label="本章菜单" bindtap="openMenu"><text>⋯</text></view>
+  </view>
+
+  <view wx:if="{{error}}" class="alert">{{error}}<text wx:if="{{canRetry}}" class="link" bindtap="load">再试一次</text><text wx:else class="link" bindtap="goMap">看全书地图</text></view>
+  <view wx:if="{{loading && !chapter}}" class="working"><text class="h3">打开中…</text><view class="bar" /></view>
+
+  <block wx:if="{{chapter}}">
+    <view wx:if="{{chapter.hidden}}" class="notice hidden-bar">这章先放着了<text class="link" bindtap="restore">放回来</text></view>
+    <view wx:if="{{fail}}" class="alert">{{fail}}</view>
+
+    <view class="head">
+      <text class="kicker">{{chapter.meta}}</text>
+      <text class="h1">{{chapter.short}}</text>
+      <view class="head-rank">
+        <text wx:if="{{chapter.started}}" class="stamp {{chapter.stamp}}">{{chapter.rank}}</text>
+        <text wx:else class="idle">还没开始</text>
+        <text class="head-count tnum">{{chapter.countText}}</text>
+      </view>
+    </view>
+
+    <!-- 升下一段 -->
+    <view class="card up">
+      <view wx:if="{{chapter.next}}" class="up-top">
+        <text class="up-k">下一段</text>
+        <text class="stamp {{chapter.next.stamp}}">{{chapter.next.rank}}</text>
+        <text class="up-gap">{{chapter.next.gap}}</text>
+      </view>
+      <text wx:else class="up-gap">这章到难点段了</text>
+      <view wx:if="{{chapter.next && chapter.next.rows.length}}" class="list">
+        <view wx:for="{{chapter.next.rows}}" wx:key="id" class="pt" hover-class="pressed" data-id="{{item.id}}" bindtap="openPoint">
+          <view class="map-cell {{item.cell}}" />
+          <text class="pt-name">{{item.name}}</text>
+          <text wx:if="{{item.status}}" class="pt-state">{{item.status}}</text>
+          <text class="pt-sec tnum">{{item.section}}</text>
+        </view>
+      </view>
+      <text wx:if="{{chapter.next && chapter.next.note}}" class="up-note">{{chapter.next.note}}</text>
+      <text wx:if="{{chapter.next && chapter.next.jump}}" class="up-note">{{chapter.next.jump}}</text>
+    </view>
+
+    <!-- 四层：基础、重点、难点、拓展。默认只展开下一段所在的那层 -->
+    <view wx:for="{{chapter.tiers}}" wx:for-item="t" wx:key="tier" class="card tier">
+      <view wx:if="{{t.none}}" class="tier-top">
+        <text class="tier-tag {{t.cls}}">{{t.tier}}</text>
+        <text class="tier-count">本章没有{{t.tier}}</text>
+      </view>
+      <view wx:else class="tier-top fold {{open[t.tier] ? 'open' : ''}}" hover-class="pressed" data-tier="{{t.tier}}" bindtap="toggleTier" aria-role="button">
+        <text class="tier-tag {{t.cls}}">{{t.tier}}</text>
+        <text class="tier-count tnum">{{t.count}}</text>
+        <text wx:if="{{t.side}}" class="tier-side {{t.ok ? 'ok' : ''}}">{{t.ok ? '✓ ' : ''}}{{t.side}}</text>
+      </view>
+      <view wx:if="{{open[t.tier] && t.rows.length}}" class="list">
+        <view wx:for="{{t.rows}}" wx:key="id" class="pt" hover-class="pressed" data-id="{{item.id}}" bindtap="openPoint">
+          <view class="map-cell {{item.cell}}" />
+          <text class="pt-name">{{item.name}}</text>
+          <text wx:if="{{item.push}}" class="pt-push">做对就升段</text>
+          <text wx:elif="{{item.status}}" class="pt-state">{{item.status}}</text>
+          <text class="pt-sec tnum">{{item.section}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 本章操作。连做本章在 S12 -->
+    <view wx:if="{{chapter.rest}}" class="card actions">
+      <button class="btn-line" hover-class="btn-press" disabled="{{busy}}" bindtap="selfRest">剩下的我都会</button>
+      <text class="actions-note">{{chapter.restNote}}</text>
+    </view>
+    <view wx:if="{{chapter.selfCount}}" class="undo">
+      <text class="undo-link" bindtap="confirmUnself">撤销本章的“我会了”</text>
+    </view>
+  </block>
+</view>

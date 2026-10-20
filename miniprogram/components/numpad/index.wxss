@@ -1,0 +1,31 @@
+/* 数字键盘: blanks as boxes on the white page, a fraction stacked; the pad in
+   four columns of 44px keys (下一空 takes two), like a phone's number keyboard.
+   V4.2: 下一空 only moves between blanks, so it looks like the other function
+   keys, not like the page's 提交. */
+.np-slots { display:flex; flex-direction:column; gap:20rpx; }
+.np-slot-row { display:flex; flex-wrap:wrap; align-items:center; gap:12rpx 20rpx; }
+.np-label { flex:none; min-width:120rpx; color:var(--sub); font-size:28rpx; }
+.np-slot { position:relative; display:flex; align-items:center; justify-content:center; gap:8rpx; min-width:200rpx; min-height:112rpx; padding:12rpx 28rpx; box-sizing:border-box; border:3rpx solid var(--rule-2); border-radius:20rpx; background:var(--card); color:var(--ink); font-size:40rpx; font-weight:600; }
+.np-slot.on { border-color:var(--primary); box-shadow:0 0 0 6rpx var(--primary-wash); }
+.np-ph { color:var(--ghost); font-size:28rpx; font-weight:400; }
+.np-neg { font-size:40rpx; }
+.np-val { font-variant-numeric:tabular-nums; }
+.np-frac { display:inline-flex; flex-direction:column; align-items:center; min-width:48rpx; font-size:34rpx; line-height:1.15; font-variant-numeric:tabular-nums; }
+.np-line { align-self:stretch; height:3rpx; margin:4rpx 0; background:var(--ink); }
+.np-den.blank { min-width:40rpx; min-height:40rpx; border-radius:6rpx; background:var(--primary-wash); }
+.np-caret { width:3rpx; height:44rpx; background:var(--primary); animation:np-blink 1s steps(1) infinite; }
+@keyframes np-blink { 50% { opacity:0; } }
+.np-note { flex-basis:100%; color:var(--faint); font-size:24rpx; }
+.np-pad { margin-top:28rpx; padding:12rpx; border-radius:24rpx; background:var(--fill); }
+.np-row { display:flex; gap:12rpx; }
+.np-row + .np-row { margin-top:12rpx; }
+.np-key { flex:1; display:flex; align-items:center; justify-content:center; height:88rpx; border-radius:16rpx; background:var(--card); color:var(--ink); font-size:36rpx; font-weight:600; box-shadow:0 2rpx 0 var(--rule-2); }
+.np-key.fn { color:var(--sub); font-size:30rpx; }
+.np-key.ok { flex:2.08; color:var(--primary-ink); font-size:30rpx; }
+.np-key.np-press { background:var(--rule); }
+/* One blank: no 下一空; the space keeps the pad's shape. */
+.np-key.np-none { visibility:hidden; }
+.np-key.ok.off, .np-key.ok.off.np-press { background:var(--card); color:var(--ghost); }
+/* V4.2 G9: the placeholder and the 确定 key while off read at about 4.5:1 (the white key still tells it is off). */
+.np-ph { color: var(--faint); }
+.np-key.ok.off, .np-key.ok.off.np-press { color: var(--faint); }

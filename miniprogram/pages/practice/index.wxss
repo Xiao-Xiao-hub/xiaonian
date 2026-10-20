@@ -1,0 +1,16 @@
+.ticks { display: flex; gap: 8rpx; margin-top: 14rpx; }
+.ticks .t { flex: 1; height: 6rpx; border-radius: 3rpx; background: var(--rule); }
+.ticks .t.done { background: var(--pencil); }
+.ticks .t.now { background: var(--primary); }
+.finished { padding-top: 64rpx; }
+.failed { padding-top: 32rpx; }
+.failed .lede { margin-bottom: 8rpx; }
+.finished .lede { margin-bottom: 8rpx; }
+.notes { margin-top: 12rpx; }
+.fold-row { margin-top: 12rpx; }
+.note-line { margin-top: 10rpx; }
+.map-link { display: flex; align-items: center; gap: 20rpx; margin-top: 24rpx; padding: 22rpx 24rpx; border: 2rpx solid var(--rule); border-radius: var(--radius-s); background: var(--primary-wash); }
+.map-link-copy { flex: 1; min-width: 0; }
+.map-link-k { display: block; font-size: 24rpx; color: var(--pencil); }
+.map-link-title { display: block; margin-top: 4rpx; font-size: 27rpx; font-weight: 600; color: var(--ink); }
+.map-link-go { flex: none; font-size: 25rpx; color: var(--link); }

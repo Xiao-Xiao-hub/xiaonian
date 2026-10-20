@@ -1,0 +1,14 @@
+.se-row { display: flex; align-items: flex-start; gap: 16rpx; margin-top: 16rpx; padding: 18rpx 20rpx; border-radius: var(--radius-s); background: var(--fill); }
+.se-no { flex: none; width: 44rpx; height: 44rpx; border-radius: 50%; background: var(--card); font-size: 24rpx; font-weight: 600; line-height: 44rpx; text-align: center; color: var(--sub); }
+.se-in { display: block; width: 100%; min-height: 44rpx; font-size: 28rpx; line-height: 1.6; color: var(--ink); }
+/* V4.2 FX4: a step typeset; tapped, its text box with the typeset step below. */
+.se-edit { flex: 1; min-width: 0; min-height: 44rpx; }
+/* The whole step is the tap target: at least --hit tall, the row's look unchanged. */
+.se-show { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; min-height: var(--hit); margin: -22rpx 0; }
+.se-text { display: block; font-size: 28rpx; line-height: 1.6; color: var(--ink); word-break: break-word; }
+.se-foot { display: flex; align-items: flex-start; gap: 16rpx; margin-top: 12rpx; padding-top: 12rpx; border-top: 2rpx dashed var(--rule-2); }
+.se-pv { flex: 1; min-width: 0; }
+.se-done { flex: none; margin-left: auto; font-size: 26rpx; line-height: 44rpx; }
+.se-x { flex: none; width: 72rpx; height: 72rpx; margin: -14rpx -14rpx -14rpx 0; font-size: 36rpx; line-height: 72rpx; text-align: center; color: var(--sub); }
+.se-add { display: inline-flex; align-items: center; min-height: 64rpx; margin-top: 16rpx; padding: 0 24rpx; border-radius: 32rpx; background: var(--primary-wash); color: var(--primary-ink); font-size: 26rpx; font-weight: 600; }
+.se-undo { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin-top: 16rpx; padding: 16rpx 20rpx; border-radius: var(--radius-s); background: var(--fill); font-size: 26rpx; color: var(--ink); }

@@ -1,0 +1,24 @@
+<view class="page crisis-page">
+  <view class="crisis-content">
+    <view class="crisis-spacer crisis-spacer-top"></view>
+    <view class="crisis-icon-wrap">
+      <image class="crisis-icon" src="/assets/icons/crisis-body.svg" mode="aspectFit" />
+    </view>
+    <text class="crisis-title">你的安全最重要。</text>
+    <text class="crisis-copy">如果你有伤害自己的想法，\n请现在就联系：</text>
+    <view class="hotline-card">
+      <text class="hotline-label">心理援助热线</text>
+      <text class="hotline-number">12356</text>
+      <text class="hotline-note">（全国统一）</text>
+    </view>
+    <view class="emergency-copy">紧急情况请拨 <text class="emergency-number call" data-phone="110" bindtap="call">110</text> 或 <text class="emergency-number call" data-phone="120" bindtap="call">120</text>。</view>
+    <view class="crisis-spacer crisis-spacer-bottom"></view>
+    <view class="crisis-actions">
+      <button class="btn hotline-button" bindtap="callHotline">
+        <image class="phone-icon" src="/assets/icons/phone-white.svg" mode="aspectFit" />
+        <text>拨打 12356</text>
+      </button>
+      <button class="btn-line continue-button" bindtap="continueChat">我现在安全，继续</button>
+    </view>
+  </view>
+</view>

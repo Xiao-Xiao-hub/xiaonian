@@ -1,0 +1,5 @@
+{
+  "navigationStyle": "custom",
+  "disableScroll": true,
+  "usingComponents": { "page-head": "/components/page-head/index", "card-tile": "/components/card-tile/index" }
+}

@@ -1,0 +1,4 @@
+{
+  "component": true,
+  "usingComponents": { "rich": "/components/rich/index" }
+}

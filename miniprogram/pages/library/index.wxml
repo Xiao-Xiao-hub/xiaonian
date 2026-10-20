@@ -1,0 +1,52 @@
+<view class="page">
+  <view class="head head-row">
+    <text class="h2">我的资料</text>
+    <view class="btn-icon" hover-class="pressed" bindtap="openMore" aria-role="button" aria-label="更多">⋯</view>
+  </view>
+  <block wx:if="{{tools}}">
+    <view class="search">
+      <image class="icon" src="/assets/icons/search-pencil.png" />
+      <input class="search-input" placeholder-class="placeholder" maxlength="40" confirm-type="search" placeholder="搜标题或原文" value="{{q}}" bindinput="onQuery" bindconfirm="search" />
+      <text wx:if="{{q}}" class="clear" bindtap="clearQuery">清除</text>
+    </view>
+    <view class="tabs">
+      <view wx:for="{{filters}}" wx:key="key" class="tab {{kind === item.key ? 'on' : ''}}" data-kind="{{item.key}}" bindtap="setKind">{{item.label}}</view>
+    </view>
+  </block>
+  <view wx:if="{{error}}" class="alert">{{error}}<text class="link" bindtap="load">再试一次</text></view>
+
+  <view wx:if="{{items.length}}" class="rows list">
+    <view wx:for="{{items}}" wx:key="id" class="item" hover-class="pressed" data-index="{{index}}" bindtap="openItem" bindlongpress="manageItem">
+      <image class="lead" src="/assets/icons/{{item.icon}}.png" />
+      <view class="copy">
+        <text class="title">{{item.title || '未命名'}}</text>
+        <text wx:if="{{item.snippet}}" class="snippet">{{item.snippet}}</text>
+        <view class="meta">
+          <text>{{item.meta}}</text>
+          <text wx:if="{{item.tag}}" class="tag {{item.tagTone}}">{{item.tag}}</text>
+        </view>
+      </view>
+      <image class="chevron" src="/assets/icons/chevron-faint.png" />
+    </view>
+  </view>
+  <view wx:if="{{more}}" class="more" hover-class="pressed" bindtap="loadMore" aria-role="button">{{loadingMore ? '正在加载…' : '加载更多'}}</view>
+  <text wx:elif="{{items.length}}" class="hint center foot-hint">长按可以删</text>
+
+  <view wx:if="{{!items.length && !loading && !error}}" class="empty">
+    <block wx:if="{{searched}}">
+      <text class="h3 block">没找到含“{{searched}}”的</text>
+      <text class="block">换个词，或者清除搜索看全部。</text>
+    </block>
+    <block wx:elif="{{kind}}">
+      <text class="h3 block">这一类还没有</text>
+      <text class="link" bindtap="showAll">看全部</text>
+    </block>
+    <block wx:else>
+      <text class="h3 block">这里还空着</text>
+      <text class="block">拍一页笔记或一道题，帮你讲明白。</text>
+      <button class="btn" hover-class="btn-press" bindtap="startNote">学一份资料</button>
+      <button class="btn-text" hover-class="pressed" bindtap="startProblem">放一道题进来</button>
+    </block>
+  </view>
+  <view wx:if="{{loading && !items.length}}" class="empty">打开中…</view>
+</view>

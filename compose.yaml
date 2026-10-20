@@ -1,0 +1,31 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    init: true
+    env_file: server/.env
+    environment:
+      PORT: 8787
+      HOST: 0.0.0.0
+      DATABASE_PATH: /app/data/app.sqlite
+      UPLOAD_DIR: /app/data/uploads
+      FORMULA_DIR: /app/data/formulas
+    ports: ["127.0.0.1:8787:8787"]
+    volumes: ["app_data:/app/data"]
+    restart: unless-stopped
+    # Give running jobs and open answers time to finish on stop or redeploy.
+    stop_grace_period: 30s
+    mem_limit: 1g
+    logging:
+      driver: json-file
+      options: { max-size: 10m, max-file: "5" }
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8787/health/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+volumes:
+  app_data:

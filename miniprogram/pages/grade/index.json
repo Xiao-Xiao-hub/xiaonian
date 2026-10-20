@@ -1,0 +1,11 @@
+{
+  "navigationBarTitleText": "批改",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "rich": "/components/rich/index",
+    "guest-bar": "/components/guest-bar/index",
+    "tool-start": "/components/tool-start/index",
+    "step-edit": "/components/step-edit/index",
+    "task-progress": "/components/task-progress/index"
+  }
+}

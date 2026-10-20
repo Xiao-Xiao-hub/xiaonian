@@ -1,0 +1,19 @@
+# Production overrides. server/.env must set WECHAT_APP_ID, WECHAT_APP_SECRET,
+# a random ADMIN_API_KEY and exact HTTPS ADMIN_ORIGIN (without trailing slash).
+# Needs Docker Compose 2.24 or later (for !reset). No public deployment is
+# performed here.
+# Run: docker compose -f compose.yaml -f compose.production.example.yaml up --build -d
+services:
+  api:
+    # Host networking lets the API see the host proxy as 127.0.0.1, so it can
+    # trust that proxy's X-Forwarded-For and rate-limit each real client.
+    # The proxy (deploy/nginx.example.conf) must run on this host and
+    # overwrite X-Forwarded-For. HOST stays on loopback: with host networking
+    # 0.0.0.0 would expose the API on every interface.
+    network_mode: host
+    ports: !reset []
+    environment:
+      NODE_ENV: production
+      DEV_LOGIN_ENABLED: "false"
+      HOST: 127.0.0.1
+      TRUST_PROXY: "loopback"

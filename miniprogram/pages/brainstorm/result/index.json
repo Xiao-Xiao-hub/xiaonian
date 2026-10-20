@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "头脑风暴",
+  "usingComponents": {
+    "card-tile": "../../../components/card-tile/index",
+    "brainstorm-report": "../../../components/brainstorm-report/index",
+    "task-progress": "/components/task-progress/index"
+  }
+}

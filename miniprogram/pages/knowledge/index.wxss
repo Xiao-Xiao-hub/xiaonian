@@ -1,0 +1,93 @@
+/* 知识点详情 (V4.1 G4): white cards on the v4 grey page, the same type scale
+   as 练一题 (pages/point) and the map's old sheet; px × 2. */
+.kn-page { padding-bottom:calc(176rpx + env(safe-area-inset-bottom)); }
+.kn-head, .kn-sec { margin-top:24rpx; padding:28rpx 32rpx; border-radius:32rpx; background:var(--card); box-shadow:var(--shadow); }
+.kn-head { margin-top:8rpx; }
+.kn-title { display:flex; align-items:baseline; gap:8rpx; }
+.kn-mark { flex:none; color:#f0a020; font-size:36rpx; }
+.kn-mark.h { color:var(--ink); }
+.kn-name { font-size:40rpx; font-weight:800; line-height:1.35; color:var(--ink); }
+.kn-meta { display:flex; flex-wrap:wrap; align-items:center; gap:10rpx 16rpx; margin-top:14rpx; color:var(--sub); font-size:24rpx; line-height:1.5; }
+.kn-meta .tier-tag { padding:0 12rpx; font-size:22rpx; }
+.kn-look { display:inline-flex; align-items:center; gap:8rpx; font-weight:600; }
+.kn-look::before { content:""; width:16rpx; height:16rpx; border-radius:50%; background:#b7c2d6; }
+.kn-look.ok { color:#b07a00; }
+.kn-look.ok::before { background:#ffb800; box-shadow:0 0 8rpx rgba(255,184,0,.6); }
+.kn-look.pend { color:var(--amber-ink); }
+.kn-look.pend::before { box-sizing:border-box; border:4rpx solid #ffc04d; background:transparent; }
+.kn-look.stuck { color:var(--red-ink); }
+.kn-look.stuck::before { background:#ff6b6b; }
+.kn-look.none { color:var(--sub); }
+.kn-look.due { color:#b07a00; }
+.kn-look.due::before { box-sizing:border-box; border:4rpx solid #ff9f1a; background:#ffc85a; }
+.kn-look.practice { color:var(--primary-ink); }
+.kn-look.practice::before { box-sizing:border-box; border:4rpx solid #5aa8ff; background:transparent; }
+.kn-look.seen { color:var(--sub); }
+.kn-look.seen::before { box-sizing:border-box; border:4rpx solid #9aa6c4; background:transparent; }
+.kn-state-line { display:block; margin-top:6rpx; color:var(--faint); font-size:24rpx; }
+.kn-acts { display:flex; flex-wrap:wrap; gap:16rpx; margin-top:24rpx; }
+.kn-acts .btn-soft { margin:0; }
+.kn-h { display:block; color:var(--ink); font-size:30rpx; font-weight:700; line-height:1.4; }
+.kn-h2 { margin-top:20rpx; }
+.kn-why { display:block; margin-top:12rpx; color:var(--body); font-size:28rpx; line-height:1.75; }
+.kn-body { margin-top:12rpx; }
+.kn-body .rich { font-size:28rpx; line-height:1.85; color:var(--body); }
+.kn-fx { margin-top:16rpx; padding:20rpx 24rpx; border-radius:20rpx; background:#f3f6ff; }
+.kn-fx-img { overflow-x:auto; }
+.kn-fx-img .rich { font-size:32rpx; line-height:1.8; color:#1e50c8; }
+.kn-fx-img .r-p { margin:0; }
+.kn-fx-note { margin-top:8rpx; }
+.kn-fx-note .rich { font-size:26rpx; line-height:1.7; color:var(--sub); }
+.kn-key { display:flex; gap:16rpx; margin-top:16rpx; padding:16rpx 20rpx; border-left:8rpx solid var(--primary); border-radius:12rpx; background:var(--primary-wash); }
+.kn-key.k2 { border-left-color:var(--amber); background:var(--amber-wash); }
+.kn-key.k3 { border-left-color:var(--green); background:var(--green-wash); }
+.kn-key-no { flex:none; width:36rpx; color:var(--primary-ink); font-size:28rpx; font-weight:800; line-height:1.7; }
+.kn-key.k2 .kn-key-no { color:var(--amber-ink); }
+.kn-key.k3 .kn-key-no { color:var(--green-ink); }
+.kn-key-text { flex:1; min-width:0; }
+.kn-key-text .rich { font-size:28rpx; line-height:1.7; color:var(--ink); }
+.kn-key-text .r-p { margin:0; }
+.kn-q { margin-top:12rpx; }
+.kn-q .rich { font-size:30rpx; line-height:1.9; color:var(--ink); }
+.kn-opt { display:flex; align-items:center; gap:20rpx; margin-top:14rpx; padding:14rpx 20rpx; border:3rpx solid var(--rule-2); border-radius:20rpx; }
+.kn-opt.right { border-color:var(--green); background:var(--green-wash); }
+.kn-opt-id { flex:none; width:44rpx; height:44rpx; border-radius:50%; background:var(--fill); color:var(--sub); font-size:24rpx; font-weight:600; line-height:44rpx; text-align:center; }
+.kn-opt.right .kn-opt-id { background:var(--green); color:#fff; }
+.kn-opt-c { flex:1; min-width:0; }
+.kn-opt-c .rich { font-size:28rpx; line-height:1.7; }
+.kn-blanks { display:flex; flex-wrap:wrap; gap:12rpx; margin-top:12rpx; }
+.kn-fold { margin-top:12rpx; color:var(--link); }
+.kn-sol { padding-top:8rpx; border-top:2rpx solid var(--rule); }
+.kn-ans { display:flex; align-items:center; gap:16rpx; margin-top:16rpx; }
+.kn-ans-c { flex:1; min-width:0; }
+.kn-ans-c .rich { font-size:30rpx; line-height:1.8; }
+.kn-links { display:flex; flex-wrap:wrap; gap:12rpx; margin-top:12rpx; }
+.kn-link { display:inline-flex; align-items:center; gap:8rpx; padding:10rpx 20rpx; border-radius:28rpx; background:var(--fill); color:var(--ink); font-size:26rpx; }
+.kn-link::after { content:"›"; color:var(--faint); }
+.kn-link.ok::before { content:"✓"; color:#e0a100; font-weight:700; }
+.kn-none { color:var(--faint); font-size:26rpx; }
+.kn-h-link { color:var(--ink); }
+.kn-card-row { display:flex; flex-wrap:wrap; gap:12rpx; margin-top:12rpx; }
+.cd { display:inline-flex; align-items:center; gap:8rpx; max-width:100%; height:52rpx; padding:0 18rpx; overflow:hidden; border-radius:16rpx; background:var(--t-wash); color:var(--ink); font-size:26rpx; white-space:nowrap; text-overflow:ellipsis; }
+.cd-t { font-size:24rpx; color:var(--t-ink); }
+.kn-li { display:flex; align-items:center; justify-content:space-between; min-height:88rpx; margin-top:8rpx; border-bottom:2rpx solid var(--rule); color:var(--ink); font-size:28rpx; }
+.kn-li .chev { color:var(--ghost); font-size:34rpx; }
+.kn-tags { display:flex; flex-wrap:wrap; gap:12rpx; margin-top:16rpx; color:var(--sub); font-size:24rpx; }
+.kn-tags text { padding:4rpx 16rpx; border-radius:12rpx; background:var(--fill); }
+.kn-cards + .kn-tags, .kn-li + .kn-tags { margin-top:20rpx; }
+.kn-mine > .kn-tags:first-child { margin-top:0; }
+.kn-small { display:block; margin-top:10rpx; color:var(--faint); font-size:24rpx; line-height:1.6; }
+/* Bottom bar like 练一题's: two text buttons, then the main one. */
+.kn-bot { position:fixed; z-index:10; left:0; right:0; bottom:0; display:flex; align-items:center; gap:20rpx; padding:20rpx 32rpx calc(20rpx + env(safe-area-inset-bottom)); background:var(--card); box-shadow:0 -2rpx 0 var(--line); }
+.kn-bot .kn-bl { min-height:80rpx; margin:0; padding:0 8rpx; color:var(--primary-ink); font-size:28rpx; font-weight:600; }
+.kn-bot .kn-main { flex:1; width:auto !important; min-height:92rpx; margin:0; }
+.kn-scrim { z-index:30; }
+.stuck-options { display:flex; flex-wrap:wrap; gap:16rpx; margin:20rpx 0; }
+.stuck-options .chip { width:auto !important; margin:0; }
+.stuck-sheet .field { box-sizing:border-box; height:180rpx; }
+.stuck-sheet .h3 { font-size:34rpx; font-weight:700; color:var(--ink); }
+.ai-ask { display:block; margin-top:12rpx; font-size:30rpx; line-height:1.6; color:var(--ink); }
+
+/* V4.2: 卡点 hint, the example's note */
+.stuck-hint { display:block; margin-top:16rpx; padding:16rpx 20rpx; border-radius:20rpx; background:var(--primary-wash); font-size:28rpx; line-height:1.7; color:var(--ink); }
+.kn-ex-note { margin-top:4rpx; }

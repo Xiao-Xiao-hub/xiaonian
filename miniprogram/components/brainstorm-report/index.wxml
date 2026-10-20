@@ -1,0 +1,18 @@
+<view wx:if="{{report&&report.length}}" class="report"
+  ><view wx:for="{{report}}" wx:for-item="section" wx:key="key" class="report-section"
+    ><text class="report-name">{{section.name}}</text
+    ><view wx:for="{{section.items}}" wx:key="id" class="report-item"
+      ><text class="report-text">{{item.text}}</text
+      ><view wx:if="{{item.cards.length}}" class="report-cards"
+        ><text
+          wx:for="{{item.cards}}"
+          wx:for-item="card"
+          wx:key="id"
+          data-id="{{card.id}}"
+          bindtap="openCard"
+          >{{card.title}}</text
+        ></view
+      ></view
+    ></view
+  ></view
+>

@@ -1,0 +1,12 @@
+<view wx:if="{{row}}" class="crow {{cardView.done ? 'done' : ''}} {{selected ? 'sel' : ''}}" style="--strip:{{cardView.typeMain}}" bindtap="tap" bindlongpress="hold">
+  <view wx:if="{{picking || selected}}" class="ck"/>
+  <view class="rtx"><view class="rtl"><text class="rname">{{cardView.titleView.text}}</text><text wx:if="{{cardView.mood}}" class="mood" aria-label="心情">心情</text><text wx:if="{{cardView.favorite}}" class="fav">★</text></view><text wx:if="{{cardView.sumParts.length}}" class="rsum"><text wx:for="{{cardView.sumParts}}" wx:key="index" class="{{item.cls}}">{{item.v}}</text></text></view>
+  <text wx:if="{{cardView.stageName}}" class="rst {{cardView.done ? 'ok' : ''}}">{{cardView.stageName}}</text>
+</view>
+<view wx:else class="pc t-{{cardView.typeClass}} {{cardView.done ? 'done' : ''}} {{due && !cardView.done && (!cardView.follow || cardView.follow === 'review') ? 'is-due' : ''}} {{picking || selected ? 'has-ck' : ''}} {{selected ? 'sel' : ''}}" bindtap="tap" bindlongpress="hold">
+  <view wx:if="{{picking || selected}}" class="ck"/>
+  <view class="top"><view class="tl"><image class="tl-ic" src="{{cardView.typeIcon}}" mode="aspectFit"/><text>{{cardView.typeName}}</text></view><text wx:if="{{cardView.mood}}" class="mood" aria-label="心情">心情</text><text wx:if="{{cardView.favorite}}" class="fav">★</text><text wx:if="{{due && !cardView.done && (!cardView.follow || cardView.follow === 'review')}}" class="due">待回顾</text></view>
+  <view class="ttl">{{cardView.titleView.text}}</view>
+  <text wx:if="{{cardView.sumParts.length}}" class="sum"><text wx:for="{{cardView.sumParts}}" wx:key="index" class="{{item.cls}}">{{item.v}}</text></text>
+  <text wx:if="{{cardView.stageName}}" class="stg {{cardView.done ? 'ok' : ''}}">{{cardView.stageName}}</text>
+</view>

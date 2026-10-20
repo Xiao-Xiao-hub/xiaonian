@@ -1,0 +1,4 @@
+/* 游客模式提示条：放在页面顶部，只在游客模式下出现 */
+.guest-bar { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin: 8rpx 0 20rpx; padding: 16rpx 24rpx; border-radius: 24rpx; background: var(--primary-wash); }
+.gb-text { flex: 1; min-width: 0; color: var(--body); font-size: 26rpx; line-height: 1.5; }
+.gb-go { flex: none; padding: 4rpx 0 4rpx 16rpx; color: var(--primary-ink); font-size: 26rpx; font-weight: 600; }

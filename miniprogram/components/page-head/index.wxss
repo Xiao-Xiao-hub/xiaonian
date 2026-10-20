@@ -1,0 +1,19 @@
+/* 自定义导航页头：状态栏 + 与胶囊同高的一行（大字标题 + 插槽），右边给胶囊留位。 */
+.ph { position: relative; }
+/* 淡彩页头：一块渐变往下淡到页面底色；后面的内容包在 .ph-body 里压在它上面 */
+.ph-tint { position: absolute; z-index: 0; left: 0; right: 0; top: 0; pointer-events: none; }
+.ph-tint.blue { background: linear-gradient(180deg, #d7e5ff 0%, #e6efff 38%, rgba(245, 246, 248, 0) 100%); }
+.ph-tint.yellow { background: linear-gradient(180deg, #ffeab8 0%, #fff3d6 40%, rgba(245, 246, 248, 0) 100%); }
+.ph-tint.mint { background: linear-gradient(180deg, #d2f1ec 0%, #e5f7f4 40%, rgba(245, 246, 248, 0) 100%); }
+.ph-tint.slate { background: linear-gradient(180deg, #dde5f0 0%, #eaeff6 40%, rgba(245, 246, 248, 0) 100%); }
+.ph-bar { position: relative; z-index: 1; padding-left: 32rpx; }
+.ph-row { display: flex; align-items: center; gap: 24rpx; }
+.ph-side { display: flex; flex: 1; min-width: 0; align-items: center; gap: 16rpx; }
+/* 有淡彩的页会滚动（卡片、学习、随心记、我的、聊一聊）：页头固定在顶上，底色是同一块淡彩的最上面一段，
+   往上滚的内容藏到它下面，不再露在状态栏和胶囊下（V4.2 FX5c）。.ph-space 在原处占位。
+   z-index 5：高于 .ph-body（1），低于底部操作条（10）和弹层遮罩（20）。没有淡彩的欢迎、新手引导页不滚动，照旧。 */
+.ph-bar.ph-fixed { position: fixed; z-index: 5; top: 0; left: 0; right: 0; background-color: var(--bg); background-repeat: no-repeat; background-position: 0 0; }
+.ph-fixed.blue { background-image: linear-gradient(180deg, #d7e5ff 0%, #e6efff 38%, rgba(245, 246, 248, 0) 100%); }
+.ph-fixed.yellow { background-image: linear-gradient(180deg, #ffeab8 0%, #fff3d6 40%, rgba(245, 246, 248, 0) 100%); }
+.ph-fixed.mint { background-image: linear-gradient(180deg, #d2f1ec 0%, #e5f7f4 40%, rgba(245, 246, 248, 0) 100%); }
+.ph-fixed.slate { background-image: linear-gradient(180deg, #dde5f0 0%, #eaeff6 40%, rgba(245, 246, 248, 0) 100%); }
