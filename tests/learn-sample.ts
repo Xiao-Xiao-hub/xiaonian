@@ -1,8 +1,7 @@
-// The sketch's sample progress (docs/design/learning-map-sketch/README.md, 示例数字),
-// built relative to `today` so every number holds on any weekday:
+// 学习地图的合成进度样例，以 `today` 为基准生成，避免依赖测试当天是星期几：
 // 27/89 做对, 390 XP, Lv.10 66/76, 本周做对 4 个 +60, 2 points due today,
 // 下一步 中值与应用再做对 1 个重点, 全书 起步 · 已到基础段 3/6.
-// Used by the tests and by scripts/seed_learn.ts. Synthetic data, not a real learner.
+// 仅供测试构造固定进度；这些数字不代表真实学习者数据。
 import type { SqliteStore } from "../server/src/shared/store.js";
 import { addDays } from "../server/src/shared/time.js";
 

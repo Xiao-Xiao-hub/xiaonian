@@ -1,17 +1,16 @@
-/* 晓念视觉 v4（2026-10-16 定稿，docs/design/v4-final-ui/README.md 的“规范”，样式源 preview/base.css）。
+/* 晓念公共视觉令牌与基础组件样式。
    浅灰页面底、白卡、纯蓝实心主按钮（每屏一个），不用蓝紫渐变、不用粉色、不用紫色 AI 点缀。
-   “作业本”皮肤已去掉（utils/theme.js 只留默认）。样张 px × 2 = rpx；最小字号 24rpx。
+   utils/theme.js 只保留默认皮肤。按 375px 设计宽度换算时，px × 2 = rpx；正文最小字号约定为 24rpx。
    颜色语义：
    - 绿色：做对、程序已核对、完成；
    - 红色：答错、和程序算的不一致、删除；
    - 琥珀色：暂时无法确认、待核对、没有核对过的 AI 答案；
    - 荧光黄：题目里的数字和被引用的原文。
-   旧变量名（--pencil、--rule、--chip、--violet…）保留，值换成新令牌，没改版的页面跟着变。
-   样张里的名字和这里的对应：--sub = --pencil，--line（细线）= --rule，--line-2 = --rule-2，--fill = --chip；
-   --line 也取样张的值（#edeef1，卡片描边和分隔线都看得见），--line-strong 取样张 --line-2，--head-rule 用同一道浅灰线；
-   --ruling（作业本横线）和 --link-line（链接下划线）样张里没有，保持透明。
-   阴影：这里的 --shadow = 样张 --shadow-sm（样张的普通白卡 .box/.list/.tile/.pc/.msg 都用它），--shadow-lg = 样张 --shadow（只给少数突出块）。
-   样张的底部弹层 .scrim + .sheet 在这里是 .scrim（或旧的 .mask）+ .pop：.sheet 早被十几个页面当普通白卡用了。 */
+   旧变量名（--pencil、--rule、--chip、--violet…）继续兼容已有页面；修改令牌前要检查所有使用处。
+   --sub/--pencil 表示次级文字，--line/--rule 表示细线，--line-strong 表示较深描边，--fill/--chip 表示浅底；
+   --head-rule 用于页头分隔线；--ruling（作业本横线）和 --link-line（链接下划线）保持透明。
+   --shadow 用于普通白卡，--shadow-lg 只用于少数突出块。
+   底部弹层使用 .scrim（或兼容的 .mask）+ .pop；.sheet 已被多个页面用作普通白卡，不能直接改作弹层。 */
 page {
   --bg: #f5f6f8;
   --card: #ffffff;

@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { ASSET_DIR } from "../server/src/modules/assets/routes.js";
 import { fakeServices, makeApp } from "./fixtures.js";
 
-// Public images, docs/mvp/progress/V4.md 约定 2.
+// 验证公开图片的匿名访问、缓存时长与文件类型。
 test("public images load without login and are cached for a week", async () => {
   const app = makeApp(fakeServices());
   const webp = await app.inject({ method: "GET", url: "/v1/assets/xiaoli-hi.webp" });

@@ -1,4 +1,4 @@
-/* v4 learn home (docs/design/v4-final-ui/preview/pages/30-learn.html). */
+/* 学习首页：继续学习卡片、地图入口与学习内容列表的布局。 */
 .page { padding-top:24rpx; padding-bottom:calc(120rpx + env(safe-area-inset-bottom)); }
 /* 知识地图: a plain link, not a search box (the map has no search). */
 .map-entry { display:flex; align-items:center; gap:6rpx; margin-left:auto; padding:12rpx 4rpx 12rpx 20rpx; color:var(--ink); font-size:28rpx; font-weight:500; white-space:nowrap; }

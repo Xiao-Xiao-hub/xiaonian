@@ -41,7 +41,9 @@
 | `tests/*.test.ts` | 后端接口、数据库、外部服务替身、页面与接口联动 |
 | `tests/frontend*.test.cjs` | 小程序逻辑、状态切换及静态约束 |
 | `tests/admin*.test.mjs` | 管理台显示、交互和会话行为 |
-| `tests/operations_test.py` | 备份恢复、路径边界和源码打包 |
+| `tests/operations_test.py` | 备份恢复、数据完整性与文件路径边界 |
+| `tests/public_release_test.py` | 公开内容检查、敏感文件阻断、指定提交打包与ZIP清单一致性 |
+| `tests/check_scripts_test.py` | 检查脚本的阶段顺序、失败停止与原生编译要求 |
 | 微信原生编译与页面检查 | WXML/WXSS可编译、实际布局和设备交互；自动行为测试不能替代 |
 
 先跑与修改相关的测试，再跑完整入口。完整检查、备份和交付要求见 [维护手册](runbook.md)。测试文件中的旧版本编号仅用于定位回归来源，不表示运行着另一套产品。

@@ -15,7 +15,7 @@ import { validateTidy } from "../server/src/modules/cards/tidy.js";
 import { MARK_RULE, tutorSystem } from "../server/src/modules/chat/prompts.js";
 import { guideSystem } from "../server/src/modules/chat/guide-prompts.js";
 
-// Colour marks, docs/mvp/progress/V4.md 约定 1.
+// 验证颜色标记在Markdown渲染、内容整理与提示词中的一致性。
 const md = new MarkdownRenderer(new FormulaRenderer(mkdtempSync(join(tmpdir(), "zhiye-formula-"))));
 const line = async (source: string): Promise<Inline[]> => {
   const blocks: Block[] = await md.render(source, "#1f2329");

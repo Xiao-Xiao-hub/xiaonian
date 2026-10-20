@@ -1,6 +1,5 @@
 "use strict";
-// Colour marks on the client (docs/mvp/progress/V4.md, 约定 1) and the shared
-// v4 pieces other pages build on.
+// 验证客户端颜色标记及各页面依赖的公共组件。
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");

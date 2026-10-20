@@ -40,6 +40,17 @@ flowchart TD
 
 **请求到任务。** 较长操作先写任务状态，再由进程内执行器处理；客户端按任务或业务记录恢复进度。流式对话使用 SSE 逐步输出，断开客户端连接不等于撤销服务端处理。幂等标识、内容版本和会话代际分别防止重复提交、覆盖新内容与跨账号回显。
 
+## 沿实际操作跟读代码
+
+先从页面事件找到请求，再沿路由进入服务，最后核对数据库写入和测试。以下两条流程均对应当前实现；表中的数据表是该动作直接写入的位置，建表与升级定义见 [store.ts](../server/src/shared/store.ts)。
+
+| 操作与页面入口 | 请求 | 路由 → 服务 | 实际写入 | 对应测试 |
+| --- | --- | --- | --- | --- |
+| 保存随心记原话：[pages/notes/index.js](../miniprogram/pages/notes/index.js) 的 `save()` | `POST /v1/cards`，带 `text`、`clientId`、`origin` | [cards/routes.ts](../server/src/modules/cards/routes.ts) 校验身份和字段 → [cards/service.ts](../server/src/modules/cards/service.ts) 的 `CardService.create()` | `cards` 保存原话与卡片；`card_versions` 保存创建记录及幂等标识；`events` 记录创建事件 | [frontend-v2-notes.test.cjs](../tests/frontend-v2-notes.test.cjs)：保存、失败保留草稿及切换账号；[v2-cards.test.ts](../tests/v2-cards.test.ts)：创建、查询、原话保护与用户隔离 |
+| 同意处理心情内容：[pages/mood-consent/index.js](../miniprogram/pages/mood-consent/index.js) 的 `agree()` | `PUT /v1/me/mood-consent`；儿童账号带 `guardian: true` | [safety/routes.ts](../server/src/modules/safety/routes.ts) 校验身份和请求 → [safety/mood.ts](../server/src/modules/safety/mood.ts) 的 `MoodService.consent()` | 更新 `users.data` 中的 `moodConsentAt`；儿童账号同时记录监护人对心情内容的单独同意 | [frontend-mood.test.cjs](../tests/frontend-mood.test.cjs)：同意后返回原页面；[v4-consent.test.ts](../tests/v4-consent.test.ts)：监护人要求、重复同意与记录读取 |
+
+保存卡片之后，入口装配的回调还会交给 [CardTidyService](../server/src/modules/cards/tidy.ts) 尝试创建整理任务，任务条件满足时写入 `jobs`。原话已保存与整理已完成是两个状态；整理不可用时不能丢掉原话。心情同意流程只更新同意记录，本身不调用大模型。
+
 ## 数据与计量
 
 SQLite 的建表、升级和兼容补列集中在 [store.ts](../server/src/shared/store.ts)。从已有数据升级必须经过原迁移链；不要删除历史迁移或修改存储标识来整理品牌文字。

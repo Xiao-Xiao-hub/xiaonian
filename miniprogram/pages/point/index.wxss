@@ -727,9 +727,8 @@
   margin-top: 16rpx;
 }
 
-/* v4 练一题 (docs/design/v4-final-ui/preview/pages/30-learn.html #try, px × 2):
-   the dark kp card, the question card, the options as full-width rows and the
-   bottom bar. Blocks are 12px apart like the preview's .body. */
+/* 练一题：深色知识点卡、题目卡、整行选项和底部操作栏。
+   按 375px 设计宽度换算为 rpx，区块之间保留 24rpx 间距。 */
 .page { padding-bottom:calc(160rpx + env(safe-area-inset-bottom)); }
 .kp { display:flex; align-items:center; gap:20rpx; margin-top:16rpx; padding:20rpx 24rpx; border-radius:28rpx; background:#10204f; color:#dfe8ff; }
 .kp-star { position:relative; flex:none; width:52rpx; height:52rpx; border-radius:50%; background:rgba(255,255,255,.08); }

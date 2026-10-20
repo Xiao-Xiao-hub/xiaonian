@@ -1,5 +1,5 @@
-// V4.2 group G8: 我的资料, 资料详情, 旧笔记, 隐私, 帮助, 欢迎和新手引导
-// (docs/mvp/progress/V4.2-G8.md).
+// 验证我的资料、资料详情、旧笔记、隐私、帮助、欢迎和新手引导页面。
+// 使用合成页面状态与接口替身检查交互边界，不调用真实服务。
 const test = require("node:test"),
   assert = require("node:assert/strict"),
   vm = require("node:vm"),
