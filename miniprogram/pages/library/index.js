@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 学习库：按类型与关键字读取已收录资料，进入学习、校对或删除流程。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -22,7 +23,7 @@ function card(item) {
 }
 // 30 at a time, the next 30 on reaching the bottom.
 const PAGE = 30;
-Page({
+Page(withShare({
   data: {
     filters: FILTERS,
     kind: "",
@@ -176,4 +177,4 @@ Page({
   startProblem() {
     wx.navigateTo({ url: "/pages/capture/index?kind=problem" });
   },
-});
+}));

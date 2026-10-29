@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 隐私政策与账号操作：展示文件，处理同意、撤回、导出和注销的用户入口。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -28,7 +29,7 @@ const today = () => {
   const two = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}`;
 };
-Page({
+Page(withShare({
   data: {
     version: config.PRIVACY_VERSION,
     docs: DOCS,
@@ -222,7 +223,7 @@ Page({
     wx.showModal({
       title: "注销账号？",
       content:
-        "你放进来的资料和原图、随心记里的内容、生成的讲解提示和题目、做题和回头看看的记录、学习时长都会删掉，找不回来。想留着的话，先导出一份；导出的是 JSON 文件，不含原图。",
+        "你放进来的资料和原图、随心记里的内容、生成的讲解提示和题目、做题和回头看看的记录、学习时长都会删掉，找不回来；没用完的套餐和积分也会作废。订单和退款记录另存 3 年，只用于对账和退款。想留着的话，先导出一份；导出的是 JSON 文件，不含原图。",
       confirmText: "注销",
       confirmColor: "#c0392b",
       success: ({ confirm }) => {
@@ -263,4 +264,4 @@ Page({
         this.refresh();
       });
   },
-});
+}));

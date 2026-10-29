@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 独立对话页：承接卡片、头脑风暴和历史会话入口，复用 utils/chat-room 的会话逻辑。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -9,4 +10,4 @@
 const studyClock = require("../../utils/study-clock");
 const room = require("../../utils/chat-room");
 
-Page(studyClock.track(room()));
+Page(withShare(studyClock.track(room())));

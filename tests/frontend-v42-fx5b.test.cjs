@@ -510,7 +510,7 @@ test("F17 批改: an old record's ✓ after the first error shows as carried ove
 // ---- F19: study time -------------------------------------------------------
 test("F19: 批改, 讲一遍 and 资料 count as study; a chat turned to mood stops the clock until it turns back", () => {
   for (const name of ["grade", "teach", "material"]) {
-    assert.match(read(`pages/${name}/index.js`), /Page\(studyClock\.track\(\{/, name);
+    assert.match(read(`pages/${name}/index.js`), /Page\(withShare\(studyClock\.track\(\{/, name);
     assert.match(read(`pages/${name}/index.wxml`).split("\n")[0], /capture-bind:touchstart="studyTouch"/, name);
   }
   const page = load("pages/ask/index.js");
@@ -1754,6 +1754,25 @@ test("解题: a step deleted from one problem's 卡住 is not put back into anot
   clearTimeout(c.undoTimer);
   clearTimeout(c.typeTimer);
   assert.match(read("pages/ask/index.wxml"), /<step-edit owner="\{\{confirm\.key \+ '#' \+ confirm\.index\}\}"/);
+});
+
+test("解题: a step whose render failed (server busy) is typeset again the next time the steps show", async () => {
+  let busy = true;
+  h.routes["POST /v1/render"] = (body) => {
+    if (busy) throw Object.assign(new Error("排版任务较多"), { code: "RENDER_BUSY", statusCode: 429 });
+    return { blocks: para(`排好:${body.text}`) };
+  };
+  const lines = ["x^2", "设 $x=1$", "然后代入"];
+  const c = stepEdit({ lines });
+  await c.show(lines);
+  assert.deepEqual(c.data.views, [null, null, null], "busy: shown as written");
+  busy = false;
+  await c.show(lines);
+  assert.deepEqual(c.data.views, [para("排好:$x^2$"), para("排好:设 $x=1$"), null]);
+  const renders = h.calls.filter((call) => call.url === "/v1/render").length;
+  await c.show(lines);
+  assert.equal(h.calls.filter((call) => call.url === "/v1/render").length, renders, "typeset and plain lines are not asked again");
+  clearTimeout(c.typeTimer);
 });
 
 test("解题: two problems, 第 1 题's steps read, 第 2 题 asked: the photo stays kept on 第 1 题 with its steps, asked from the conversation or from 上次拍的题; once both are asked it goes", async () => {

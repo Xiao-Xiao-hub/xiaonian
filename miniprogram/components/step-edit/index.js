@@ -7,7 +7,7 @@
 // render that failed, show as written.
 // A step that is all formula ("\frac{1}{2}x") is typeset whole; one with
 // words in it only where it has $…$ (utils/tex lineBlocks, V4.2 FX5b).
-const { lineBlocks: typeset } = require("../../utils/tex");
+const { lineBlocks: typeset, lineTex } = require("../../utils/tex");
 // Typing waits this long before the step is typeset again.
 const WAIT = 400;
 Component({
@@ -64,7 +64,8 @@ Component({
       return Promise.all(
         todo.map((line) =>
           typeset(line).then((blocks) => {
-            this.known.set(line, blocks);
+            // A render that failed (server busy, network) is tried again next time.
+            if (blocks || !lineTex(line)) this.known.set(line, blocks);
           }),
         ),
       ).then(() => {

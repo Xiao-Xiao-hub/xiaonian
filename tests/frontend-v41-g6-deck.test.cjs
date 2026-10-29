@@ -37,7 +37,7 @@ function deck({ state = "ok", routes = {} } = {}) {
   };
   const sandbox = {
     require: (n) =>
-      n.endsWith("/api")
+      n.endsWith("/share") ? { withShare: (page) => page } : n.endsWith("/api")
         ? api
         : n.endsWith("/auth")
           ? {

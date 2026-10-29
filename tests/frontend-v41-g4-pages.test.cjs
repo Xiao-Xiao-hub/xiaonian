@@ -350,12 +350,25 @@ test("new pages are routed and registered; new text has no banned words or model
   const MODEL = /jev|glm|智谱|混元|火山|豆包|typesafe|bigmodel|deepseek|qwen|通义|文心|kimi|gpt|claude|openai|anthropic|\bflash\b/i;
   for (const rel of [
     "pages/bank/index.wxml",
+    "pages/commercial/center/index.wxml",
+    "pages/commercial/orders/index.wxml",
+    "pages/commercial/order/index.wxml",
+    "pages/support/chat/index.wxml",
+    "pages/support/tickets/index.wxml",
+    "pages/support/ticket/index.wxml",
     "pages/knowledge/index.wxml",
     "pages/point/index.wxml",
     "components/numpad/index.wxml",
     "components/point-list/index.wxml",
     "pages/map/components/sky/index.wxml",
     "pages/map/components/stage/index.wxml",
+    "pages/commercial/center/index.js",
+    "pages/support/chat/index.js",
+    "pages/support/ticket/index.js",
+    "pages/support/tickets/index.js",
+    "pages/support/support-api.js",
+    "pages/help/index.js",
+    "pages/help/index.wxml",
   ]) {
     const text = read(rel);
     for (const w of BANNED) assert.ok(!text.includes(w), `${rel}: ${w}`);

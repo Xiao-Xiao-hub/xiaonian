@@ -28,7 +28,7 @@ function notes({ state = "ok", storage = {}, cards = [], total, open, globalData
   };
   const sandbox = {
     require: (n) =>
-      n.endsWith("/api")
+      n.endsWith("/share") ? { withShare: (page) => page } : n.endsWith("/api")
         ? api
         : n.endsWith("/auth")
           ? { getUser: () => ({ id: "u1" }), hasConsent: () => state === "ok", login: async () => {} }
@@ -177,6 +177,7 @@ test("resume-card: something due wins, else the tidy card (整理一下 / 稍后
   let reply = { kind: "none", item: null };
   const context = {
     require(name) {
+      if (name.endsWith("/share")) return { withShare: (page) => page };
       if (name.endsWith("/api")) return { post: async () => reply };
       if (name.endsWith("/auth")) return { getUser: () => ({ id: "u1" }), hasConsent: () => true };
       if (name.endsWith("/visit")) return { current: () => "v1" };
@@ -234,7 +235,7 @@ test("resume-card: something due wins, else the tidy card (整理一下 / 稍后
   const flaky = {
     ...context,
     require: (name) =>
-      name.endsWith("/api")
+      name.endsWith("/share") ? { withShare: (page) => page } : name.endsWith("/api")
         ? {
             post: async () => {
               if (failNext) {
@@ -292,7 +293,7 @@ function onboard(query, pages = 1) {
     nav = [];
   const sandbox = {
     require: (n) =>
-      n.endsWith("/gate")
+      n.endsWith("/share") ? { withShare: (page) => page } : n.endsWith("/gate")
         ? { check: () => true }
         : { asset: (f) => `https://assets.test/${f}` },
     Page: (x) => (def = x),
@@ -323,6 +324,7 @@ test("帮助 › 再看一遍新手引导 opens the tour, which goes back to 帮
   let opened;
   let def;
   vm.runInNewContext(read("pages/help/index.js"), {
+    require: () => ({ withShare: (page) => page }),
     Page: (x) => (def = x),
     wx: { navigateTo: (x) => (opened = x.url) },
   });
@@ -374,7 +376,7 @@ test("welcome: 小狸 is a packaged png under 60 KB, the webp is left out of the
   let def;
   vm.runInNewContext(read("pages/welcome/index.js"), {
     require: (n) =>
-      n.endsWith("/assets") ? { asset: (f) => `https://assets.test/${f}` } : {},
+      n.endsWith("/share") ? { withShare: (page) => page } : n.endsWith("/assets") ? { asset: (f) => `https://assets.test/${f}` } : {},
     Page: (x) => (def = x),
     wx: {},
   });

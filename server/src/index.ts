@@ -15,11 +15,32 @@ import { z, ZodError } from "zod";
 import { loadEnv, type Env } from "./config/env.js";
 import { SqliteStore } from "./shared/store.js";
 import { AppError } from "./shared/domain.js";
+import { runWithCallContext } from "./shared/call-context.js";
 import { AuthService, publicUser } from "./modules/auth/service.js";
 import { registerAdminSessionRoutes } from "./modules/auth/admin-session.js";
 import { safeError } from "./shared/logging.js";
+import { checkInputComplexity, rejectionEvent } from "./shared/request-safety.js";
+import { registerUploadAdmission } from "./shared/upload-admission.js";
 import { shiftedClock } from "./shared/time.js";
 import { UsageLedger } from "./shared/usage-ledger.js";
+import { CommercialMeter } from "./shared/commercial-meter.js";
+import { CommercialBilling } from "./shared/commercial-billing.js";
+import { registerCommercialRoutes } from "./modules/commercial/routes.js";
+import type { CommercialPaymentConfig } from "./modules/commercial/runtime.js";
+import { WechatAccessToken } from "./providers/wechat-access-token.js";
+import { CommercialRefunds } from "./modules/commercial/refunds.js";
+import { registerCommercialAdminRoutes } from "./modules/commercial/admin-routes.js";
+import { registerCommercialSettingsRoutes } from "./modules/commercial/settings-routes.js";
+import { isTencentOcrPriceMissing } from "./modules/commercial/readiness.js";
+import { pruneRetainedTransactions } from "./modules/commercial/retention.js";
+import { SupportTickets, type SupportMailer } from "./modules/support/tickets.js";
+import { createSupportMailer } from "./modules/support/mailer.js";
+import { SupportNotifications } from "./modules/support/notifications.js";
+import { registerSupportRoutes } from "./modules/support/routes.js";
+import { registerSupportChatRoutes } from "./modules/support/chat-routes.js";
+import { registerSupportAdminRoutes } from "./modules/support/admin-routes.js";
+import { createSupportRuntime, getSupportPricingStatus } from "./modules/support/runtime.js";
+import { SUPPORT_KNOWLEDGE } from "./modules/support/knowledge.js";
 import {
   JobRunner,
   publicJob,
@@ -93,6 +114,8 @@ declare module "fastify" {
   }
 }
 export type BuildOptions = {
+  supportMailer?: SupportMailer;
+  commercialPayment?: CommercialPaymentConfig;
   env?: Env;
   store?: SqliteStore;
   // Shared by every outbound integration (WeChat, AI, OCR); tests pass a fake.
@@ -119,10 +142,36 @@ export function buildApp(options: BuildOptions = {}) {
     );
   store.useClock(businessNow);
   const usageMeter = new UsageLedger(store, businessNow);
+  const commercialBilling = new CommercialBilling(store, businessNow);
+  const commercialMeter = new CommercialMeter(store, businessNow, commercialBilling, {
+    dailySafetyCap: env.DAILY_SAFETY_CAP,
+    legacyBudget: { day: env.DAILY_BUDGET_CNY, week: env.WEEKLY_BUDGET_CNY },
+    logger: { warn: (fields, message) => app.log.warn(fields, message) },
+  });
+  commercialBilling.recover();
+  const tokenClient = env.WECHAT_APP_ID && env.WECHAT_APP_SECRET
+    ? new WechatAccessToken({ appId: env.WECHAT_APP_ID, appSecret: env.WECHAT_APP_SECRET, fetcher: options.fetcher })
+    : undefined;
+  const commercialPayment = options.commercialPayment ?? (
+    tokenClient && env.WECHAT_VIRTUAL_OFFER_ID && env.WECHAT_VIRTUAL_APP_KEY && env.WECHAT_VIRTUAL_CALLBACK_TOKEN
+      ? {
+          offerId: env.WECHAT_VIRTUAL_OFFER_ID,
+          appKey: env.WECHAT_VIRTUAL_APP_KEY,
+          callbackToken: env.WECHAT_VIRTUAL_CALLBACK_TOKEN,
+          callbackFormat: env.WECHAT_VIRTUAL_CALLBACK_FORMAT,
+          callbackMode: env.WECHAT_VIRTUAL_CALLBACK_MODE,
+          appId: env.WECHAT_APP_ID,
+          encodingAesKey: env.WECHAT_VIRTUAL_CALLBACK_AES_KEY,
+          getAccessToken: () => tokenClient.get(),
+          fetcher: options.fetcher,
+        }
+      : undefined
+  );
   // AI endpoints live in the database and fail over in order; the
   // LLM_* settings only seed them on the first start.
   const models = new ModelRouter(store, {
     usageMeter,
+    commercialMeter,
     fetcher: options.fetcher,
     now: options.now ? () => options.now!().getTime() : undefined,
   });
@@ -147,6 +196,7 @@ export function buildApp(options: BuildOptions = {}) {
       cap: env.DAILY_SAFETY_CAP,
     },
     businessNow,
+    commercialBilling,
   );
   const tencentOcr = new TencentOcr(
     {
@@ -155,6 +205,7 @@ export function buildApp(options: BuildOptions = {}) {
       region: env.OCR_REGION,
       timeoutMs: env.OCR_TIMEOUT_MS,
       usageMeter,
+      commercialMeter,
     },
     options.fetcher,
   );
@@ -170,6 +221,7 @@ export function buildApp(options: BuildOptions = {}) {
       baseUrl: env.JEV_BASE_URL,
       timeoutMs: env.JEV_TIMEOUT_MS,
       usageMeter,
+      commercialMeter,
       ...(env.JUDGE_PROVIDER === "llm"
         ? { answer: llmJudge(models.client("judge")) }
         : env.JUDGE_PROVIDER === "jev_llm"
@@ -211,7 +263,6 @@ export function buildApp(options: BuildOptions = {}) {
       serializers: {
         req: (req) => ({
           method: req.method,
-          url: String(req.url || "").split("?")[0],
         }),
         err: (error) => ({
           ...safeError(error),
@@ -229,10 +280,25 @@ export function buildApp(options: BuildOptions = {}) {
     },
     genReqId: () => randomUUID(),
   });
+  const tencentOcrConfigured = Boolean(env.TENCENT_SECRET_ID && env.TENCENT_SECRET_KEY);
+  app.addHook("onReady", async () => {
+    if (isTencentOcrPriceMissing(store, tencentOcrConfigured))
+      app.log.error({ event: "commercial_ocr_price_missing", setting: "commercial.prices.ocr" },
+        "腾讯 OCR 已配置且收费已开启，但缺少有效 OCR 单价；请配置 commercial.prices.ocr");
+  });
   app.register(cors, { origin: false });
   app.register(helmet);
-  app.register(rateLimit, { max: 120, timeWindow: "1 minute" });
+  app.register(rateLimit, {
+    max: 120, timeWindow: "1 minute", cache: 10000,
+    keyGenerator: (req) => auth.rateLimitKey(req),
+  });
   app.register(multipart);
+  registerUploadAdmission(app, auth);
+  app.addHook("preValidation", async (req) => {
+    checkInputComplexity(req.body);
+    checkInputComplexity(req.query);
+    checkInputComplexity(req.params);
+  });
   app.decorateRequest("rawBody", "");
   app.removeContentTypeParser("application/json");
   app.addContentTypeParser(
@@ -251,12 +317,16 @@ export function buildApp(options: BuildOptions = {}) {
       }
     },
   );
-  app.addHook("onRequest", async (req, reply) => {
-    reply.header("x-request-id", req.id);
-    reply.header("cache-control", "no-store");
-    reply.header("x-service-time", businessNow().toISOString());
+  app.addHook("onRequest", (req, reply, done) => {
+    runWithCallContext({ source: "http" }, () => {
+      reply.header("x-request-id", req.id);
+      reply.header("cache-control", "no-store");
+      reply.header("x-service-time", businessNow().toISOString());
+      done();
+    });
   });
   app.addHook("onResponse", async (req, reply) => {
+    commercialBilling.finishCurrent(reply.statusCode < 400);
     // Probes and console assets must not inflate application traffic/error
     // counters (or turn frequent monitoring into a reported outage).
     const route = req.routeOptions.url || "";
@@ -353,10 +423,12 @@ export function buildApp(options: BuildOptions = {}) {
   let backfillJudge: Pick<Jev, "noul" | "choice"> = jev;
   const backfill = new CardBackfill(store, {
     schedule: (run, signal) =>
-      jev.background(async (judge) => {
-        backfillJudge = judge;
-        return run();
-      }, signal),
+      runWithCallContext({ source: "system" }, () =>
+        jev.background(async (judge) => {
+          backfillJudge = judge;
+          return run();
+        }, signal),
+      ),
     checkCrisis: (text, scene, signal) =>
       new CrisisSafetyService(backfillJudge).check(
         text,
@@ -374,6 +446,15 @@ export function buildApp(options: BuildOptions = {}) {
     },
   });
   let backfillTask: Promise<void> | undefined;
+  let paymentPolling: ReturnType<typeof setInterval> | undefined;
+  let paymentPollTask: Promise<unknown> | undefined;
+  let supportPolling: ReturnType<typeof setInterval> | undefined;
+  let supportPollTask: Promise<unknown> | undefined;
+  const commercialRecovery = setInterval(() => {
+    try { commercialBilling.ledger.releaseExpired(); }
+    catch (error) { app.log.error(safeError(error), "commercial reservation recovery failed"); }
+  }, 60_000);
+  commercialRecovery.unref();
   app.addHook("onReady", async () => {
     const removed = imports.cleanupOld();
     if (removed) app.log.info({ removed }, "stale import uploads pruned");
@@ -382,6 +463,11 @@ export function buildApp(options: BuildOptions = {}) {
     });
   });
   app.addHook("onClose", async () => {
+    clearInterval(commercialRecovery);
+    clearInterval(paymentPolling);
+    clearInterval(supportPolling);
+    await supportPollTask;
+    await paymentPollTask;
     backfillAbort.abort();
     await backfillTask;
     await runner.stop();
@@ -395,14 +481,9 @@ export function buildApp(options: BuildOptions = {}) {
     if (err instanceof ZodError) {
       status = 400;
       code = "VALIDATION_ERROR";
-      // The details are English and about fields; they stay in the log.
       message = "填的内容不太对，再看一下";
       req.log.warn(
-        {
-          issues: err.issues
-            .slice(0, 5)
-            .map((i) => ({ path: i.path.join("."), message: i.message })),
-        },
+        { event: "validation_rejected", code, route: req.routeOptions.url },
         "validation failed",
       );
     } else if (err instanceof AppError) {
@@ -420,6 +501,8 @@ export function buildApp(options: BuildOptions = {}) {
       code = "BAD_REQUEST";
       message = "请求无效或请求过于频繁";
     }
+    const event = rejectionEvent(status, code, req.routeOptions.url ?? "");
+    if (event) req.log.warn({ event, code, route: req.routeOptions.url, status }, "request rejected");
     if (status >= 500)
       req.log.error({ code, requestId: req.id }, "request failed");
     reply.code(status).send({ code, message, requestId: req.id });
@@ -434,7 +517,7 @@ export function buildApp(options: BuildOptions = {}) {
   app.after(() => {
     const userCount = () =>
       (
-        store.db.prepare("SELECT COUNT(*) AS n FROM users").get() as {
+        store.db.prepare("SELECT COUNT(*) AS n FROM users WHERE erased_at IS NULL").get() as {
           n: number;
         }
       ).n;
@@ -511,13 +594,12 @@ export function buildApp(options: BuildOptions = {}) {
     registerStudyRoutes(app, { auth, study, runner });
     registerReviewRoutes(app, { auth, reviews });
     const formulas = new FormulaRenderer(env.FORMULA_DIR);
-    // Formula images are only a cache; without pruning the folder grows with
-    // every new formula ever shown. Once at start, then daily; the
-    // daily job is started below, once the chat service exists.
-    const pruneFormulas = () => {
-      const removed = formulas.prune(30 * 86400000);
+    // Async maintenance belongs to the long-lived parent, never the worker's
+    // cold start or the drawing path. Capacity is checked every minute.
+    const stopFormulaMaintenance = formulas.startMaintenance((removed) => {
       if (removed) app.log.info({ removed }, "formula cache pruned");
-    };
+    });
+    app.addHook("onClose", async () => stopFormulaMaintenance());
     const markdown = new MarkdownRenderer(formulas);
     registerRenderRoutes(app, { auth, formulas, markdown });
     registerAssetRoutes(app);
@@ -540,10 +622,10 @@ export function buildApp(options: BuildOptions = {}) {
       log: (error, context) => app.log.warn(safeError(error), context),
     });
     registerChatRoutes(app, { auth, chat });
-    // The daily job: the formula cache, and chat uploads left unsent for a
-    // day by anyone (0.6.0; their owner's next visit drops them too).
+    // The daily job handles retained records and uploads left unsent for a day.
     const daily = () => {
-      pruneFormulas();
+      const transactionsRemoved = pruneRetainedTransactions(store);
+      if (transactionsRemoved) app.log.info({ removed: transactionsRemoved }, "expired detached transactions pruned");
       const profilesRemoved = profiles.sweepOrphans();
       if (profilesRemoved) app.log.info({ removed: profilesRemoved }, "unreferenced avatars pruned");
       const dropped = chat.sweepStale();
@@ -608,6 +690,54 @@ export function buildApp(options: BuildOptions = {}) {
         import: env.DAILY_IMPORT_LIMIT,
       }, budget),
     });
+    const payments = registerCommercialRoutes(app, { auth, store, billing: commercialBilling, config: commercialPayment, clock: businessNow });
+    const refunds = payments.runtime ? new CommercialRefunds(store, payments.runtime.api, payments.runtime.api, businessNow) : undefined;
+    const tickets = new SupportTickets(store, options.supportMailer ?? createSupportMailer(env), env.SUPPORT_OPERATIONS_EMAIL);
+    tickets.recoverSending();
+    const notifications = new SupportNotifications(store,
+      tokenClient && env.WECHAT_SUPPORT_SUBSCRIBE_TEMPLATE_ID && env.WECHAT_SUPPORT_SUBSCRIBE_TITLE_FIELD && env.WECHAT_SUPPORT_SUBSCRIBE_STATUS_FIELD && env.WECHAT_SUPPORT_SUBSCRIBE_TIME_FIELD
+        ? { templateId: env.WECHAT_SUPPORT_SUBSCRIBE_TEMPLATE_ID,
+            state: env.WECHAT_SUPPORT_SUBSCRIBE_STATE ?? (env.NODE_ENV === "production" ? "formal" : "developer"),
+            fields: { title: env.WECHAT_SUPPORT_SUBSCRIBE_TITLE_FIELD, status: env.WECHAT_SUPPORT_SUBSCRIBE_STATUS_FIELD, time: env.WECHAT_SUPPORT_SUBSCRIBE_TIME_FIELD },
+            getAccessToken: () => tokenClient.get(), fetcher: options.fetcher } : undefined);
+    notifications.recoverSending();
+    const wakeSupport = () => {
+      if (supportPollTask) return;
+      supportPollTask = Promise.allSettled([tickets.sendPending(), notifications.sendPending()]).then(results => {
+        for (const result of results) if (result.status === "rejected") app.log.error(safeError(result.reason), "support notification failed");
+      }).finally(() => { supportPollTask = undefined; });
+    };
+    supportPolling = setInterval(wakeSupport, 60_000);
+    supportPolling.unref();
+    registerSupportRoutes(app, { auth, tickets, notifications, wake: wakeSupport });
+    registerSupportAdminRoutes(app, { auth, store, clock: businessNow,
+      pricingStatus: () => getSupportPricingStatus({ models, commercialMeter,
+        judge: { apiKey: env.JEV_API_KEY, baseUrl: env.JEV_BASE_URL } }),
+    });
+    const support = createSupportRuntime({ store, models, commercialMeter, usageMeter,
+      judge: { apiKey: env.JEV_API_KEY, baseUrl: env.JEV_BASE_URL, timeoutMs: env.JEV_TIMEOUT_MS },
+      fetcher: options.fetcher, clock: businessNow });
+    registerSupportChatRoutes(app, { auth, support });
+    app.get("/v1/support/knowledge", async () => ({ data: SUPPORT_KNOWLEDGE.map(({ id, title, answer }) => ({ id, title, answer })) }));
+    registerCommercialSettingsRoutes(app, { auth, store });
+    registerCommercialAdminRoutes(app, { auth, store, refunds, syncOrder: payments.runtime?.syncOrder, configuration: {
+      paymentConfigured: Boolean(payments.runtime),
+      callbackConfigured: Boolean(payments.runtime),
+      accessTokenConfigured: Boolean(commercialPayment?.getAccessToken),
+      tencentOcrConfigured,
+    } });
+    if (payments.runtime) {
+      paymentPolling = setInterval(() => {
+        if (paymentPollTask) return;
+        paymentPollTask = Promise.allSettled([payments.pollPending(), refunds!.syncPending()]).then(results => {
+          for (const result of results) if (result.status === "rejected")
+            app.log.error(safeError(result.reason), "commercial reconciliation failed");
+        }).catch(error => {
+          app.log.error(safeError(error), "commercial payment reconciliation failed");
+        }).finally(() => { paymentPollTask = undefined; });
+      }, 300_000);
+      paymentPolling.unref();
+    }
     registerStudyTimeRoutes(app, {
       auth,
       studyTime: new StudyTimeService(store),
@@ -701,8 +831,9 @@ export function buildApp(options: BuildOptions = {}) {
             note: "未接入备份执行记录；请按运维手册定期备份并验证恢复",
           },
           accounting: {
-            status: usageMeter.accountingWriteFailures ? "degraded" : "ok",
+            status: usageMeter.accountingWriteFailures || commercialMeter.accountingWriteFailures ? "degraded" : "ok",
             writeFailures: usageMeter.accountingWriteFailures,
+            commercialWriteFailures: commercialMeter.accountingWriteFailures,
           },
         },
       };

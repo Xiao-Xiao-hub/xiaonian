@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 随心记首页：保存用户输入，展示回顾入口与最近卡片；完整卡片列表由 deck 页面负责。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -107,7 +108,7 @@ function tidyPick(cards) {
       }
     : null;
 }
-Page({
+Page(withShare({
   data: {
     // "none" (not agreed, not a guest) shows only the background until the
     // welcome page opens; a guest sees the page with examples and sends
@@ -520,4 +521,4 @@ Page({
   clearContext() {
     this.setData({ context: null });
   },
-});
+}));

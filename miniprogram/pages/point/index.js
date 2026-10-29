@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 知识点练习页：加载题目、提交选项或答案、显示核对结果与复习状态，支持继续练习。
  * 页面中的请求标识、账号快照和 alive 状态用于拦截过期回包；不能仅因离开页面就删除另一份新草稿。
@@ -349,7 +350,7 @@ const REPORTS = [
 ];
 // 知识点页: the problem, the answer box, the result, the chapter rank-up sheet
 // and the book rank-up card.
-Page(studyClock.track({
+Page(withShare(studyClock.track({
   data: {
     loading: true,
     error: "",
@@ -1369,4 +1370,4 @@ Page(studyClock.track({
     if (this.data.point)
       this.leave(ROUTES.chapter, this.data.point.chapterId);
   },
-}));
+})));

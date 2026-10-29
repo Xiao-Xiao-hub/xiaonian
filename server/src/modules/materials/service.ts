@@ -7,6 +7,7 @@ import { randomUUID } from "node:crypto";
 import { mkdirSync, rmSync, writeFileSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { AppError } from "../../shared/domain.js";
+import { reserveUploadBytes } from "../../shared/upload-budget.js";
 import type { SqliteStore } from "../../shared/store.js";
 import { now as businessNow, type Clock } from "../../shared/time.js";
 import type { Job, JobHandler } from "../jobs/runner.js";
@@ -209,6 +210,7 @@ export class MaterialService {
       );
     const id = `mat_${randomUUID().replaceAll("-", "")}`;
     const relative = `${userId}/${id}.${type}`;
+    reserveUploadBytes(this.uploadRoot, userId, input.data.length);
     mkdirSync(join(this.uploadRoot, userId), { recursive: true, mode: 0o700 });
     writeFileSync(join(this.uploadRoot, relative), input.data, { mode: 0o600 });
     this.store.db

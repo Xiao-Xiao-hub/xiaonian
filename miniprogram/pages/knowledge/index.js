@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 知识点详情：展示概念、公式与相关卡片，并提供标记、卡点求助和练习入口。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -147,7 +148,7 @@ function view(d) {
   };
 }
 
-Page(studyClock.track({
+Page(withShare(studyClock.track({
   data: {
     loading: true,
     error: "",
@@ -330,6 +331,6 @@ Page(studyClock.track({
     actions.collectCard(this.data.point, this.data.stuckText);
   },
   hold() {},
-}));
+})));
 
 module.exports = { view, lookOf, stateLine };

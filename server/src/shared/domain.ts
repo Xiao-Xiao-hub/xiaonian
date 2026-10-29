@@ -23,13 +23,15 @@ export type User = {
 };
 export type AgeBand = "adult" | "child";
 // server/legal 中三份法律文件的版本；必须与小程序 utils/config.js 的 PRIVACY_VERSION 一致。
-export const PRIVACY_VERSION = "2026-10-20.2";
-export const PREVIOUS_PRIVACY_VERSION = "2026-10-20.1";
+export const PRIVACY_VERSION = "2026-10-25.1";
+export const PREVIOUS_PRIVACY_VERSION = "2026-10-24.1";
 // 已发布客户端仍可使用原有业务；记录用户实际阅读的版本，不能把旧同意自动升级。
 // 新增的可选头像、昵称写入单独要求当前版本同意。
 export const ACCEPTED_PRIVACY_VERSIONS = [
   PRIVACY_VERSION,
   PREVIOUS_PRIVACY_VERSION,
+  "2026-10-20.2",
+  "2026-10-20.1",
   "2026-10-17.1",
 ];
 // "docs": the three documents; "guardian": a guardian's consent for a child,

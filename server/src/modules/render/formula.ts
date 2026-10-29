@@ -1,110 +1,138 @@
-import MathJax from "mathjax";
-import { Resvg } from "@resvg/resvg-js";
 import { createHash } from "node:crypto";
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  statSync,
-  unlinkSync,
-  utimesSync,
-  writeFileSync,
-} from "node:fs";
-import { isAbsolute, join } from "node:path";
-import { pathToFileURL } from "node:url";
-import { setFlagsFromString } from "node:v8";
-import { runInNewContext } from "node:vm";
-// Sizes are in em so the page can scale formulas with its own font size.
+import { existsSync, readFileSync, readdirSync, statSync, unlinkSync, utimesSync } from "node:fs";
+import { readdir, stat, unlink } from "node:fs/promises";
+import { join } from "node:path";
+import { runIsolated } from "../../shared/isolated-worker.js";
+import { FORMULA_CACHE_BYTES, FORMULA_CACHE_FILES, FORMULA_CACHE_GRACE_MS } from "./cache-limits.js";
 export type FormulaImage = { id: string; w: number; h: number; va: number };
-// 48 px per em keeps 16 px text sharp on 3x screens.
-const PX_PER_EM = 48;
-const MAX_PX = 4096;
-const MAX_TEX = 2000;
-// MathJax sizes a formula in thousands of em without complaint (\rule, \raise,
-// \style, or \left( inside nested fractions, which doubles per level), and resvg
-// then allocates the whole bitmap: gigabytes, or a panic that aborts the process.
-// A formula beyond these bounds falls back to its TeX text.
-const MAX_EM = 200;
-const MAX_AREA = 2_000_000; // pixels; a page-high derivation is about 1 million
-// Each <text> run (Chinese in \text{}) costs resvg about 16 ms.
-const MAX_TEXT = 40;
-// resvg-js has no free: a bitmap stays in native memory until a full GC
-// collects its small wrapper and the next turn of the event loop runs the
-// finalizer. V8 sees no reason to collect, so one request with a couple of
-// hundred large formulas held 1.5 GB. After every GC_BYTES of bitmaps we collect
-// ourselves (serial then turns the event loop); the flag needs nothing on the
-// node command line.
-setFlagsFromString("--expose-gc");
-const collect = runInNewContext("gc") as () => void;
-const GC_BYTES = 64 * 2 ** 20;
-let drawn = 0;
-// A render over its caller's pixel budget: null, but not remembered.
-const OVER = Symbol("over budget");
-// A displayed formula wider than this breaks onto more lines (at = and +), so a
-// long chain of equalities fits a phone card (about 20 em wide) without scrolling.
-const DISPLAY_EM = 18;
-// Chinese inside \text{} is drawn as <text>; without a CJK font it would vanish.
-const CJK_FONT = [
-  "/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc",
-  "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-  "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
-  "C:/Windows/Fonts/simsun.ttc",
-  "C:/Windows/Fonts/msyh.ttc",
-].find((file) => existsSync(file));
-const round = (n: number) => Math.round(n * 1000) / 1000;
-let ready: Promise<unknown> | null = null;
-// MathJax keeps global state, so conversions run one at a time. Between two the
-// event loop turns: other requests get in, and finalizers free what was collected.
-let queue: Promise<unknown> = Promise.resolve();
-function serial<T>(task: () => Promise<T>): Promise<T> {
-  const next = queue.then(task, task);
-  queue = next
-    .catch(() => undefined)
-    .then(() => new Promise((done) => setImmediate(done)));
-  return next;
-}
 export const formulaId = (tex: string, display: boolean, color: string) =>
-  createHash("sha256")
-    .update(`${display ? `D${DISPLAY_EM}` : "I"}|${color}|${tex}`)
-    .digest("hex")
-    .slice(0, 40);
+  createHash("sha256").update(`${display ? "D18" : "I"}|${color}|${tex}`).digest("hex").slice(0, 40);
 export class FormulaRenderer {
-  // Recently used formulas with their sizes; null marks TeX that failed to render.
   private readonly known = new Map<string, FormulaImage | null>();
-  constructor(
-    private readonly dir: string,
-    private readonly limit = 5000,
-  ) {}
-  // budget: new pixels this caller may still draw; it shrinks as formulas draw.
-  async render(
-    tex: string,
-    display: boolean,
-    color: string,
-    budget?: { px: number },
-  ): Promise<FormulaImage | null> {
-    tex = tex.trim();
-    if (!tex || tex.length > MAX_TEX) return null;
-    const id = formulaId(tex, display, color);
-    const hit = this.known.get(id);
-    if (hit !== undefined) {
-      this.known.delete(id);
-      this.known.set(id, hit);
-      return hit;
+  private readonly drawing = new Map<string, Promise<FormulaImage | null>>();
+  private usage = { count: 0, bytes: 0 };
+  private cleaning?: Promise<number>;
+  private writesDuringCleanup?: Map<string, number>;
+  private maintenance?: { timer: NodeJS.Timeout; pressure?: NodeJS.Timeout; notify: (removed: number) => void };
+  constructor(private readonly dir: string, private readonly limit = FORMULA_CACHE_FILES) {}
+  // The long-lived application owns maintenance. Workers exit after a second
+  // idle, so neither worker startup nor a newly drawn image scans the directory.
+  startMaintenance(notify: (removed: number) => void = () => {}, intervalMs = 60_000) {
+    const run = () => { void this.maintain().then(notify).catch(() => undefined); };
+    const timer = setInterval(run, intervalMs);
+    timer.unref();
+    this.maintenance = { timer, notify };
+    run();
+    return () => {
+      clearInterval(timer);
+      clearTimeout(this.maintenance?.pressure);
+      this.maintenance = undefined;
+    };
+  }
+  maintain(maxAgeMs = 30 * 86400_000, now = Date.now()): Promise<number> {
+    if (this.cleaning) return this.cleaning;
+    this.writesDuringCleanup = new Map();
+    this.cleaning = this.trim(maxAgeMs, now).finally(() => {
+      this.cleaning = undefined;
+      this.writesDuringCleanup = undefined;
+    });
+    return this.cleaning;
+  }
+  private async trim(maxAgeMs: number, now: number) {
+    let names: string[];
+    try { names = await readdir(this.dir); } catch { return 0; }
+    const files: { id: string; bytes: number; time: number }[] = [];
+    // Limit outstanding disk operations and yield throughout the scan.
+    for (let offset = 0; offset < names.length; offset += 128) {
+      await Promise.all(names.slice(offset, offset + 128).map(async (name) => {
+        if (!/^[0-9a-f]{40}\.png$/.test(name)) return;
+        try {
+          const value = await stat(join(this.dir, name));
+          if (value.isFile()) files.push({ id: name.slice(0, -4), bytes: value.size, time: value.mtimeMs });
+        } catch { /* Removed while scanning. */ }
+      }));
     }
-    const image = await serial(() =>
-      this.draw(id, tex, display, color, budget),
-    ).catch(() => null);
-    if (image === OVER) return null;
-    this.known.set(id, image);
-    if (this.known.size > this.limit)
-      this.known.delete(this.known.keys().next().value!);
-    return image;
+    files.sort((a, b) => a.time - b.time || a.id.localeCompare(b.id));
+    const scanned = new Set(files.map((file) => file.id));
+    let count = files.length, bytes = files.reduce((sum, file) => sum + file.bytes, 0), removed = 0;
+    for (const file of files) {
+      const overCapacity = count > Math.min(this.limit, FORMULA_CACHE_FILES) || bytes > FORMULA_CACHE_BYTES;
+      const expired = !this.known.has(file.id) && now - file.time >= Math.max(maxAgeMs, FORMULA_CACHE_GRACE_MS);
+      if (!overCapacity && !expired) continue;
+      try {
+        // A render/cache hit may have reused this image during the async scan.
+        if ((await stat(this.path(file.id))).mtimeMs !== file.time) continue;
+        await unlink(this.path(file.id));
+        this.known.delete(file.id);
+        count--;
+        bytes -= file.bytes;
+        removed++;
+      } catch { /* Removed or replaced concurrently; rescan next time. */ }
+    }
+    for (const [id, size] of this.writesDuringCleanup ?? []) {
+      if (!scanned.has(id)) { count++; bytes += size; }
+    }
+    this.usage = { count, bytes };
+    return removed;
+  }
+  private written(id: string, bytes: number) {
+    if (!bytes) return;
+    this.usage.count++;
+    this.usage.bytes += bytes;
+    this.writesDuringCleanup?.set(id, bytes);
+    const maintenance = this.maintenance;
+    if (!maintenance || maintenance.pressure || this.cleaning ||
+        (this.usage.count <= Math.min(this.limit, FORMULA_CACHE_FILES) && this.usage.bytes <= FORMULA_CACHE_BYTES)) return;
+    // Coalesce a busy burst rather than rescanning once per new formula. The
+    // regular minute timer also catches external writes and quiet overshoots.
+    maintenance.pressure = setTimeout(() => {
+      void this.maintain().then(maintenance.notify).catch(() => undefined).finally(() => { maintenance.pressure = undefined; });
+    }, 10_000);
+    maintenance.pressure.unref();
+  }
+  async render(tex: string, display: boolean, color: string, budget?: { px: number }): Promise<FormulaImage | null> {
+    tex = tex.trim();
+    if (!tex || tex.length > 2000 || !/^#[0-9a-f]{6}$/i.test(color)) return null;
+    const id = formulaId(tex, display, color);
+    const cached = this.known.get(id);
+    if (cached !== undefined && (!cached || existsSync(this.path(id)))) {
+      this.known.delete(id);
+      this.known.set(id, cached);
+      if (cached) {
+        try { const now = new Date(); utimesSync(this.path(id), now, now); } catch { /* Gone between lookup and touch. */ }
+      }
+      return cached;
+    }
+    // The same equation may be visible in several concurrent pages. Draw it
+    // once; a cache hit (including one in progress) does not occupy the queue.
+    const existing = this.drawing.get(id);
+    if (existing) return existing;
+    const drawing = this.draw(tex, display, color, id, budget);
+    this.drawing.set(id, drawing);
+    try { return await drawing; } finally { this.drawing.delete(id); }
+  }
+  private async draw(tex: string, display: boolean, color: string, id: string, budget?: { px: number }) {
+    try {
+      const result = await runIsolated<{ image: FormulaImage | null; px: number; bytesWritten: number }>("formula", "formula", {
+        dir: this.dir, limit: this.limit, tex, display, color, px: budget?.px ?? 2_010_000,
+      });
+      // Queue submission is bounded and the shared budget is reserved up front
+      // by MarkdownRenderer's sequential loop.
+      if (budget) budget.px = result.px;
+      this.written(id, result.bytesWritten);
+      if (result.image) this.known.set(id, result.image);
+      if (this.known.size > this.limit) this.known.delete(this.known.keys().next().value!);
+      return result.image;
+    } catch { return null; }
   }
   file(id: string): Buffer | null {
     if (!/^[0-9a-f]{40}$/.test(id)) return null;
     try {
-      return readFileSync(this.path(id));
+      const image = readFileSync(this.path(id));
+      // Cached card blocks bypass render(), but fetching their image is still
+      // a real use for LRU purposes.
+      try { const now = new Date(); utimesSync(this.path(id), now, now); } catch { /* Evicted after reading. */ }
+      return image;
     } catch {
       return null;
     }
@@ -124,7 +152,7 @@ export class FormulaRenderer {
       const id = name.slice(0, -4);
       if (!/^[0-9a-f]{40}\.png$/.test(name) || this.known.has(id)) continue;
       try {
-        if (now - statSync(this.path(id)).mtimeMs < maxAgeMs) continue;
+        if (now - statSync(this.path(id)).mtimeMs < Math.max(maxAgeMs, FORMULA_CACHE_GRACE_MS)) continue;
         unlinkSync(this.path(id));
         removed++;
       } catch {
@@ -135,91 +163,5 @@ export class FormulaRenderer {
   }
   private path(id: string) {
     return join(this.dir, `${id}.png`);
-  }
-  private async draw(
-    id: string,
-    tex: string,
-    display: boolean,
-    color: string,
-    budget?: { px: number },
-  ): Promise<FormulaImage | null | typeof OVER> {
-    ready ??= MathJax.init({
-      loader: {
-        load: ["input/tex", "output/svg"],
-        // Node's ESM loader needs file URLs for Windows drive-letter paths.
-        require: (file: string) =>
-          import(isAbsolute(file) ? pathToFileURL(file).href : file),
-      },
-      // Inline line breaking would split one formula into several pieces.
-      svg: {
-        fontCache: "none",
-        linebreaks: { inline: false },
-        displayOverflow: "linebreak",
-      },
-    });
-    await ready;
-    const adaptor = MathJax.startup.adaptor;
-    const node = await MathJax.tex2svgPromise(tex, {
-      display,
-      em: 16,
-      ex: 8,
-      containerWidth: DISPLAY_EM * 16,
-    });
-    let svg = adaptor.serializeXML(adaptor.firstChild(node));
-    if (svg.includes("data-mjx-error") || svg.includes("<merror")) return null;
-    const box = svg.match(/viewBox="(-?[\d.]+) (-?[\d.]+) ([\d.]+) ([\d.]+)"/);
-    const heightEx = Number(svg.match(/height="([\d.]+)ex"/)?.[1]);
-    const alignEx = Number(
-      svg.match(/vertical-align:\s*(-?[\d.]+)ex/)?.[1] ?? 0,
-    );
-    if (!box || !heightEx) return null;
-    // The viewBox is in thousandths of an em.
-    const w = Number(box[3]) / 1000,
-      h = Number(box[4]) / 1000;
-    if (!(w > 0 && h > 0) || w > MAX_EM || h > MAX_EM) return null;
-    if ((svg.match(/<text/g)?.length ?? 0) > MAX_TEXT) return null;
-    const scale = Math.min(
-      PX_PER_EM,
-      MAX_PX / w,
-      MAX_PX / h,
-      Math.sqrt(MAX_AREA / (w * h)),
-    );
-    const width = Math.max(1, Math.round(w * scale));
-    // A hairline far taller than wide: one pixel across is already too tall.
-    if ((h * width) / w > MAX_PX) return null;
-    const va = (alignEx * h) / heightEx;
-    if (!existsSync(this.path(id))) {
-      const px = width * Math.ceil((h * width) / w);
-      if (budget) {
-        if (px > budget.px) return OVER;
-        budget.px -= px;
-      }
-      svg = svg.replace(/currentColor/g, color);
-      const cjk = svg.includes("<text") && CJK_FONT;
-      const png = new Resvg(svg, {
-        fitTo: { mode: "width", value: width },
-        font: cjk
-          ? { loadSystemFonts: false, fontFiles: [CJK_FONT] }
-          : { loadSystemFonts: false },
-      })
-        .render()
-        .asPng();
-      mkdirSync(this.dir, { recursive: true, mode: 0o700 });
-      writeFileSync(this.path(id), png);
-      drawn += px * 4;
-      if (drawn > GC_BYTES) {
-        collect();
-        drawn = 0;
-      }
-    } else {
-      // Handed out again: the daily prune counts age from the last use.
-      try {
-        const now = new Date();
-        utimesSync(this.path(id), now, now);
-      } catch {
-        // Gone in between: the next page asking for it draws it again.
-      }
-    }
-    return { id, w: round(w), h: round(h), va: round(va) };
   }
 }

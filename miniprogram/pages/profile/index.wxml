@@ -3,54 +3,30 @@
   <guest-bar />
   <view class="who">
     <view class="who-l">
-      <text class="who-name">{{guest ? '游客' : (name || '你好')}}</text>
-      <button wx:if="{{!guest}}" class="edit-profile" hover-class="btn-press" disabled="{{loading || profileSaving}}" bindtap="editProfile">编辑资料</button>
+      <block wx:if="{{profileMode === 'nickname' && profileReady}}">
+        <block wx:for="{{[nicknameInputId]}}" wx:key="*this">
+          <input class="who-name nickname-inline" type="nickname" value="{{draftNickname}}" maxlength="24" placeholder="昵称" focus="{{true}}" confirm-type="done" data-edit="{{profileEditId}}" data-input="{{item}}" disabled="{{profileSaving || nicknamePending}}" bindinput="nicknameInput" bindblur="nicknameBlur" bindconfirm="nicknameBlur" bindnicknamereview="nicknameReview" aria-label="修改昵称" />
+        </block>
+      </block>
+      <text wx:else class="who-name" bindtap="editNickname" aria-role="button" aria-label="修改昵称">{{guest ? '游客' : (name || '你好')}}</text>
       <view wx:if="{{learn}}" class="who-tags"><text class="lv">Lv {{learn.level}}</text><text wx:if="{{learn.rank}}">{{learn.rank}}</text><text>高数上</text></view>
     </view>
-    <view class="me-av"><image wx:if="{{avatarPath}}" class="avatar-image" src="{{avatarPath}}" mode="aspectFill" binderror="avatarError" /><text wx:else>{{initial || '我'}}</text></view>
-  </view>
-  <view wx:if="{{editingProfile}}" class="profile-editor">
-    <text class="profile-title">{{profileFirst ? '设置头像和昵称' : '编辑资料'}}</text>
-    <text class="profile-note">头像和昵称由你选择，只用于晓念里的个人展示。先跳过也能正常使用。</text>
-    <text wx:if="{{profileUnsupported}}" class="profile-note">当前微信版本暂不支持安全填写头像昵称。升级微信后可再设置，现在可以继续使用默认资料。</text>
-    <view wx:elif="{{!profileReady}}" class="profile-authorization">
-      <text class="profile-note">先确认微信隐私授权，再选择头像或填写昵称。</text>
-      <button class="btn-line" hover-class="btn-press" loading="{{profileAuthorizing}}" disabled="{{profileAuthorizing}}" bindtap="authorizeProfile">{{profileAuthorizing ? '正在确认…' : '确认隐私授权'}}</button>
-    </view>
-    <form wx:else bindsubmit="saveProfile">
-      <view class="profile-avatar-row">
-        <button class="avatar-picker" hover-class="btn-press" open-type="chooseAvatar" data-edit="{{profileEditId}}" bindchooseavatar="chooseAvatar" disabled="{{profileSaving || profileWaiting}}" aria-label="选择头像">
-          <image wx:if="{{draftAvatar || avatarPath}}" class="avatar-image" src="{{draftAvatar || avatarPath}}" mode="aspectFill" />
-          <text wx:else>{{initial || '我'}}</text>
-        </button>
-        <view><text class="profile-label">头像</text><text class="profile-note">点击选择，保存后更新</text></view>
-      </view>
-      <label class="profile-label" for="profile-nickname">昵称</label>
-      <block wx:for="{{[nicknameInputId]}}" wx:key="*this">
-        <input id="profile-nickname" class="profile-nickname" type="nickname" name="nickname" value="{{draftNickname}}" maxlength="24" placeholder="填写你喜欢的昵称" placeholder-class="profile-placeholder" data-edit="{{profileEditId}}" data-input="{{item}}" disabled="{{profileSaving || nicknamePending}}" bindinput="nicknameInput" bindblur="nicknameBlur" bindnicknamereview="nicknameReview" />
-      </block>
-      <text wx:if="{{nicknamePending}}" class="profile-note">正在检查昵称，请稍等…</text>
-      <text wx:if="{{profileError}}" class="profile-error" role="alert">{{profileError}}</text>
-      <view class="profile-actions">
-        <button class="btn" hover-class="btn-press" form-type="submit" loading="{{profileSaving || profileWaiting}}" disabled="{{profileSaving || profileWaiting}}">{{profileSaving ? '正在保存…' : (profileWaiting ? '等待昵称检查…' : '保存')}}</button>
-        <button class="btn-line" hover-class="btn-press" disabled="{{profileSaving}}" bindtap="cancelProfile">{{profileFirst ? '先跳过' : '取消'}}</button>
-      </view>
-      <button wx:if="{{profileCanReset}}" class="profile-skip tap-area" hover-class="btn-press" disabled="{{profileSaving || profileWaiting}}" bindtap="resetProfile">恢复默认资料</button>
-    </form>
-    <block wx:if="{{!profileReady}}">
-      <text wx:if="{{profileError}}" class="profile-error" role="alert">{{profileError}}</text>
-      <button class="profile-skip tap-area" hover-class="btn-press" bindtap="cancelProfile">{{profileFirst ? '先跳过，继续使用' : '取消'}}</button>
-    </block>
+    <button wx:if="{{!guest}}" class="me-av" hover-class="btn-press" open-type="chooseAvatar" bindtap="beginAvatar" bindchooseavatar="changeAvatar" disabled="{{loading || profileSaving || profileAuthorizing || profileMode === 'nickname'}}" aria-label="修改头像"><image wx:if="{{avatarPath}}" class="avatar-image" src="{{avatarPath}}" mode="aspectFill" binderror="avatarError" /><text wx:else>{{initial || '我'}}</text></button>
+    <view wx:else class="me-av"><text>我</text></view>
   </view>
   <view wx:if="{{error}}" class="alert">{{error}}<button wx:if="{{!guest}}" class="retry tap-area" disabled="{{loading || busy}}" bindtap="load">重试</button></view>
   <block wx:if="{{!guest}}">
+    <view class="entry2">
+      <view class="entry pay" hover-class="entry-press" bindtap="openUsage" aria-role="button" aria-label="充值"><text class="entry-t">充值</text><text class="entry-s">套餐 · 积分</text><image wx:if="{{!broken.gem}}" class="ic3d entry-ic" src="{{icons.gem}}" webp="{{true}}" mode="aspectFit" data-k="gem" binderror="iconError" /></view>
+      <view class="entry help" hover-class="entry-press" bindtap="openSupport" aria-role="button" aria-label="客服"><text class="entry-t">客服</text><text class="entry-s">有问题问我</text><image wx:if="{{!broken.headphone}}" class="ic3d entry-ic" src="{{icons.headphone}}" webp="{{true}}" mode="aspectFit" data-k="headphone" binderror="iconError" /></view>
+    </view>
     <view wx:if="{{lowUsage}}" class="notice" bindtap="openUsage">{{lowUsage}} ›</view>
     <view wx:if="{{study}}" class="study">
       <view class="st-hd"><text class="st-t">学习时间</text></view>
       <view class="nums">
-        <view class="num"><view class="num-v">{{study.total}}<text class="num-u">天</text></view><text class="num-k">累计学习</text></view>
-        <view class="num"><view class="num-v">{{study.current}}<text class="num-u">天</text></view><text class="num-k">当前连续</text></view>
-        <view class="num"><view class="num-v">{{study.best}}<text class="num-u">天</text></view><text class="num-k">最高连续</text></view>
+        <view class="num"><view class="num-v">{{study.total}}</view><text class="num-k">累计学习天数</text></view>
+        <view class="num"><view class="num-v">{{study.minutes}}</view><text class="num-k">累计学习分钟</text></view>
+        <view class="num"><view class="num-v">{{study.current}}</view><text class="num-k">连续学习天数</text></view>
       </view>
       <view class="heat">
         <text class="st-more heat-t">近 18 周</text>
@@ -58,14 +34,17 @@
         <view class="heat-b">
           <view class="wd"><text>一</text><text></text><text>三</text><text></text><text>五</text><text></text><text>日</text></view>
           <view class="cols">
-            <view wx:for="{{study.columns}}" wx:for-item="col" wx:for-index="w" wx:key="key" class="col">
-              <view wx:for="{{col.cells}}" wx:for-item="c" wx:for-index="i" wx:key="day" class="hc {{c.fu ? 'fu' : 'l' + c.lv}} {{c.td ? 'td' : ''}} {{picked.day === c.day ? 'pk' : ''}}" data-w="{{w}}" data-i="{{i}}" bindtap="pickDay" />
+            <view wx:for="{{study.columns}}" wx:for-item="col" wx:for-index="w" wx:key="key" class="col {{picked.w === w ? 'pk' : ''}}" data-w="{{w}}" bindtap="pickWeek" aria-role="button" aria-label="{{col.al}}">
+              <view wx:for="{{col.cells}}" wx:for-item="c" wx:key="day" class="hc {{c.fu ? 'fu' : 'l' + c.lv}} {{c.td ? 'td' : ''}}" aria-hidden="true" />
             </view>
           </view>
         </view>
       </view>
+      <view wx:if="{{picked}}" class="wk">
+        <view wx:for="{{picked.days}}" wx:key="k" class="wk-d {{item.td ? 'td' : ''}} {{item.fu ? 'fu' : ''}}" aria-label="{{item.fu ? '周' + item.wd : '周' + item.wd + ' ' + item.min + ' 分钟'}}"><text class="wk-n {{item.min === 0 ? 'z' : ''}}" aria-hidden="true">{{item.min}}</text><text class="wk-w" aria-hidden="true">{{item.wd}}</text></view>
+      </view>
       <view class="hfoot">
-        <text wx:if="{{picked}}" class="hf-today">{{picked.label}} <text class="hf-b">{{picked.min}}</text> 分钟</text>
+        <text wx:if="{{picked}}" class="hf-today">{{picked.label}} 共 <text class="hf-b">{{picked.min}}</text> 分钟</text>
         <text wx:else class="hf-today">今天 <text class="hf-b">{{study.todayMin}}</text> 分钟</text>
         <view class="grow" />
         <text>少</text><view class="hk l0" /><view class="hk l1" /><view class="hk l2" /><view class="hk l3" /><view class="hk l4" /><text>多</text>
@@ -92,7 +71,6 @@
       <view wx:if="{{prefs}}" class="li"><text class="li-l">个性化学习推荐</text><switch checked="{{personalized}}" disabled="{{prefBusy || loading}}" data-k="personalized" bindchange="togglePref" color="#2459d8"/></view>
       <view wx:if="{{prefs}}" class="li"><text class="li-l">学习时长统计</text><switch checked="{{studyTime}}" disabled="{{prefBusy || loading}}" data-k="studyTime" bindchange="togglePref" color="#2459d8"/></view>
       <view class="li" bindtap="toggleUsage"><text class="li-l">{{budget ? '额度' : '今天还能用'}}</text><text wx:if="{{budget}}" class="li-v">{{budget}}</text><text wx:elif="{{left !== null}}" class="li-v">还剩 {{left}} 次</text><text class="chev {{usageOpen?'turned':''}}">›</text></view>
-      <view wx:if="{{usageOpen}}" class="usage"><view wx:for="{{usage}}" wx:key="k" class="usage-cell"><text class="usage-k">{{item.k}}</text><view wx:if="{{budget}}" class="usage-v">已用 <text>{{item.pct}}</text>%</view><view wx:else class="usage-v">还能用 <text>{{item.left}}</text> 次</view><view class="meter"><view class="fill" style="width:{{item.share}}%"/></view><text wx:if="{{item.reset}}" class="usage-r">{{item.reset}}</text></view></view>
       <view class="li" bindtap="openPrivacy"><text class="li-l">隐私政策</text><text class="chev">›</text></view>
       <view wx:if="{{study}}" class="li" bindtap="deleteStudyTime"><text class="li-l danger">删除学习时长记录</text><text class="chev">›</text></view>
     </view>

@@ -40,12 +40,9 @@ export function registerMistakeRoutes(
       limit: query.limit,
       chapter: query.chapter,
     });
-    const items = await Promise.all(
-      page.items.map(async (item) => ({
-        ...item,
-        blocks: await markdown.render(item.problem, INK[query.tone]),
-      })),
-    );
+    const items = [];
+    for (const item of page.items)
+      items.push({ ...item, blocks: await markdown.render(item.problem, INK[query.tone]) });
     return {
       data: {
         items,

@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 回顾列表：查看待回应或暂停的回顾项，提交回应、跳过、提醒与恢复等动作。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -32,7 +33,7 @@ const when = (item, day) => {
   const label = LABELS[item.kind];
   return label ? `${label} · ${at}` : at;
 };
-Page({
+Page(withShare({
     data: {
       items: [],
       state: "waiting",
@@ -152,4 +153,4 @@ Page({
         if (this.active(account, seq)) this.setData({ busy: false });
       }
     },
-  });
+  }));

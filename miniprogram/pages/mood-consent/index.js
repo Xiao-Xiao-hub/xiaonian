@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 心情内容单独同意页：说明处理范围并提交用户选择，完成后返回对应的心情流程。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -16,7 +17,7 @@ function safeNext(value) {
   }
 }
 
-Page({
+Page(withShare({
   // A child's account needs the guardian's own consent too (儿童隐私政策 第十章).
   data: { saving: false, error: "", child: false, guardian: false },
   onLoad(query) { this.next = safeNext(query && query.next); },
@@ -67,4 +68,4 @@ Page({
       })
       .finally(() => this.setData({ saving: false }));
   },
-});
+}));

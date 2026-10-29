@@ -4,6 +4,7 @@
  */
 import { AppError } from "./domain.js";
 import type { SqliteStore } from "./store.js";
+import type { CommercialBilling } from "./commercial-billing.js";
 import {
   chinaDayStart,
   chinaWeekStart,
@@ -208,7 +209,10 @@ export class Budget {
     private readonly store: SqliteStore,
     readonly defaults: Allowance & { cap: number },
     private readonly clock: Clock = businessNow,
+    private readonly commercial?: CommercialBilling,
   ) {}
+  get commercialEnabled() { return this.commercial?.enabled ?? false; }
+  finishCall(success: boolean) { this.commercial?.finishCurrent(success); }
   global(): Allowance {
     return {
       day: this.defaults.day,
@@ -229,6 +233,10 @@ export class Budget {
   // keeps its cost at today's prices (estimated usage and unpriced models
   // alike), so the admin changing a price never rewrites what was used.
   charge(userId: string, source: string, sourceId: string, usage: unknown) {
+    if (this.commercial?.enabled) {
+      this.commercial.settleCurrent(userId);
+      return;
+    }
     if (usage === undefined || usage === null) return;
     const table = priceTable(this.store);
     const priced = (item: UsageItem) =>
@@ -304,6 +312,10 @@ export class Budget {
   }
   // What the learner sees: two percentages and when each comes back.
   view(userId: string) {
+    if (this.commercial?.enabled) {
+      const free = this.commercial.accounts.view(userId, this.commercial.pricing.snapshot("", "").microyuanPerCredit).free;
+      return { day: { pct: free.day.percent, resetAt: free.day.resetAt }, week: { pct: free.week.percent, resetAt: free.week.resetAt } };
+    }
     const { day, week } = this.status(userId);
     return {
       day: { pct: day.pct, resetAt: day.resetAt },
@@ -313,6 +325,13 @@ export class Budget {
   // The window that stops the next action, if any. The week wins when both
   // are used up, since it comes back later.
   blocked(userId: string) {
+    if (this.commercial?.enabled) {
+      const rate = this.commercial.pricing.snapshot("", "").microyuanPerCredit;
+      const available = this.commercial.accounts.available(userId, rate);
+      if (available.free + available.plan + available.wallet > 0) return null;
+      const view = this.commercial.accounts.view(userId, rate);
+      return { window: "week" as const, resetAt: view.free.week.resetAt, message: "可用额度已用完，请查看额度" };
+    }
     const { day, week } = this.status(userId);
     if (week.pct >= 100)
       return {

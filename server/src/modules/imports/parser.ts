@@ -2,13 +2,13 @@
  * 导入文件解析边界：根据文件类型提取文字或待识别页面，供导入与聊天附件共用。
  * 解析工具可注入以便测试；读取失败、截断和扫描件需要由上层继续处理，不能伪装完整内容。
  */
-import { execFile } from "node:child_process";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import type { DocxText } from "./docx.js";
+import { AppError } from "../../shared/domain.js";
+import { runIsolated } from "../../shared/isolated-worker.js";
+import { ResourceLimitError, processingRejected } from "../../shared/isolated-worker.js";
+import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import mammoth from "mammoth";
-import { getDocumentProxy } from "unpdf";
-import { readDocxText, type DocxText } from "./docx.js";
 
 export type ParsedPdfPage = { n: number; text: string };
 export type ParsedPdf = { totalPages: number; pages: ParsedPdfPage[] };
@@ -24,9 +24,28 @@ export type ImportFileTools = {
   ): Promise<Buffer>;
 };
 
-type PdfPage = Awaited<
-  ReturnType<Awaited<ReturnType<typeof getDocumentProxy>>["getPage"]>
->;
+// Temporary worker pressure must not label a user's valid document corrupt.
+export function documentReadError(error: unknown, code: string, message: string) {
+  if (error instanceof ResourceLimitError && ["queue_full", "timeout"].includes(error.reason))
+    return new AppError(503, code, "文件处理暂时繁忙，请稍后再试");
+  if (error instanceof ResourceLimitError && ["worker_failed", "memory_limit"].includes(error.reason))
+    return new AppError(400, code, "文件处理未能完成，请缩小文件或拆分后重新上传");
+  return new AppError(400, code, message);
+}
+
+export function readPlainText(data: Buffer, ignoreBOM: boolean) {
+  if (data.length > 1_500_000) {
+    processingRejected("document", "text_size");
+    throw new ResourceLimitError("text_size");
+  }
+  const text = new TextDecoder("utf-8", { fatal: true, ignoreBOM }).decode(data);
+  if (text.length > 500_000) {
+    processingRejected("document", "text_size");
+    throw new ResourceLimitError("text_size");
+  }
+  return text;
+}
+
 // One pdf.js text item where it sits on the page (PDF units, y upwards).
 export type PdfTextItem = {
   str: string;
@@ -116,84 +135,21 @@ export const pdfParagraphs = (items: PdfTextItem[]): string => {
   if (current) paragraphs.push(current);
   return paragraphs.join("\n\n");
 };
-const pageText = async (page: PdfPage) => {
-  const content = await page.getTextContent();
-  const items: PdfTextItem[] = [];
-  for (const item of content.items) {
-    if (!("str" in item)) continue;
-    items.push({
-      str: item.str,
-      x: item.transform[4] ?? 0,
-      y: item.transform[5] ?? 0,
-      w: item.width,
-      h: item.height || Math.abs(item.transform[3] ?? 0),
-      eol: item.hasEOL,
-    });
-  }
-  page.cleanup();
-  return pdfParagraphs(items);
-};
-
 export const defaultImportFileTools: ImportFileTools = {
   async readDocx(data) {
-    return (await defaultImportFileTools.readDocxFull!(data)).text;
+    return (await runIsolated<DocxText>("document", "docx", { data })).text;
   },
-  // The document walk first (formulas, line breaks); mammoth's raw text when
-  // it finds nothing, e.g. a Strict Open XML file.
-  async readDocxFull(data) {
-    let read: DocxText | undefined;
-    try {
-      read = await readDocxText(data);
-      if (read.text.replace(/\s/g, "")) return read;
-    } catch {
-      /* mammoth below */
-    }
-    const text = (await mammoth.extractRawText({ buffer: data })).value
-      .replace(/\r\n?/g, "\n")
-      .trim();
-    // Nothing either way: keep the picture counts of the walk.
-    if (read && !text.replace(/\s/g, "")) return read;
-    return { text, mathImages: 0, images: 0 };
-  },
-  async readPdf(data, start, count) {
-    const pdf = await getDocumentProxy(new Uint8Array(data));
-    try {
-      const pages: ParsedPdfPage[] = [];
-      const end = Math.min(pdf.numPages, start + count - 1);
-      for (let n = start; n <= end; n++)
-        pages.push({ n, text: await pageText(await pdf.getPage(n)) });
-      return { totalPages: pdf.numPages, pages };
-    } finally {
-      await pdf.loadingTask.destroy();
-    }
-  },
+  readDocxFull: (data) => runIsolated<DocxText>("document", "docx", { data }),
+  readPdf: (data, start, count) => runIsolated<ParsedPdf>("document", "pdf", { data, start, count }),
   async rasterizePdfPage(path, page, signal) {
+    signal.throwIfAborted();
     const folder = await mkdtemp(join(tmpdir(), "zhiye-import-"));
-    const prefix = join(folder, "page");
     try {
-      await new Promise<void>((resolve, reject) => {
-        execFile(
-          "pdftoppm",
-          [
-            "-f",
-            String(page),
-            "-l",
-            String(page),
-            "-singlefile",
-            "-r",
-            "150",
-            "-scale-to",
-            "2000",
-            "-png",
-            path,
-            prefix,
-          ],
-          { signal, windowsHide: true },
-          (error) => (error ? reject(error) : resolve()),
-        );
-      });
-      return await readFile(`${prefix}.png`);
+      const image = await runIsolated<Buffer>("document", "raster", { path, page, prefix: join(folder, "page") });
+      signal.throwIfAborted();
+      return image;
     } finally {
+      // Parent cleanup also runs after a timed-out or crashed worker is killed.
       await rm(folder, { recursive: true, force: true });
     }
   },

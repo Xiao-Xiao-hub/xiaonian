@@ -1,3 +1,4 @@
+const { withShare } = require("../../../utils/share");
 /*
  * 横屏地图：以横向视野展示地图，复用同一知识点和进度数据；保持原页面导航与点击规则。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -21,7 +22,7 @@ function activeFor(page) {
     page.alive && auth.hasConsent() && owner === (auth.getUser() || {}).id;
 }
 
-Page({
+Page(withShare({
   data: {
     loading: true,
     error: "",
@@ -189,4 +190,4 @@ Page({
   back() {
     wx.navigateBack();
   },
-});
+}));

@@ -219,7 +219,7 @@ test("pruning drops old cached formulas but keeps recent and remembered ones", a
   assert.equal(formulas.prune(30 * 86400000), 1);
   assert.equal(existsSync(old), false);
   assert.ok(existsSync(fresh) && existsSync(other));
-  assert.ok(formulas.file(used.id), "a remembered image keeps its file");
+  assert.ok(existsSync(usedFile), "a remembered image keeps its file without a new read refreshing its age");
   // After a restart nothing is remembered: the old image goes, then comes back on use.
   const restarted = new FormulaRenderer(folder);
   assert.equal(restarted.prune(30 * 86400000), 1);

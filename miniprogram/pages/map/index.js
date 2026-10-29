@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 学习地图：加载知识点图与本人进度，处理缩放、定位、点击和横屏入口；绘制辅助在本目录。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -99,7 +100,7 @@ function sectionChoices(chapter) {
     ),
   ];
 }
-Page(studyClock.track({
+Page(withShare(studyClock.track({
   data: {
     loading: true,
     error: "",
@@ -685,6 +686,6 @@ Page(studyClock.track({
   goLearn() {
     backTo(ROUTES.learn);
   },
-}));
+})));
 
 module.exports = { noNextText };

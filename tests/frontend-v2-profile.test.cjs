@@ -80,7 +80,7 @@ function fixture() {
     ),
     {
       Page: (x) => (definition = x),
-      require: (n) => deps[n.split("/").at(-1)],
+      require: (n) => n.endsWith("/share") ? { withShare: (page) => page } : deps[n.split("/").at(-1)],
       getApp: () => app,
       setTimeout,
       clearTimeout,
@@ -111,7 +111,7 @@ function fixture() {
   };
 }
 test("profile shows owned card totals, seven actual allowance buckets and recommendation setting", async () => {
-  const { p, requests } = fixture();
+  const { p, requests, nav } = fixture();
   await p.load();
   assert.equal(p.data.stats.total, 5);
   assert.equal(p.data.usage.length, 7);
@@ -125,10 +125,10 @@ test("profile shows owned card totals, seven actual allowance buckets and recomm
   assert.equal(p.data.left, 59, "今天还能用 shows the 问 AI count");
   assert.equal(requests.length, 8);
   assert.ok(requests.includes("/v1/auth/me"), "refresh profile data from the current account");
-  // Allowances stay folded under 今天还能用 until opened.
+  // The existing allowance row opens the commercial subpackage.
   assert.equal(p.data.usageOpen, false);
   p.openUsage();
-  assert.equal(p.data.usageOpen, true);
+  assert.deepEqual(nav, ["/pages/commercial/center/index"]);
 });
 test("profile mentions only the allowance closest to running out, in one line", async () => {
   const f = fixture();
@@ -165,7 +165,8 @@ test("V4.2 G4: with a budget, 我的 shows today's and this week's used percenta
   assert.equal(f.p.data.lowUsage, "这周的额度用完了，下周一 0 点恢复");
   const wxml = fs.readFileSync(path.join(__dirname, "../miniprogram/pages/profile/index.wxml"), "utf8");
   assert.match(wxml, /budget \? '额度' : '今天还能用'/);
-  assert.match(wxml, /已用 <text>\{\{item.pct\}\}<\/text>%/);
+  assert.match(wxml, /bindtap="toggleUsage"/);
+  assert.doesNotMatch(wxml, /class="usage-cell"/);
   assert.doesNotMatch(wxml, /¥|元/, "no yuan for learners");
 });
 test("profile greets without the placeholder WeChat nickname; the stickers are on 学习 now (D112)", async () => {
@@ -235,7 +236,7 @@ function load(file, deps = {}, globals = {}) {
     {
       Page: (x) => (definition = x),
       require: (n) =>
-        deps[n.split("/").at(-1)] ||
+        n.endsWith("/share") ? { withShare: (page) => page } : deps[n.split("/").at(-1)] ||
         (n.endsWith("/theme") ? { themed: (x) => x } : {}),
       ...globals,
     },
@@ -292,7 +293,7 @@ test("help opens with three steps and keeps every rule behind a question", () =>
     [...p.data.sections.map((s) => s.id)],
     // V4.2 : 聊一聊怎么用 (the tab, history, chips and replay); the
     // three study tools after the map.
-    ["cards", "talk", "resume", "learn", "tools", "rank", "quota"],
+    ["cards", "talk", "resume", "learn", "tools", "rank"],
   );
   // 反馈与隐私 holds feedback and privacy only.
   assert.deepEqual([...p.data.privacy.map((s) => s.id)], ["privacy"]);

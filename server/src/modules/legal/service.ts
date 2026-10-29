@@ -84,6 +84,11 @@ export class LegalService {
   private async render(doc: LegalDoc): Promise<LegalView> {
     const parts = split(await readFile(join(this.dir, `${doc}.md`), "utf8"));
     const render = (text: string) => this.markdown.render(text, INK.light);
+    const summaryBlocks = await render(parts.summary);
+    const leadBlocks = await render(parts.lead);
+    const sections = [];
+    for (const section of parts.sections)
+      sections.push({ title: section.title, blocks: await render(section.body) });
     return {
       doc,
       title: parts.title,
@@ -91,15 +96,10 @@ export class LegalService {
       summary: {
         head: parts.summaryHead,
         note: parts.summaryNote,
-        blocks: await render(parts.summary),
+        blocks: summaryBlocks,
       },
-      blocks: await render(parts.lead),
-      sections: await Promise.all(
-        parts.sections.map(async (s) => ({
-          title: s.title,
-          blocks: await render(s.body),
-        })),
-      ),
+      blocks: leadBlocks,
+      sections,
     };
   }
 }

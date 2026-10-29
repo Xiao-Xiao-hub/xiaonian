@@ -5,10 +5,29 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildApp } from "../server/src/index.js";
 import { loadEnv } from "../server/src/config/env.js";
+import { approvedCommercialCatalog } from "../server/src/modules/commercial/policy.js";
+import { CommercialBilling } from "../server/src/shared/commercial-billing.js";
 import { SqliteStore } from "../server/src/shared/store.js";
 
-function create(fetcher: typeof fetch) {
+function create(fetcher: typeof fetch, commercial = false) {
   const store = new SqliteStore(":memory:");
+  if (commercial) {
+    store.saveSetting("commercial.enabled", true);
+    store.saveSetting("commercial.catalog", approvedCommercialCatalog());
+    store.saveSetting("commercial.prices", {
+      jev: { microyuanPerRequest: 1 },
+    });
+    store.saveSetting("ai.prices", [
+      {
+        host: "tokenhub-intl.tencentmaas.com",
+        model: "hy4-preview",
+        input: 0.5,
+        output: 0.5,
+        cached: 0.5,
+        note: "quota boundary test",
+      },
+    ]);
+  }
   const app = buildApp({
     store,
     fetcher,
@@ -78,6 +97,27 @@ function seed(store: SqliteStore, userId: string, name: string) {
 }
 const equivalent = () =>
   new Response(JSON.stringify({ answers: { q: { noul: 0.9 } } }));
+const similarResponse = () =>
+  new Response(
+    JSON.stringify({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              question: "求 x^2 的导数",
+              answer: "2*x",
+              options: ["$2x$", "$x^{2}$", "$2$", "$x$"],
+              correct: 0,
+              steps: ["幂函数求导", "得 $2x$"],
+              solution: "幂函数求导得 2*x。",
+              checks: [{ kind: "derivative", expr: "x^2", answer: "2*x" }],
+            }),
+          },
+        },
+      ],
+      usage: { prompt_tokens: 3, completion_tokens: 2 },
+    }),
+  );
 
 test("remote similar-answer judging reserves per user; exhausted users keep free local judging", async () => {
   const releases: ((response: Response) => void)[] = [];
@@ -185,7 +225,8 @@ test("a verified similar result finishing after deletion keeps only a quota rece
       ready = resolve;
     });
     const { app, store } = create((async (url) => {
-      if (String(url).startsWith("https://api.typesafe.ai/")) return equivalent();
+      if (String(url).startsWith("https://api.typesafe.ai/"))
+        return equivalent();
       ready();
       return new Promise<Response>((resolve) => {
         release = resolve;
@@ -210,30 +251,7 @@ test("a verified similar result finishing after deletion keeps only a quota rece
         ...(erase ? { payload: { confirm: true } } : {}),
       });
       assert.equal(removed.statusCode, 200);
-      release(
-        new Response(
-          JSON.stringify({
-            choices: [
-              {
-                message: {
-                  content: JSON.stringify({
-                    question: "求 x^2 的导数",
-                    answer: "2*x",
-                    options: ["$2x$", "$x^{2}$", "$2$", "$x$"],
-                    correct: 0,
-                    steps: ["幂函数求导", "得 $2x$"],
-                    solution: "幂函数求导得 2*x。",
-                    checks: [
-                      { kind: "derivative", expr: "x^2", answer: "2*x" },
-                    ],
-                  }),
-                },
-              },
-            ],
-            usage: { prompt_tokens: 3, completion_tokens: 2 },
-          }),
-        ),
-      );
+      release(similarResponse());
       const response = await pending;
       assert.equal(response.statusCode, 404, response.body);
       assert.equal(
@@ -256,5 +274,60 @@ test("a verified similar result finishing after deletion keeps only a quota rece
     } finally {
       await app.close();
     }
+  }
+});
+
+test("commercial similar result finishing after deletion releases every hold", async () => {
+  let release!: (response: Response) => void;
+  let ready!: () => void;
+  const arrived = new Promise<void>((resolve) => {
+    ready = resolve;
+  });
+  const { app, store } = create(
+    (async (url) => {
+      if (String(url).startsWith("https://api.typesafe.ai/"))
+        return equivalent();
+      ready();
+      return new Promise<Response>((resolve) => {
+        release = resolve;
+      });
+    }) as typeof fetch,
+    true,
+  );
+  try {
+    const who = await identity(app, "commercial-late-similar");
+    const question = seed(store, who.id, "commercial-late");
+    const pending = app.inject({
+      method: "POST",
+      url: `/v1/chat/threads/${question.thread}/similar`,
+      headers: who.headers,
+      payload: {},
+    });
+    await arrived;
+    const removed = await app.inject({
+      method: "DELETE",
+      url: `/v1/chat/threads/${question.thread}`,
+      headers: who.headers,
+    });
+    assert.equal(removed.statusCode, 200);
+    release(similarResponse());
+    const response = await pending;
+    assert.equal(response.statusCode, 404, response.body);
+    assert.equal(
+      store.db.prepare("SELECT COUNT(*) AS n FROM quota_receipts").get()!.n,
+      0,
+    );
+    const calls = store.db
+      .prepare("SELECT status,charged_credits FROM commercial_calls")
+      .all() as { status: string; charged_credits: number | null }[];
+    assert.ok(calls.length >= 1);
+    assert.ok(calls.every((call) => call.status === "released"));
+    assert.ok(calls.every((call) => call.charged_credits === null));
+    assert.equal(
+      new CommercialBilling(store).accounts.available(who.id).free,
+      30,
+    );
+  } finally {
+    await app.close();
   }
 });

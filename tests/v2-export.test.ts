@@ -87,6 +87,67 @@ test("export includes declared profile and preferences but excludes internal use
   assert.doesNotMatch(response.body, /openid|authMode|must-not-export/);
 });
 
+test("export includes only the owner's support sessions and pending request text without dedupe secrets", async (t) => {
+  const { store, login } = fixture(t);
+  const owner = await login("support-export-owner");
+  const other = await login("support-export-other");
+  const createdAt = "2026-10-24T08:00:00.000Z";
+  const sessionInsert = store.db.prepare(
+    "INSERT INTO support_sessions(id,user_id,turn_count,created_at,updated_at) VALUES(?,?,0,?,?)",
+  );
+  sessionInsert.run("owner-support-session", owner.userId, createdAt, createdAt);
+  sessionInsert.run("other-support-session", other.userId, createdAt, createdAt);
+  const requestInsert = store.db.prepare(
+    `INSERT INTO support_chat_requests(
+       id,session_id,user_id,idempotency_key,text_hash,raw_text,status,created_ms,created_at
+     ) VALUES(?,?,?,?,?,?,'processing',?,?)`,
+  );
+  requestInsert.run(
+    "owner-request-internal-id",
+    "owner-support-session",
+    owner.userId,
+    "owner-idempotency-secret",
+    "owner-request-hash-secret",
+    "本人待处理原话",
+    Date.parse(createdAt),
+    createdAt,
+  );
+  requestInsert.run(
+    "other-request-internal-id",
+    "other-support-session",
+    other.userId,
+    "other-idempotency-secret",
+    "other-request-hash-secret",
+    "其他用户原话",
+    Date.parse(createdAt),
+    createdAt,
+  );
+
+  const response = await owner.call("GET", "/v1/me/export");
+  assert.equal(response.statusCode, 200);
+  const support = response.json().support;
+  assert.deepEqual(support.sessions, [{
+    id: "owner-support-session",
+    turn_count: 0,
+    created_at: createdAt,
+    updated_at: createdAt,
+  }]);
+  assert.deepEqual(support.requests, [{
+    session_id: "owner-support-session",
+    turn_id: null,
+    raw_text: "本人待处理原话",
+    answer: null,
+    status: "processing",
+    created_at: createdAt,
+    finished_at: null,
+    layer: null,
+  }]);
+  assert.doesNotMatch(
+    response.body,
+    /other-support-session|其他用户原话|request-hash-secret|idempotency-secret|request-internal-id|text_hash|request_hash|idempotency/i,
+  );
+});
+
 test("artifact feedback exports and erases only the owner's reports", async (t) => {
   const { store, login } = fixture(t);
   const owner = await login("report-owner");
@@ -146,6 +207,14 @@ test("each table with user_id has an export location or a documented exclusion",
     imports: data.imports,
     retests: data.retests,
     study_days: data.studyDays,
+    commercial_buckets: data.commercial.buckets,
+    commercial_calls: data.commercial.calls,
+    commercial_orders: data.commercial.orders,
+    commercial_usage: data.commercial.usage,
+    support_turns: data.support.turns,
+    support_tickets: data.support.tickets,
+    support_sessions: data.support.sessions,
+    support_chat_requests: data.support.requests,
   };
   const excluded = {
     sessions: "Authentication sessions are credentials, not learner content.",

@@ -25,6 +25,7 @@ import {
 import type { Jev } from "../../providers/jev.js";
 import type { OcrProvider } from "../../providers/tencent-ocr.js";
 import { AppError } from "../../shared/domain.js";
+import { hasDiskSpace, reserveUploadBytes } from "../../shared/upload-budget.js";
 import { IDENTITY_RULE } from "../../shared/identity.js";
 import type { SqliteStore } from "../../shared/store.js";
 import { now as businessNow } from "../../shared/time.js";
@@ -47,7 +48,7 @@ import {
   type JobHandler,
   type JobRunner,
 } from "../jobs/runner.js";
-import { defaultImportFileTools, type ImportFileTools } from "./parser.js";
+import { defaultImportFileTools, documentReadError, readPlainText, type ImportFileTools } from "./parser.js";
 import { mergeParagraphs, segmentText } from "./segment.js";
 import {
   candidateSchema,
@@ -72,6 +73,8 @@ export const IMPORT_TEXT_LIMIT = 20_000;
 export const IMPORT_FILE_LIMIT = 10 * 1024 * 1024;
 export const IMPORT_IMAGE_LIMIT = 5 * 1024 * 1024;
 export const IMPORT_PAGE_LIMIT = 20;
+export const IMPORT_STORAGE_BYTES = 512 * 1024 * 1024;
+export const IMPORT_STORAGE_COUNT = 10_000;
 const SCAN_TEXT_BELOW = 50;
 const SOURCE_TITLES: Record<string, string> = {
   photo: "拍的照片",
@@ -333,6 +336,23 @@ export class ImportService {
     if (!row) throw new AppError(404, "NOT_FOUND", "这次导入找不到了，可能已经删掉");
     return row;
   }
+  private checkStorage(userId: string, values: Record<string, string | null>, before?: Row, reserveBytes = 0) {
+    const bytes = (value: unknown) => Buffer.byteLength(String(value ?? ""));
+    const delta = Object.entries(values).reduce((sum, [key, value]) => sum + bytes(value) - bytes(before?.[key]), 0) + reserveBytes;
+    const stored = "COALESCE(length(CAST(segments AS BLOB)),0)+COALESCE(length(CAST(extra AS BLOB)),0)+COALESCE(length(CAST(pages AS BLOB)),0)+COALESCE(length(CAST(candidates AS BLOB)),0)";
+    const totals = this.store.db.prepare(`SELECT COUNT(*) AS count, COALESCE(SUM(${stored}),0) AS bytes FROM imports WHERE user_id=?`).get(userId)!;
+    if ((!before && Number(totals.count) >= IMPORT_STORAGE_COUNT) ||
+        (delta > 0 && Number(totals.bytes) + delta > IMPORT_STORAGE_BYTES)) {
+      console.warn(JSON.stringify({ event: "upload_storage_rejected", reason: "import_storage" }));
+      throw new AppError(429, "IMPORT_STORAGE_LIMIT", "导入空间暂时不足，删除一些旧导入后再试");
+    }
+    const database = this.store.db.prepare("PRAGMA database_list").get() as { file: string };
+    if (delta > 0 && !hasDiskSpace(database.file || this.uploadRoot, delta)) {
+      console.warn(JSON.stringify({ event: "upload_storage_rejected", reason: "disk" }));
+      throw new AppError(503, "IMPORT_STORAGE_LIMIT", "导入空间暂时不足，请稍后再试");
+    }
+  }
+
   private insert(
     userId: string,
     input: {
@@ -347,7 +367,16 @@ export class ImportService {
     },
   ) {
     const at = this.now();
-    this.store.db
+    const values = {
+      segments: JSON.stringify(input.segments ?? []),
+      pages: input.pages ? JSON.stringify(input.pages) : null,
+      extra: extraJson(input.extra ?? {}),
+    };
+    this.store.transaction(() => {
+      // Same client ID stays idempotent even when the storage quota is full.
+      if (this.store.db.prepare("SELECT 1 FROM imports WHERE id=? AND user_id=?").get(input.id, userId)) return;
+      this.checkStorage(userId, values);
+      this.store.db
       .prepare(
         `INSERT OR IGNORE INTO imports(id,user_id,source,file_name,own,segments,pages,status,created_at,updated_at,extra)
        VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
@@ -358,13 +387,14 @@ export class ImportService {
         input.source,
         input.fileName ?? null,
         input.own ? 1 : 0,
-        JSON.stringify(input.segments ?? []),
-        input.pages ? JSON.stringify(input.pages) : null,
+        values.segments,
+        values.pages,
         input.status,
         at,
         at,
-        extraJson(input.extra ?? {}),
+        values.extra,
       );
+    });
     return this.own(userId, input.id);
   }
   private tempDir(userId: string, id: string) {
@@ -374,6 +404,7 @@ export class ImportService {
     return join(this.tempDir(userId, id), name);
   }
   private saveTemp(userId: string, id: string, name: string, data: Buffer) {
+    reserveUploadBytes(this.uploadRoot, userId, data.length);
     mkdirSync(this.tempDir(userId, id), { recursive: true, mode: 0o700 });
     writeFileSync(this.tempFile(userId, id, name), data, { mode: 0o600 });
   }
@@ -460,12 +491,8 @@ export class ImportService {
             input.start,
             IMPORT_PAGE_LIMIT,
           );
-        } catch {
-          throw new AppError(
-            400,
-            "IMPORT_READ_FAILED",
-            "这个 PDF 打不开（可能加了密或坏了）",
-          );
+        } catch (error) {
+          throw documentReadError(error, "IMPORT_READ_FAILED", "这个 PDF 打不开（可能加了密或坏了）");
         }
         if (input.start > parsed.totalPages)
           throw new AppError(400, "IMPORT_PAGE", "这份 PDF 没有这么多页，起始页改小一点");
@@ -523,16 +550,9 @@ export class ImportService {
             pictures = { mathImages: read.mathImages, images: read.images };
           } else text = await this.tools.readDocx(input.data);
         } else
-          text = new TextDecoder("utf-8", {
-            fatal: true,
-            ignoreBOM: true,
-          }).decode(input.data);
-      } catch {
-        throw new AppError(
-          400,
-          "IMPORT_READ_FAILED",
-          "这个文件打不开，换一份试试",
-        );
+          text = readPlainText(input.data, true);
+      } catch (error) {
+        throw documentReadError(error, "IMPORT_READ_FAILED", "这个文件打不开，换一份试试");
       }
       if (!countChars(text))
         throw new AppError(
@@ -815,6 +835,7 @@ export class ImportService {
         ...(cut && index === next.length - 1 ? { truncated: true } : {}),
       }));
     }
+    this.checkStorage(userId, { segments: JSON.stringify(segments) }, row);
     this.store.db
       .prepare(
         "UPDATE imports SET own=COALESCE(?,own),segments=?,updated_at=? WHERE id=? AND user_id=?",
@@ -1050,6 +1071,9 @@ export class ImportService {
             .map((tag) => tag.name);
           // every batch is sent; none is dropped past the third.
           const chunks = splitBatches(segments);
+          // Reserve enough output headroom before the first paid model/judge
+          // call; commit still rechecks after any concurrent storage changes.
+          this.checkStorage(job.userId, {}, row, chunks.length * SPLIT_MAX_CARDS * 4096);
           const usages: LlmUsage[] = [],
             raw: SplitCard[] = [];
           for (const [index, part] of chunks.entries()) {
@@ -1112,6 +1136,7 @@ export class ImportService {
             throw new JobError("IMPORT_CHANGED", "这次导入有变化，退出这页再进来");
           const candidates = (output as { candidates: ImportCandidate[] })
             .candidates;
+          this.checkStorage(job.userId, { candidates: JSON.stringify(candidates) }, row);
           this.store.db
             .prepare(
               "UPDATE imports SET candidates=?,status='picking',updated_at=? WHERE id=? AND user_id=?",
@@ -1158,6 +1183,9 @@ export class ImportService {
             }));
         for (const [index, entry] of entries.entries()) {
           signal.throwIfAborted();
+          // A page can contain 200 x 4000 UTF-8 characters and its retained
+          // overflow. Check that headroom before rasterization or paid OCR.
+          this.checkStorage(job.userId, {}, this.own(job.userId, importId), 6 * 1024 * 1024);
           report({ page: index + 1, pages: entries.length, stage: "read" });
           let result: {
             page: number;
@@ -1334,6 +1362,11 @@ export class ImportService {
           (a.page ?? Number.MAX_SAFE_INTEGER) - (b.page ?? Number.MAX_SAFE_INTEGER),
       );
       const capped = capSegments(next);
+      this.checkStorage(job.userId, {
+        segments: JSON.stringify(capped.segments),
+        pages: JSON.stringify(pages),
+        extra: extraJson({ ...extra, rest: capped.rest, restSegments: capped.restSegments }),
+      }, row);
       this.store.db
         .prepare(
           "UPDATE imports SET segments=?,pages=?,extra=?,updated_at=? WHERE id=? AND user_id=?",
@@ -1550,7 +1583,7 @@ export class ImportService {
     return (
       this.store.db
         .prepare(
-          "SELECT * FROM imports WHERE user_id=? ORDER BY updated_at DESC,rowid DESC",
+          "SELECT * FROM imports WHERE user_id=? ORDER BY updated_at DESC,rowid DESC LIMIT 100",
         )
         .all(userId) as Row[]
     ).map((row) => this.view(row, runner));
@@ -1593,7 +1626,7 @@ export class ImportService {
     return (
       this.store.db
         .prepare(
-          `SELECT * FROM imports WHERE user_id=? AND status IN ('reading','read','splitting','picking') AND updated_at>=? ORDER BY updated_at DESC,rowid DESC${all ? "" : " LIMIT 10"}`,
+          `SELECT * FROM imports WHERE user_id=? AND status IN ('reading','read','splitting','picking') AND updated_at>=? ORDER BY updated_at DESC,rowid DESC LIMIT ${all ? 100 : 10}`,
         )
         .all(userId, since) as Row[]
     ).map((row) => {

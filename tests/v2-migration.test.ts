@@ -6,17 +6,18 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { MIGRATIONS, SqliteStore } from "../server/src/shared/store.js";
 
-const tempDb = () => join(mkdtempSync(join(tmpdir(), "zhiye-v2-")), "app.sqlite");
+const tempDb = () =>
+  join(mkdtempSync(join(tmpdir(), "zhiye-v2-")), "app.sqlite");
 
 test("migration 16 creates the v2 schema and copies legacy notes into cards", () => {
-  assert.equal(MIGRATIONS.length, 16);
+  assert.ok(MIGRATIONS.length >= 16);
   const path = tempDb();
   const legacy = new DatabaseSync(path);
   const appliedAt = "2026-10-12T00:00:00.000Z";
   legacy.exec(
     "CREATE TABLE schema_migrations(version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL);",
   );
-  for (const [index, migration] of MIGRATIONS.slice(0, -1).entries()) {
+  for (const [index, migration] of MIGRATIONS.slice(0, 15).entries()) {
     legacy.exec(migration!);
     legacy
       .prepare("INSERT INTO schema_migrations VALUES(?,?)")
@@ -144,8 +145,18 @@ test("migration 16 creates the v2 schema and copies legacy notes into cards", ()
         .all()
         .map((row) => ({ ...row })),
       [
-        { card_id: "card_note_ai", kind: "create", by: "system", data: '{"from":"note"}' },
-        { card_id: "card_note_user", kind: "create", by: "system", data: '{"from":"note"}' },
+        {
+          card_id: "card_note_ai",
+          kind: "create",
+          by: "system",
+          data: '{"from":"note"}',
+        },
+        {
+          card_id: "card_note_user",
+          kind: "create",
+          by: "system",
+          data: '{"from":"note"}',
+        },
         {
           card_id: "card_note_ai",
           kind: "supplement",
@@ -155,17 +166,30 @@ test("migration 16 creates the v2 schema and copies legacy notes into cards", ()
       ],
     );
     assert.deepEqual(
-      store.db.prepare("PRAGMA table_info(threads)").all().map((r: { name: string }) => r.name).slice(-3),
+      store.db
+        .prepare("PRAGMA table_info(threads)")
+        .all()
+        .map((r: { name: string }) => r.name)
+        .slice(-3),
       ["scene", "mode", "mood_cards"],
     );
     assert.ok(
-      store.db.prepare("PRAGMA table_info(map_points)").all().some((r: { name: string }) => r.name === "stuck_at"),
+      store.db
+        .prepare("PRAGMA table_info(map_points)")
+        .all()
+        .some((r: { name: string }) => r.name === "stuck_at"),
     );
     assert.ok(
-      store.db.prepare("PRAGMA table_info(usage_ledger)").all().some((r: { name: string }) => r.name === "scene"),
+      store.db
+        .prepare("PRAGMA table_info(usage_ledger)")
+        .all()
+        .some((r: { name: string }) => r.name === "scene"),
     );
     assert.ok(
-      store.db.prepare("PRAGMA table_info(usage_ledger)").all().some((r: { name: string }) => r.name === "cached_tokens"),
+      store.db
+        .prepare("PRAGMA table_info(usage_ledger)")
+        .all()
+        .some((r: { name: string }) => r.name === "cached_tokens"),
     );
   } finally {
     store.close();
@@ -173,17 +197,27 @@ test("migration 16 creates the v2 schema and copies legacy notes into cards", ()
   const reopened = new SqliteStore(path);
   try {
     assert.equal(
-      (reopened.db.prepare("SELECT count(*) AS n FROM cards").get() as { n: number }).n,
+      (
+        reopened.db.prepare("SELECT count(*) AS n FROM cards").get() as {
+          n: number;
+        }
+      ).n,
       2,
     );
     assert.equal(
-      (reopened.db
-        .prepare("SELECT count(*) AS n FROM card_versions")
-        .get() as { n: number }).n,
+      (
+        reopened.db
+          .prepare("SELECT count(*) AS n FROM card_versions")
+          .get() as { n: number }
+      ).n,
       3,
     );
     assert.equal(
-      (reopened.db.prepare("SELECT count(*) AS n FROM notes").get() as { n: number }).n,
+      (
+        reopened.db.prepare("SELECT count(*) AS n FROM notes").get() as {
+          n: number;
+        }
+      ).n,
       2,
     );
   } finally {
@@ -205,8 +239,12 @@ test("v3 columns are added idempotently without bumping the schema version", () 
     assert.ok(columns("cards").includes("remind_on"));
     assert.ok(columns("brainstorms").includes("report"));
     assert.equal(
-      (store.db.prepare("SELECT MAX(version) AS v FROM schema_migrations").get() as { v: number }).v,
-      16,
+      (
+        store.db
+          .prepare("SELECT MAX(version) AS v FROM schema_migrations")
+          .get() as { v: number }
+      ).v,
+      MIGRATIONS.length,
     );
   } finally {
     store.close();

@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 资料收录入口：选择文字或图片输入，保存后进入原文校对；草稿通过 utils/drafts 按账号保存。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -10,7 +11,7 @@ const auth = require("../../utils/auth");
 const { draftGet, draftSet } = require("../../utils/drafts");
 const TEXT_LIMIT = 2000;
 const IMAGE_LIMIT = 5 * 1024 * 1024;
-Page({
+Page(withShare({
   data: {
     kind: "note",
     mode: "image",
@@ -144,4 +145,4 @@ Page({
       })
       .finally(() => this.alive && this.setData({ busy: false }));
   },
-});
+}));

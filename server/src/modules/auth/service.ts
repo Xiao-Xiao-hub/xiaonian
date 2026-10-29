@@ -7,6 +7,7 @@ import type { FastifyRequest } from "fastify";
 import type { Env } from "../../config/env.js";
 import { SqliteStore, digest } from "../../shared/store.js";
 import { AppError, type User } from "../../shared/domain.js";
+import { bindCallUser } from "../../shared/call-context.js";
 import { AdminSessions, KeyFailures } from "./admin-session.js";
 export const publicUser = (user: User) => ({
   id: user.id,
@@ -28,7 +29,7 @@ export class AuthService {
     this.adminSessions = new AdminSessions(env, now);
     this.keyFailures = new KeyFailures(now);
   }
-  issue(user: User) {
+  issue(user: User, paymentSessionKey?: string) {
     const token = randomBytes(32).toString("base64url"),
       expiresAt = Date.now() + this.env.SESSION_TTL_SECONDS * 1000;
     this.store.transaction(() => {
@@ -38,6 +39,11 @@ export class AuthService {
       this.store.db
         .prepare("INSERT INTO sessions VALUES(?,?,?)")
         .run(digest(token), user.id, expiresAt);
+      if (paymentSessionKey) {
+        this.store.db.prepare(
+          "INSERT INTO wechat_payment_sessions(session_hash,session_key,refreshed_at) VALUES(?,?,?)",
+        ).run(digest(token), paymentSessionKey, this.store.now());
+      }
       this.store.audit(user.id, "session.created", user.id, {
         authMode: user.authMode,
       });
@@ -75,7 +81,7 @@ export class AuthService {
     } catch {
       throw new AppError(502, "WECHAT_LOGIN_FAILED", "微信登录服务暂时不可用");
     }
-    const data = value as { openid?: unknown; errcode?: unknown };
+    const data = value as { openid?: unknown; errcode?: unknown; session_key?: unknown };
     if (
       !data ||
       typeof data.openid !== "string" ||
@@ -83,13 +89,56 @@ export class AuthService {
       (data.errcode && data.errcode !== 0)
     )
       throw new AppError(401, "INVALID_WECHAT_CODE", "登录凭证失效，请重试");
-    return this.issue(this.store.upsertUser(data.openid, "微信用户", "wechat"));
+    // Keep payment keys server-side and tied to the freshly issued business
+    // session. Older/mock login responses without a usable key can still log
+    // in, but cannot create payment parameters until a fresh wx.login succeeds.
+    const paymentKey = typeof data.session_key === "string" &&
+      /^[A-Za-z0-9+/]{22}==$/.test(data.session_key) &&
+      Buffer.from(data.session_key, "base64").length === 16
+      ? data.session_key : undefined;
+    return this.issue(this.store.upsertUser(data.openid, "微信用户", "wechat"), paymentKey);
+  }
+  wechatPaymentSession(req: FastifyRequest) {
+    const user = this.require(req);
+    if (user.authMode !== "wechat")
+      throw new AppError(403, "WECHAT_LOGIN_REQUIRED", "请使用微信登录后购买");
+    const row = this.store.db.prepare(
+      "SELECT session_key FROM wechat_payment_sessions WHERE session_hash=?",
+    ).get(digest(this.token(req)));
+    if (!row) throw new AppError(401, "WECHAT_SESSION_REFRESH", "请刷新微信登录后重试");
+    return { user, sessionKey: String(row.session_key) };
   }
   token(req: FastifyRequest) {
     const header = req.headers.authorization;
     if (!header || !/^Bearer [A-Za-z0-9_-]{43}$/.test(header))
       throw new AppError(401, "AUTH_REQUIRED", "登录过期了，重新打开晓念就好");
     return header.slice(7);
+  }
+  // Quotas follow a verified account across sessions and source addresses.
+  // Login attempts remain IP-scoped: a supplied learner token must not change
+  // the administrator password-guessing bucket. This lookup deliberately does
+  // not throw or bind the request's billing context before authentication.
+  rateLimitKey(req: FastifyRequest) {
+    const ipKey = `ip:${req.ip}`;
+    const route = req.routeOptions.url ?? req.url.split("?")[0];
+    if (
+      route === "/v1/admin/session" ||
+      route === "/v1/auth/dev-login" ||
+      route === "/v1/auth/wechat-login"
+    ) return ipKey;
+    const header = req.headers.authorization;
+    if (!header || !/^Bearer [A-Za-z0-9_-]{43}$/.test(header)) return ipKey;
+    const row = this.store.db.prepare(
+      "SELECT user_id FROM sessions WHERE hash=? AND expires_at>?",
+    ).get(digest(header.slice(7)), Date.now());
+    if (!row) return ipKey;
+    const user = this.store.getUser(String(row.user_id));
+    if (
+      !user ||
+      (user.authMode !== "wechat" &&
+        (!this.env.DEV_LOGIN_ENABLED || this.env.NODE_ENV === "production"))
+    ) return ipKey;
+    return `user:${user.id}`;
   }
   // A banned account  can still sign in, export, erase and log out, as
   // the privacy notice promises; every other route answers ACCOUNT_BANNED.
@@ -113,6 +162,7 @@ export class AuthService {
         "ACCOUNT_BANNED",
         "账号已被停用。你仍可以在“我的”里导出数据或注销账号，如有疑问请联系维护者",
       );
+    bindCallUser(user.id);
     return user;
   }
   logout(req: FastifyRequest) {

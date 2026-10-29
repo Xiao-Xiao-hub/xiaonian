@@ -10,6 +10,8 @@ App({
   onShow() {
     visit.show();
     auth.syncPending();
+    // 已同意的用户进入即恢复登录；游客和未授权用户仍走原来的同意入口。
+    if (auth.hasConsent() && !auth.signedIn()) auth.login().catch(() => {});
   },
   onHide() {
     visit.hide();

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
-import { SqliteStore } from "../server/src/shared/store.js";
+import { MIGRATIONS, SqliteStore } from "../server/src/shared/store.js";
 import { fakeServices, makeApp } from "./fixtures.js";
 
 // 学习时长 (V4.md 约定 6, D108).
@@ -44,7 +44,11 @@ type Me = Awaited<ReturnType<ReturnType<typeof fixture>["login"]>>;
 const report = (me: Me, seconds: unknown) =>
   me.call("POST", "/v1/me/study-time", { seconds });
 // Seeds whole days directly: { "2026-10-01": minutes }.
-function seed(store: SqliteStore, userId: string, days: Record<string, number>) {
+function seed(
+  store: SqliteStore,
+  userId: string,
+  days: Record<string, number>,
+) {
   for (const [day, minutes] of Object.entries(days))
     store.db
       .prepare("INSERT INTO study_days VALUES(?,?,?,?)")
@@ -57,8 +61,12 @@ test("a report must be 1 to 900 whole seconds", async (t) => {
   for (const bad of [0, -5, 901, 1.5, "60", null])
     assert.equal((await report(me, bad)).statusCode, 400, String(bad));
   assert.equal(
-    (await me.call("POST", "/v1/me/study-time", { seconds: 60, day: "2020-01-01" }))
-      .statusCode,
+    (
+      await me.call("POST", "/v1/me/study-time", {
+        seconds: 60,
+        day: "2020-01-01",
+      })
+    ).statusCode,
     400,
   );
   const one = await report(me, 1);
@@ -146,7 +154,14 @@ test("the four numbers come from the same days as the heat map", async (t) => {
   // 2026-06-13 is the first day of the 126-day window.
   assert.deepEqual(
     view.days.map((d: { day: string }) => d.day),
-    ["2026-06-13", "2026-10-10", "2026-10-11", "2026-10-13", "2026-10-14", "2026-10-15"],
+    [
+      "2026-06-13",
+      "2026-10-10",
+      "2026-10-11",
+      "2026-10-13",
+      "2026-10-14",
+      "2026-10-15",
+    ],
   );
   assert.equal(view.totalMinutes, 120 + 10 + 20 + 40 + 5 + 70 + 15);
   // V4.2 累计天数: every day with a whole minute, inside the window or not;
@@ -227,9 +242,11 @@ test("the table is added without a new schema version", () => {
   const version = store.db
     .prepare("SELECT MAX(version) AS v FROM schema_migrations")
     .get() as { v: number };
-  assert.equal(version.v, 16);
+  assert.equal(version.v, MIGRATIONS.length);
   const columns = (
-    store.db.prepare("PRAGMA table_info(study_days)").all() as { name: string }[]
+    store.db.prepare("PRAGMA table_info(study_days)").all() as {
+      name: string;
+    }[]
   ).map((c) => c.name);
   assert.deepEqual(columns, ["user_id", "day", "seconds", "updated_at"]);
 });

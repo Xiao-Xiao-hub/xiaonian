@@ -1,1 +1,1 @@
-{"desc": "晓念小程序站点地图", "rules": [{"action": "allow", "page": "*"}]}
+{"desc": "晓念小程序站点地图：只让微信搜索收录不需要登录的公开页", "rules": [{"action": "allow", "page": "pages/legal/index"}, {"action": "allow", "page": "pages/help/index"}, {"action": "disallow", "page": "*"}]}

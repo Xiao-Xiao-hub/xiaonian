@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 资料学习页：展示讲解、原文依据、追问与自测入口；异步结果必须对应当前资料和版本。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -38,7 +39,7 @@ function waitText(status, since) {
   return `${status === "queued" ? "排着队" : "已经开始"}，等了 ${took}`;
 }
 // V4.2 FX5b : time on this page counts as study (utils/study-clock).
-Page(studyClock.track({
+Page(withShare(studyClock.track({
   ...reviewMethods,
   data: {
     id: "",
@@ -294,4 +295,4 @@ Page(studyClock.track({
       },
     });
   },
-}));
+})));

@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 错题本：查看待重做与已掌握的题，进入重做、同类练习或讲解，并支持移出错题本。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -89,7 +90,7 @@ function verdictOf(message) {
   };
 }
 Page(
-  studyClock.track({
+  withShare(studyClock.track({
     data: {
       status: "open",
       chapter: "",
@@ -437,5 +438,5 @@ Page(
       this.ask({ photo: "problem" });
     },
     noop() {},
-  }),
+  })),
 );

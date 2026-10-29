@@ -1,3 +1,4 @@
+const { withShare } = require("../../../utils/share");
 /*
  * 头脑风暴结论页：让用户选择、补充或修改结论，确认后保存。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -25,7 +26,7 @@ const clientId = () =>
 const KIND_IDS = Object.keys(KINDS);
 const count = (value) => [...String(value || "").replace(/\s/g, "")].length;
 
-Page({
+Page(withShare({
     data: {
       loading: true,
       saving: false,
@@ -405,4 +406,4 @@ Page({
           if (this.active(epoch, account)) this.setData({ saving: false });
         });
     },
-  });
+  }));

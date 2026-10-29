@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 讲一遍：记录用户的解释，接收追问并发起要点核对；话题、草稿与历史按当前账号处理。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -8,7 +9,8 @@
 // the key points (POST /v1/chat/threads/:id/teach-review): covered, missed,
 // said wrong; the clearest sentence can be kept as a card (我的话, pages/collect).
 // ?pointId=&name= starts on a point, ?id= reopens a teach chat (&finish=1:
-// straight to 讲完了, from 解题's teach mode).
+// straight to 讲完了, from 解题's teach mode; only with the mark that tap
+// leaves in globalData, so a link from another mini program cannot spend it).
 // what is being explained and the unsent text are kept on this phone
 // (继续刚才的讲解); the start lists past ones (tool=teach); 讲完了 takes the
 // unsent text along.
@@ -73,7 +75,7 @@ function when(iso) {
   return Number.isNaN(d.getTime()) ? "" : `${d.getMonth() + 1}月${d.getDate()}日`;
 }
 // V4.2 FX5b : time on this page counts as study (utils/study-clock).
-Page(studyClock.track({
+Page(withShare(studyClock.track({
   data: {
     usageText: "",
     guest: false,
@@ -114,7 +116,9 @@ Page(studyClock.track({
     const q = query || {};
     if (q.id) {
       this.threadId = q.id;
-      this.finishOnLoad = q.finish === "1";
+      const app = typeof getApp === "function" ? getApp() : null;
+      this.finishOnLoad = q.finish === "1" && Boolean(app && app.globalData.teachFinish === q.id);
+      if (app) delete app.globalData.teachFinish;
       const kept = tools.kept("teach");
       this.setData({ stage: "talk", ...(kept && kept.threadId === q.id && kept.draft ? { draft: kept.draft } : {}) });
     } else if (q.pointId) {
@@ -477,4 +481,4 @@ Page(studyClock.track({
   faceBroken() {
     this.setData({ faceBroken: true });
   },
-}));
+})));

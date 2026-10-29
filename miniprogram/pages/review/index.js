@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 资料复习页：读取到期材料，展示卡片正反面并提交记得或忘了；不处理地图做题进度。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -23,7 +24,7 @@ function decorate(card) {
   };
 }
 // Due cards one at a time: recall first, then flip, then say whether it stuck.
-Page(studyClock.track({
+Page(withShare(studyClock.track({
   data: {
     today: "",
     loading: true,
@@ -124,4 +125,4 @@ Page(studyClock.track({
   openLibrary() {
     require("../../utils/learn").backTo("pages/library/index");
   },
-}));
+})));

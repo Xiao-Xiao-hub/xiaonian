@@ -6,6 +6,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { AppError } from "../../shared/domain.js";
+import { finishUpload } from "../../shared/upload-admission.js";
 import { publicUser, type AuthService } from "../auth/service.js";
 import type { AccountService } from "./service.js";
 import { AVATAR_LIMIT, ProfileService, profileNickname } from "./profile.js";
@@ -75,6 +76,8 @@ export function registerAccountRoutes(
         )
           throw new AppError(400, "VALIDATION_ERROR", "只需一张头像和一个昵称");
         throw error;
+      } finally {
+        finishUpload(req);
       }
       if (!image) throw new AppError(400, "IMAGE_REQUIRED", "请选择一张头像");
       // Uploading can take time: logout, account erasure or a ban during the

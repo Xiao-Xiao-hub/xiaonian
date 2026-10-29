@@ -11,10 +11,22 @@
   ],
   "syntheticValues": [
     {
+      "path": "admin/app.js",
+      "rule": "credential-literal",
+      "sha256": "bf9db6c8108bc250c122ddc1f33283c9b353250cd223055eaaf7a0d4134c5608",
+      "reason": "Admin UI label mapping readiness keys to Chinese text, not a credential value."
+    },
+    {
       "path": "server/src/modules/admin/ai.ts",
       "rule": "credential-literal",
       "sha256": "460191020d7c1d12617d10f3ee022c9387af00fd583f0116a7a2c7d1300f160b",
       "reason": "SQL column-name mapping, not a credential value."
+    },
+    {
+      "path": "server/src/modules/support/notifications.ts",
+      "rule": "url-credential-query",
+      "sha256": "b3778391737e91d6efe004596ec192bf97ead88b26e2bbd563299828293149c7",
+      "reason": "Runtime-built WeChat API URL; the access token is fetched at runtime, not embedded."
     },
     {
       "path": "tests/admin-manage.test.ts",
@@ -125,6 +137,150 @@
       "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
     },
     {
+      "path": "tests/commercial-access-token.test.ts",
+      "rule": "credential-literal",
+      "sha256": "3a4ce8e3041f351136db38d7363d8b2e3ad1662ff7b3ce814b9df3833d557905",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-access-token.test.ts",
+      "rule": "credential-literal",
+      "sha256": "7808218c0beb6f5ffd0d12e11568d370bfa6021a4444c00969641bcad73bf659",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-access-token.test.ts",
+      "rule": "credential-literal",
+      "sha256": "dc5808d01547c3f0adb77288b860637bd2ec1631a96b9cf6c3210b321f17caf3",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-chat-settlement.test.ts",
+      "rule": "credential-literal",
+      "sha256": "0e1e3913b881f25a7b768fd32f554b3462ee729a319259aeef41bb636d55d2f9",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-chat-settlement.test.ts",
+      "rule": "credential-literal",
+      "sha256": "0ff2171902b446a06e78eeb737a450e4c005ad44385aecf3db7f325eb2238002",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-meter.test.ts",
+      "rule": "credential-literal",
+      "sha256": "6b13bfcc90cef4792b2f7bd106040068d4cf6a19a868c22897501981c9f81d1a",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-payment-events.test.ts",
+      "rule": "credential-literal",
+      "sha256": "041f377f6e93e0f16ff700b207507a1c38bc2f69d0ba3977dec858b28b9f7093",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-plan-payment.test.ts",
+      "rule": "credential-literal",
+      "sha256": "041f377f6e93e0f16ff700b207507a1c38bc2f69d0ba3977dec858b28b9f7093",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-provider-meter.test.ts",
+      "rule": "credential-literal",
+      "sha256": "38a1e2bee3d57fade633e4ee7e6df7f3346460033dbb87f12eeed41406cef8f4",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-provider-meter.test.ts",
+      "rule": "credential-literal",
+      "sha256": "43e0a6abd7882d1e2d10a2d54326b70e67efd6619e2c44c5091068bdac2261c4",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-provider-meter.test.ts",
+      "rule": "credential-literal",
+      "sha256": "ec4caceceee734ae2e03d92a109df76ce6659c060a4bd6e6802c133b90b768b8",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-retention.test.ts",
+      "rule": "credential-literal",
+      "sha256": "89787f72e6372283b210cef1fa78a317faeafd3d9957fe1bd8890cceb17439c5",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-routes.test.ts",
+      "rule": "credential-literal",
+      "sha256": "041f377f6e93e0f16ff700b207507a1c38bc2f69d0ba3977dec858b28b9f7093",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-routes.test.ts",
+      "rule": "credential-literal",
+      "sha256": "0b47b64bbe011cf63c7cfefbfe3c93487bd6da9193c90206775d2076fd1a5c1c",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-routes.test.ts",
+      "rule": "credential-literal",
+      "sha256": "454befc397c1866fd9c82789ef765902b4fa2b5b1fe2c31b4eb7e68a9d3c1dc5",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-routes.test.ts",
+      "rule": "credential-literal",
+      "sha256": "8e6a3f5182d0b6926a1570f9c3d7828aef250d16a82b7b0527380fe7b350d0e7",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-session.test.ts",
+      "rule": "credential-literal",
+      "sha256": "89787f72e6372283b210cef1fa78a317faeafd3d9957fe1bd8890cceb17439c5",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-support-judge.test.ts",
+      "rule": "credential-literal",
+      "sha256": "9bf405e2d0fce55b0714010a95f8c07c836b18290a106062a8d9fc7d26d0afb4",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-support-judge.test.ts",
+      "rule": "credential-literal",
+      "sha256": "9f8abeabad95af99dfa684924e2f7f2b5d8b2639a24e969d3fe6244d51416a98",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-support-notifications.test.ts",
+      "rule": "credential-literal",
+      "sha256": "dc0d03434fbb7779f0c93b274e75bc1aae3efc6f7a04ea9c59ed023ac490ed89",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-support-runtime.test.ts",
+      "rule": "credential-literal",
+      "sha256": "54fd96243f93b62ddc664aa8ae861d6ee592a717a10f4d1919df0c2aa22ebfd4",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/commercial-virtual-payment.test.ts",
+      "rule": "credential-literal",
+      "sha256": "22e2d1933aa102058acfd7b354fcab61bdcda22b620c2ceea6e15f5c31b166eb",
+      "reason": "Official WeChat message-encryption example parameters or synthetic fixture; not a project credential."
+    },
+    {
+      "path": "tests/commercial-virtual-payment.test.ts",
+      "rule": "credential-literal",
+      "sha256": "454befc397c1866fd9c82789ef765902b4fa2b5b1fe2c31b4eb7e68a9d3c1dc5",
+      "reason": "Official WeChat message-encryption example parameters or synthetic fixture; not a project credential."
+    },
+    {
+      "path": "tests/commercial-virtual-payment.test.ts",
+      "rule": "credential-literal",
+      "sha256": "91b96091d582b72a2ea18ec2fc789e97d5221786cdecc309a9f679253a2f9922",
+      "reason": "Official WeChat message-encryption example parameters or synthetic fixture; not a project credential."
+    },
+    {
       "path": "tests/fixtures.ts",
       "rule": "credential-literal",
       "sha256": "0e1e3913b881f25a7b768fd32f554b3462ee729a319259aeef41bb636d55d2f9",
@@ -147,6 +303,12 @@
       "rule": "credential-literal",
       "sha256": "91b96091d582b72a2ea18ec2fc789e97d5221786cdecc309a9f679253a2f9922",
       "reason": "Reviewed injected-transport/session fixture, example signing fixture, or synthetic privacy assertion; not an external credential."
+    },
+    {
+      "path": "tests/frontend-space.test.cjs",
+      "rule": "credential-literal",
+      "sha256": "6d8da37ddfe42e1a59b40e0007065e431d671482dd20267177f324b8951d5dc4",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
     },
     {
       "path": "tests/frontend-user-profile.test.cjs",
@@ -314,6 +476,96 @@
       "path": "tests/quota-receipts.test.ts",
       "rule": "credential-literal",
       "sha256": "709fbce6cc50a925c0bcf8ba7e702a80e36c69fd5b33c16074404eb237162d4b",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/security-commercial-readiness.test.ts",
+      "rule": "credential-literal",
+      "sha256": "16860d3e41644ad4194c32facdd4cf6988cab1440159749a009d1438524aa383",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/security-commercial-readiness.test.ts",
+      "rule": "credential-literal",
+      "sha256": "6b0056787fbd6b08a071a7c84f9e2df7e2d7f45ab383565a5c9f6b15d7e918f3",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/security-commercial-readiness.test.ts",
+      "rule": "credential-literal",
+      "sha256": "c271dee7e10d090bc909b8a45db136033e1d11264e69ab82417e506a280c6a0a",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/security-commercial-readiness.test.ts",
+      "rule": "credential-literal",
+      "sha256": "cfaf29b1090357532dfe0db528ffc684bf46a38e05c608aea6cc3d24c78e32d9",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/security-commercial-readiness.test.ts",
+      "rule": "credential-literal",
+      "sha256": "e21f57fceb995cf59b822a0bb9173a7e9e958d3f10ea1832ecf00480c443d702",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/security-commercial-readiness.test.ts",
+      "rule": "credential-literal",
+      "sha256": "f4e413d3688c665b7d75f9589ea284d6a501fe23997dfffcf7636eda3ffaabed",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/security-cost-safety.test.ts",
+      "rule": "credential-literal",
+      "sha256": "10944a91ce98bf75689651ae8c67117f16f14615714fdc9a184063810adb397d",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/security-cost-safety.test.ts",
+      "rule": "credential-literal",
+      "sha256": "7b4970e683f0751d14b1d14e530b0efa6a95d58a8e9830137e2c01dd3e1520ca",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/security-cost-safety.test.ts",
+      "rule": "credential-literal",
+      "sha256": "9adf001b82282d835c9205f226a5b9d64ff04c8f926cdb44be271d8a9ab1f199",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/security-job-activity.test.ts",
+      "rule": "credential-literal",
+      "sha256": "11d5cb51f32e942727475681be9fcaf6c7a7d80d40454afc9af5f36ed82bc364",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/security-job-activity.test.ts",
+      "rule": "credential-literal",
+      "sha256": "69ec7f071b21f564778c65404b6601101cb23a56ce29be4fe257cc0e99f4d5c9",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/security-llm-risk-usage.test.ts",
+      "rule": "credential-literal",
+      "sha256": "10944a91ce98bf75689651ae8c67117f16f14615714fdc9a184063810adb397d",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/support-routes.test.ts",
+      "rule": "credential-literal",
+      "sha256": "0b47b64bbe011cf63c7cfefbfe3c93487bd6da9193c90206775d2076fd1a5c1c",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/support-routes.test.ts",
+      "rule": "credential-literal",
+      "sha256": "83133c5486112f2eed257e7c8bc05695e8dbcfb6cd541fa5b9d5aa988de01091",
+      "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
+    },
+    {
+      "path": "tests/support-routes.test.ts",
+      "rule": "credential-literal",
+      "sha256": "8e6a3f5182d0b6926a1570f9c3d7828aef250d16a82b7b0527380fe7b350d0e7",
       "reason": "Explicit synthetic fixture used with an injected transport, temporary database or negative validation test."
     },
     {
@@ -792,6 +1044,7 @@
     "miniprogram/assets/tab/user.png": "ac3c64bdf7390fb1dc0d7cde00581ab02fe08303b3ecceeac8b8fe2860184adc",
     "miniprogram/assets/xiaoli/hi.png": "7499efb6c85d7bb2d8742feb4d904d5554567e253f597a2246072c22f742868e",
     "miniprogram/assets/xiaoli/hi.webp": "310b737bd8aa595d2e57b8b71b90f996844d07fd39111f76adb72a863b009702",
+    "miniprogram/assets/xiaoli/share.jpg": "ca9ba57d2ee613202f66e4f2006bdb61ff66afc9cefc30e836ec8b47cf5a86f0",
     "miniprogram/pages/map/stars.png": "0e0ed2cf3b40afe5965ede46ed850697bc5111a251635e07fc2a4c6e31384b6a",
     "server/assets/ic-alarm-clock.webp": "9cf28852567bf80d74908fbfaab75e8b400b900e8d34020b4b6b1983de34e54b",
     "server/assets/ic-books.webp": "296a1e7da432702cc1372d35d82a215781e253b06c49a775b1526ed6026d1f28",
@@ -799,7 +1052,9 @@
     "server/assets/ic-camera-with-flash.webp": "b4063163b63599a4b32034e8b892de090a473d9197b0b0d5711c8eb0a3da17ca",
     "server/assets/ic-card-index-dividers.webp": "d277ecccee63d7391445a40ac2702779fccbc9f0b0bbd63a6aad3aa8c12d93d8",
     "server/assets/ic-chart-increasing.webp": "a19a57e03027e293b7ef86368acb3adaac4b860d226e4dc0b7495b49968c3d37",
+    "server/assets/ic-gem-stone.webp": "eb656ccafa25d6f4dbec66ac95c420598d45f0932a17d1653399077fc0215abf",
     "server/assets/ic-glowing-star.webp": "4f08ab0f72bdc8bf723e6fde418a6dc5173a8411f382d0d7a8e6bc667bdf51bc",
+    "server/assets/ic-headphone.webp": "c05fe37fe2ff419152b2dbe49afd60e54ac7e7bb4161f9249ff4488b142706b2",
     "server/assets/ic-inbox-tray.webp": "81a449989969cca994b87396f7bbe1bfa405006822c1501c1d89a06a6b2a131d",
     "server/assets/ic-label.webp": "ee68e80545d047833e2b1415b5259ed689dfd02ecc254519fdea33ffa393444a",
     "server/assets/ic-ledger.webp": "8fe82db8e084c26131e2deb788931da0633ef839c6c0bab8fc038b4cf9cd0ef1",

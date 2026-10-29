@@ -1,5 +1,6 @@
-import { marked, type Token, type Tokens } from "marked";
+import type { Token, Tokens } from "marked";
 import type { FormulaImage, FormulaRenderer } from "./formula.js";
+import { runIsolated } from "../../shared/isolated-worker.js";
 // Rendered content sent to the mini program. Formulas are PNGs served by id
 // (`/api/formula/:id.png`) with sizes in em; `d` marks a display formula.
 // Colour marks the model writes as [[k:…]] (重点), [[w:…]] (方法), [[f:…]] (公式)
@@ -22,6 +23,15 @@ export type Block =
   | { t: "code"; v: string }
   | { t: "hr" }
   | { t: "table"; head: Inline[][]; rows: Inline[][][] };
+// Internal metadata only: response shapes remain unchanged. Cached composites
+// can also contain rendered blocks several levels below their root.
+const degraded = new WeakSet<object>();
+const markDegraded = (blocks: Block[]): Block[] => { degraded.add(blocks); return blocks; };
+export function hasDegradedRender(value: unknown): boolean {
+  if (!value || typeof value !== "object") return false;
+  if (degraded.has(value) || ("t" in value && value.t === "tex")) return true;
+  return Object.values(value).some(hasDegradedRender);
+}
 const OPEN = "",
   CLOSE = "";
 const HOLDER = new RegExp(`${OPEN}(\\d+)${CLOSE}`, "g");
@@ -238,20 +248,32 @@ const CALL_PX = 40_000_000;
 export class MarkdownRenderer {
   constructor(private readonly formulas: FormulaRenderer) {}
   async render(source: string, color: string): Promise<Block[]> {
+    // Model output and stored content also reach this renderer without passing
+    // through /v1/render's request schema.
+    // Never drop a suffix: very large stored answers remain readable in full.
+    // The lexer still runs out of process with its time/heap/tree bounds.
+    if (source.length > 200_000)
+      return markDegraded([
+        { t: "p", c: [{ t: "text", v: "内容较长，以下以原文显示，内容未删减。" }] },
+        { t: "p", c: [{ t: "text", v: source }] },
+      ]);
     const extracted = extractMath(source);
     const found = extracted.found,
       text = markUp(extracted.text);
     const budget = { px: CALL_PX };
-    const images = await Promise.all(
-      found.map((m) =>
-        this.formulas.render(
+    const images: (FormulaImage | null)[] = [];
+    const deadline = Date.now() + 60_000;
+    let limited = false;
+    for (const [index, m] of found.entries()) {
+      const allowed = index < 200 && Date.now() < deadline;
+      if (!allowed) limited = true;
+      images.push(allowed ? await this.formulas.render(
           m.display || !roomy(m.tex) ? m.tex : `\\displaystyle ${m.tex}`,
           m.display,
           color,
           budget,
-        ),
-      ),
-    );
+        ) : null);
+    }
     const math = (index: number, display: boolean): Inline => {
       const image = images[index],
         tex = found[index]?.tex ?? "";
@@ -436,8 +458,18 @@ export class MarkdownRenderer {
         }
       }
     };
-    walk(marked.lexer(text));
-    return blocks;
+    try {
+      walk(await runIsolated<Token[]>("formula", "markdown", text));
+    } catch {
+      // Preserve readable content when the parser budget is exceeded.
+      return markDegraded([
+        { t: "p", c: [{ t: "text", v: "内容排版暂未完成，以下显示完整原文。" }] },
+        { t: "p", c: [{ t: "text", v: source }] },
+      ]);
+    }
+    if (limited)
+      blocks.push({ t: "p", c: [{ t: "text", v: "部分公式较多或排版耗时较长，已保留公式原文。" }] });
+    return limited || images.some((image) => !image) ? markDegraded(blocks) : blocks;
   }
 }
 // Code blocks show formulas and marks as the source the model wrote.

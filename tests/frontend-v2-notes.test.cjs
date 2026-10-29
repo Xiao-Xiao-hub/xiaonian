@@ -36,7 +36,7 @@ function page(overrides = {}) {
     )({ exports: {} });
   const sandbox = {
     require: (n) =>
-      n.endsWith("/chat-entry")
+      n.endsWith("/share") ? { withShare: (page) => page } : n.endsWith("/chat-entry")
         ? shared("utils/chat-entry.js")
         : n.endsWith("/stream")
           ? require(path.join(root, "utils/stream.js"))

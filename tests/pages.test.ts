@@ -2241,6 +2241,7 @@ test("S10 notes: two-stage organize, confirmed drafts, three groups, manual edit
     pointId: "limit-rules",
     pointName: point.data.point.name,
   };
+  appState.globalData.noteOrganize = saved.id;
   const page = open("note", query);
   t.after(() => page.onUnload());
   await until(
@@ -2329,6 +2330,32 @@ test("S10 notes: two-stage organize, confirmed drafts, three groups, manual edit
   assert.equal(store.db.prepare("SELECT COUNT(*) AS n FROM notes").get()?.n, 1);
 });
 
+test("S10 notes: organize=1 from another mini program, without the in-app mark, organizes nothing", async (t) => {
+  const services = fakeServices();
+  const store = new SqliteStore(":memory:");
+  const app = makeApp(services, {}, undefined, store);
+  t.after(() => app.close());
+  mountWx(app);
+  const auth = require(`${ROOT}utils/auth.js`);
+  auth.recordConsent();
+  await auth.login();
+  const wx = (globalThis as any).wx,
+    send = wx.request;
+  let organizes = 0;
+  wx.request = (o: any) => {
+    if (o.method === "POST" && o.url.endsWith("/organize")) organizes++;
+    send(o);
+  };
+  const api = require(`${ROOT}utils/api.js`);
+  const saved = await api.post("/v1/notes", { text: "别人家的链接不能替我整理" });
+  const page = open("note", { id: saved.id, organize: "1" });
+  t.after(() => page.onUnload());
+  await until(() => page.data.note && !page.data.loading, "note shown");
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  assert.equal(organizes, 0);
+  assert.equal(page.data.note.text, "别人家的链接不能替我整理");
+});
+
 test("S10 notes: organize transport failure preserves one saved note and retry uses the same ID", async (t) => {
   const services = fakeServices();
   const store = new SqliteStore(":memory:");
@@ -2350,6 +2377,7 @@ test("S10 notes: organize transport failure preserves one saved note and retry u
   };
   const api = require(`${ROOT}utils/api.js`);
   const saved = await api.post("/v1/notes", { text: "先留下这句原话" });
+  (globalThis as any).getApp().globalData.noteOrganize = saved.id;
   const page = open("note", { id: saved.id, organize: "1" });
   t.after(() => page.onUnload());
   await until(() => page.data.error && !page.data.busy, "organize failed");
@@ -2430,6 +2458,7 @@ test("S10 notes: unknown organizing waits for explicit confirmation before consu
   auth.recordConsent();
   await auth.login();
   const saved = await api.post("/v1/notes", { text: "想理清楚复习顺序" });
+  (globalThis as any).getApp().globalData.noteOrganize = saved.id;
   const page = open("note", { id: saved.id, organize: "1" });
   t.after(() => page.onUnload());
   await until(
@@ -2507,6 +2536,7 @@ test("S10 notes: hidden polling stops, returning reloads, and another identity c
     }
     send(o);
   };
+  (globalThis as any).getApp().globalData.noteOrganize = saved.id;
   page = open("note", { id: saved.id, organize: "1" });
   await until(() => releasePoll, "poll pending");
   page.onHide();
@@ -2829,6 +2859,7 @@ test("S10 notes: expected organize errors are readable while unexpected errors r
   const saved = await api.post("/v1/notes", {
     text: "先存下来，等整理可以用了再试",
   });
+  (globalThis as any).getApp().globalData.noteOrganize = saved.id;
   const page = open("note", { id: saved.id, organize: "1" });
   t.after(() => page.onUnload());
   await until(() => page.data.error && !page.data.busy, "unconfigured model");

@@ -31,9 +31,13 @@ while IFS= read -r file; do
     echo "compile: $file"; head -c 400 "$OUT/log"; echo; failed=1
   fi
 done < <(find pages components -name '*.wxml' | sort)
+styles=()
+while IFS= read -r file; do styles+=("$file"); done < <(find . -name '*.wxss' | sort)
 while IFS= read -r file; do
   wxss=$((wxss + 1))
-  if ! "$WCC_DIR/wcsc" -d -o "$OUT/out.css" "./$file" >"$OUT/log" 2>&1 || [ -s "$OUT/log" ]; then
+  dependencies=()
+  for style in "${styles[@]}"; do [ "$style" = "$file" ] || dependencies+=("$style"); done
+  if ! "$WCC_DIR/wcsc" -d -o "$OUT/out.css" "$file" "${dependencies[@]}" >"$OUT/log" 2>&1 || [ -s "$OUT/log" ]; then
     echo "compile: $file"; head -c 400 "$OUT/log"; echo; failed=1
   fi
 done < <(find . -name '*.wxss' | sort)

@@ -1,3 +1,4 @@
+const { withShare } = require("../../../utils/share");
 /*
  * 头脑风暴历史：列出本人任务及状态，重新打开时回到该任务对应的步骤。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -54,7 +55,7 @@ function rowOf(item) {
 const shown = (item) => item && item.id && !(item.status === "picked" && !item.job);
 const rowsOf = (items) => (items || []).filter(shown).map(rowOf);
 
-Page({
+Page(withShare({
   data: { loading: true, loaded: false, error: "", rows: [] },
   onShow() {
     if (!gate.check()) return;
@@ -102,6 +103,6 @@ Page({
     const url = event.currentTarget.dataset.url;
     if (url) wx.navigateTo({ url });
   },
-});
+}));
 
 module.exports = { rowOf, rowsOf };

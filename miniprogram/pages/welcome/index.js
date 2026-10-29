@@ -1,10 +1,10 @@
+const { withShare } = require("../../utils/share");
 /*
  * 欢迎页：引导初次使用者了解产品并进入既有的同意与设置流程。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
  */
 const auth = require("../../utils/auth");
 const gate = require("../../utils/gate");
-const profile = require("../../utils/profile");
 const { errorText } = require("../../utils/format");
 const { asset } = require("../../utils/assets");
 // The guided tour is shown once per phone (zhiye_onboarded, cleared when the
@@ -17,7 +17,7 @@ const NOTES = "/pages/notes/index";
 const HI = { src: "/assets/xiaoli/hi.png", webp: false };
 // 欢迎 → 同意并继续 → 青少年守护 → 已满14岁 / 监护人同意 → 新手引导 → 随心记.
 // Nothing is recorded and wx.login is not called until an age band is picked.
-Page({
+Page(withShare({
   data: { youth: false, busy: false, age: "", error: "", hi: HI },
   onShow() {
     if (gate.state() === "ok" && !this.data.busy) wx.reLaunch({ url: NOTES });
@@ -55,15 +55,6 @@ Page({
         // anyone who has not seen the tour on this phone sees it, also
         // after agreeing again to new documents (随心记 checks the same flag).
         const tour = wx.getStorageSync(ONBOARDED) !== "1";
-        const user = auth.getUser();
-        if (user && !profile.displayName(user) && !user.avatar && !profile.prompted(user.id)) {
-          getApp().globalData.profileSetup = {
-            owner: user.id,
-            next: tour ? "/pages/onboard/index" : NOTES,
-          };
-          wx.switchTab({ url: "/pages/profile/index" });
-          return;
-        }
         wx.reLaunch({ url: tour ? "/pages/onboard/index" : NOTES });
       })
       .catch((error) => {
@@ -81,4 +72,4 @@ Page({
   refuse() {
     this.guest();
   },
-});
+}));

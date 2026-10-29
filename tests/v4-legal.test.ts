@@ -36,7 +36,7 @@ test("server/legal is self-contained and matches the current privacy version", (
   for (const doc of LEGAL_DOCS) {
     const served = readFileSync(`${LEGAL_DIR}${doc}.md`, "utf8");
     assert.ok(served.includes(`版本：${PRIVACY_VERSION}`), doc);
-    assert.match(served, /版本：2026-10-20\.2　更新日期：2026-10-20　生效日期：2026-10-20/);
+    assert.match(served, /版本：2026-10-25\.1　更新日期：2026-10-25　生效日期：2026-10-25/);
   }
 });
 
@@ -131,4 +131,23 @@ test("AI processing disclosure states operator facts or requires deployment-spec
     const copy = readFileSync(`${LEGAL_DIR}${doc}.md`, "utf8");
     assert.doesNotMatch(copy, /所有信息都存储在中国境内|我们不会向境外提供|全部在中国境内处理|我们每年[^。\n]*合规审计/);
   }
+});
+
+test("the agreement states D138's single-plan rules", () => {
+  const text = readFileSync(`${LEGAL_DIR}user-agreement.md`, "utf8");
+  assert.match(text, /9\.5 \*\*套餐的续费、升级和更换。\*\*/);
+  assert.match(text, /同一时间只有一个套餐生效/);
+  assert.match(text, /从当前套餐到期时起接着生效 30 天，额度不叠加/);
+  assert.match(text, /只需补差价，到期时间不变/);
+  assert.match(text, /升级目前只支持在安卓手机上进行/);
+  assert.match(text, /不足 24 小时/);
+  assert.match(text, /补差价超过新套餐价格/);
+  assert.match(text, /更换为更低的套餐：须等当前套餐（包括已购买、尚未开始的）全部到期后才能购买/);
+  assert.match(text, /已购买多份套餐的，从最后购买的一份开始逐份退/);
+  assert.match(text, /“我的 › 充值”/);
+  assert.doesNotMatch(text, /自购买时起有效 30 天|我的 › 额度”进入|苹果设备暂不支持升级|多份同一套餐/);
+  assert.deepEqual(
+    [...text.matchAll(/^9\.(\d+) /gm)].map((m) => Number(m[1])),
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+  );
 });

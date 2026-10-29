@@ -36,7 +36,7 @@ function collect(intent, overrides = {}) {
   };
   const sandbox = {
     require: (n) =>
-      n.endsWith("/api")
+      n.endsWith("/share") ? { withShare: (page) => page } : n.endsWith("/api")
         ? api
         : n.endsWith("/auth")
           ? { getUser: () => ({ id: "u" }), hasConsent: () => true }
@@ -161,7 +161,7 @@ test("the card page sets 每天 / 每周; the same choice is a no-op; 关掉 sen
   const api = { patch: async (url, body) => sent.push([url, body]) };
   vm.runInNewContext(read("pages/card/index.js"), {
     require: (n) =>
-      n.endsWith("/api") ? api : n.endsWith("/study-clock") ? { track: (x) => x } : n.endsWith("/cards") ? cards : n.endsWith("/examples") ? { cards: [] } : {},
+      n.endsWith("/share") ? { withShare: (page) => page } : n.endsWith("/api") ? api : n.endsWith("/study-clock") ? { track: (x) => x } : n.endsWith("/cards") ? cards : n.endsWith("/examples") ? { cards: [] } : {},
     Page: (x) => (def = x),
     getApp: () => ({ globalData: {} }),
     wx: { showToast: (x) => toasts.push(x.title) },

@@ -4,9 +4,13 @@
  * 新增接口时同步维护 API 文档，并在 tests 中验证正常流程与权限、版本冲突等边界。
  */
 import type { FastifyInstance } from "fastify";
+import { finishUpload } from "../../shared/upload-admission.js";
+import type { ServerResponse } from "node:http";
 import { z, ZodError } from "zod";
 import { AppError } from "../../shared/domain.js";
 import { safeError } from "../../shared/logging.js";
+import { rejectionEvent } from "../../shared/request-safety.js";
+import { onResponseEnd } from "../../shared/response-lifecycle.js";
 import type { AuthService } from "../auth/service.js";
 import { CARD_FOLLOWS } from "../cards/types.js";
 import { IMAGE_LIMIT } from "../materials/service.js";
@@ -52,6 +56,16 @@ export const ascii = (value: unknown) =>
   );
 export const sseFrame = (event: ChatEvent | string) =>
   `data: ${typeof event === "string" ? event : ascii(event)}\n\n`;
+export function writeSse(raw: Pick<ServerResponse, "writableLength" | "write" | "destroy">, frame: string) {
+  // Stop retaining output for a client that has stopped reading. The answer
+  // continues in its bounded provider slot and can be reopened from history.
+  if (raw.writableLength + Buffer.byteLength(frame) > 262144) {
+    raw.destroy();
+    return false;
+  }
+  raw.write(frame);
+  return true;
+}
 const failure = (error: unknown) => {
   if (error instanceof AppError)
     return {
@@ -76,6 +90,8 @@ export function registerChatRoutes(
   deps: { auth: AuthService; chat: ChatService },
 ) {
   const { auth, chat } = deps;
+  const streams = new Map<string, number>();
+  let streamCount = 0;
   const ink = (tone: "light" | "dark") => INK[tone];
   // Server-sent events over a POST; the answer keeps going (and is saved) even if
   // the phone drops the connection, so reopening the thread shows it.
@@ -85,15 +101,43 @@ export function registerChatRoutes(
     async (req, reply) => {
       const user = auth.require(req);
       const body = sendBody.parse(req.body);
+      if (streamCount >= 64 || (streams.get(user.id) ?? 0) >= 2)
+        throw new AppError(429, "STREAM_BUSY", "当前对话较多，请稍后再试");
+      streamCount++;
+      streams.set(user.id, (streams.get(user.id) ?? 0) + 1);
       reply.hijack();
       const raw = reply.raw;
       let started = false,
         open = true;
-      raw.on("close", () => {
+      let released = false;
+      let idle: NodeJS.Timeout | undefined, lifetime: NodeJS.Timeout | undefined;
+      const release = () => {
+        if (released) return;
+        released = true;
         open = false;
-      });
+        clearTimeout(idle);
+        clearTimeout(lifetime);
+        streamCount--;
+        const remaining = (streams.get(user.id) ?? 1) - 1;
+        if (remaining) streams.set(user.id, remaining);
+        else streams.delete(user.id);
+      };
+      const finish = onResponseEnd(raw, release);
+      // A dead connection must not start a new generation. Already running
+      // answers retain their provider/billing bounds and are saved to history.
+      if (!open) return;
+      const closeSlow = () => {
+        finish();
+        raw.destroy();
+        req.log.warn({ event: "stream_timeout", route: "/v1/chat/send" }, "stream closed");
+      };
+      idle = setTimeout(closeSlow, 180_000);
+      lifetime = setTimeout(closeSlow, 1_800_000);
+      idle.unref();
+      lifetime.unref();
       const emit = (event: ChatEvent) => {
         if (!open) return;
+        idle?.refresh();
         if (!started) {
           started = true;
           raw.writeHead(200, {
@@ -103,12 +147,23 @@ export function registerChatRoutes(
             "x-request-id": req.id,
           });
         }
-        raw.write(sseFrame(event));
+        if (!writeSse(raw, sseFrame(event))) finish();
       };
       try {
         await chat.send(user.id, { ...body, tone: ink(body.tone) }, emit);
+        chat.finishSendBilling(true);
       } catch (error) {
+        try {
+          chat.finishSendBilling(false);
+        } catch (billingError) {
+          req.log.error(
+            { ...safeError(billingError), requestId: req.id },
+            "chat billing release failed",
+          );
+        }
         const f = failure(error);
+        const event = rejectionEvent(f.status, f.code, "/v1/chat/send");
+        if (event) req.log.warn({ event, code: f.code, route: "/v1/chat/send", status: f.status }, "chat request rejected");
         if (f.status >= 500)
           req.log.error(
             { ...safeError(error), requestId: req.id },
@@ -127,8 +182,11 @@ export function registerChatRoutes(
           return;
         }
         emit({ e: "error", code: f.code, message: f.message });
+      } finally {
+        try {
+          if (open && !raw.writableEnded) raw.end(sseFrame("[DONE]"));
+        } finally { finish(); }
       }
-      if (open) raw.end(sseFrame("[DONE]"));
     },
   );
   app.get("/v1/chat/threads", async (req) => {
@@ -394,6 +452,8 @@ export function registerChatRoutes(
         if (code === "FST_INVALID_MULTIPART_CONTENT_TYPE")
           throw new AppError(400, "IMAGE_REQUIRED", "选一张照片");
         throw error;
+      } finally {
+        finishUpload(req);
       }
       return { data: await chat.scan(user.id, data, ink(tone), purpose) };
     },
@@ -435,6 +495,8 @@ export function registerChatRoutes(
         if (code === "FST_INVALID_MULTIPART_CONTENT_TYPE")
           throw new AppError(400, "FILE_REQUIRED", "选一个文件吧");
         throw error;
+      } finally {
+        finishUpload(req);
       }
       return {
         data: await chat.attach(user.id, {

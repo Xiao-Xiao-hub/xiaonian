@@ -27,7 +27,7 @@
         <view class="chev" />
       </view>
       <view wx:else class="item" hover-class="pressed" bindtap="deleteAccount">
-        <view class="copy"><text class="title">注销账号</text><text class="snippet">删除全部数据，找不回来</text></view>
+        <view class="copy"><text class="title">注销账号</text><text class="snippet">内容和记录都会删掉，找不回来</text></view>
         <view class="chev" />
       </view>
     </view>

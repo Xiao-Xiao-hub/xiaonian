@@ -410,13 +410,20 @@ test("整页: while a page is graded, another tool is told which task holds it",
       return "**结论**：过程正确";
     }, "**结论**：过程正确");
     const scan = (await t.upload("?purpose=grade")).json().data;
-    await t.call("POST", "/v1/chat/homework", { imageId: scan.imageId, tone: "light" });
+    const homework = (await t.call("POST", "/v1/chat/homework", { imageId: scan.imageId, tone: "light" })).json().data;
     await tick();
     const busy = await t.call("POST", "/v1/chat/drafts", draftBody());
     assert.equal(busy.statusCode, 409);
     assert.equal(busy.json().code, "STILL_ANSWERING");
     assert.match(busy.json().message, /作业还在批改/);
     hold.open();
+    for (let i = 0; i < 100; i++) {
+      const view = (await t.call("GET", `/v1/chat/threads/${homework.id}?tone=light`)).json().data.thread;
+      if (!view.homework.counts.grading) break;
+      await tick();
+    }
+    const settled = (await t.call("GET", `/v1/chat/threads/${homework.id}?tone=light`)).json().data.thread;
+    assert.equal(settled.homework.counts.grading, 0);
   } finally {
     await t.app.close();
   }

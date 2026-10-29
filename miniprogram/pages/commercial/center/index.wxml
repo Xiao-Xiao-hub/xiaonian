@@ -1,0 +1,33 @@
+<view class="page commercial">
+  <view class="hero">
+    <view class="hero-copy"><text class="eyebrow">晓念 · 额度中心</text><text class="hero-title">给好想法，<text class="blue">多一点空间</text></text><text class="hero-note">整理随心记 · 学习问答 · 资料拆分</text></view>
+    <image wx:if="{{hi.src && !hiBroken}}" class="hi" src="{{hi.src}}" webp="{{hi.webp}}" mode="aspectFit" binderror="hiError" />
+  </view>
+  <view wx:if="{{loading}}" class="working">正在加载额度…</view>
+  <view wx:if="{{error}}" class="error-box"><text>{{error}}</text><button class="text-button" bindtap="load">重新加载</button></view>
+  <block wx:if="{{!loading && account}}">
+    <view class="quota-strip"><view><text class="quota-label">今日免费剩余</text><text class="quota-value">{{account.free.day.remaining}}<text class="unit">%</text></text></view><view class="quota-week"><text class="quota-label">本周剩余 {{account.free.week.remaining}}%</text><view class="track"><view style="width:{{account.free.week.remaining}}%" /></view></view></view>
+    <view wx:if="{{account.legacy}}" class="availability">购买功能准备中，当前学习功能仍可正常使用。</view>
+    <block wx:else>
+    <view wx:if="{{account.card}}" class="active-plan"><view class="active-heading"><text>{{account.card.name}}</text><text wx:if="{{account.card.hasQuota}}">本周剩余 {{account.card.weekRemaining}}%</text></view><view wx:if="{{account.card.hasQuota}}" class="track"><view style="width:{{account.card.weekRemaining}}%" /></view><text class="detail">{{account.card.detail}}</text><text wx:if="{{account.card.resetLabel}}" class="detail">{{account.card.resetLabel}}恢复周额度</text></view>
+    <view class="tabs" role="tablist"><view class="tab {{tab === 'plan' ? 'on' : ''}}" data-tab="plan" bindtap="setTab">30天套餐</view><view class="tab {{tab === 'points' ? 'on' : ''}}" data-tab="points" bindtap="setTab">积分充值</view></view>
+    <view class="section-heading"><text>{{tab === 'plan' ? '选一份适合你的额度' : '按需补充，用多少扣多少'}}</text><text class="section-note">{{tab === 'plan' ? '每7天恢复' : '积分长期有效'}}</text></view>
+    <view wx:if="{{tab === 'points'}}" class="wallet"><view><text class="wallet-label">我的积分</text><text class="wallet-number">{{account.wallet.balance}}</text></view><button wx:if="{{account.wallet.consentRequired && account.wallet.balance > 0}}" class="wallet-consent" bindtap="consentWallet">同意使用积分</button><text wx:else class="wallet-note">免费和套餐额度用完后使用</text></view>
+    <view class="goods">
+      <block wx:for="{{catalog}}" wx:key="id">
+        <view wx:if="{{item.kind === tab}}" class="good {{selected === item.id ? 'selected' : ''}} {{item.blocked ? 'blocked' : ''}}" data-id="{{item.id}}" bindtap="select" role="button" aria-disabled="{{item.blocked}}" aria-label="{{item.name}} {{item.actionLabel || item.price}}">
+          <view class="good-top"><view><text class="good-name">{{item.name}}</text><text class="good-description {{item.actionLabel ? 'good-action' : ''}}">{{item.actionLabel || (item.kind === 'plan' ? item.description : '无需购买套餐，随用随扣')}}</text></view><view class="good-price"><text>{{item.price}}</text><text class="price-period">{{item.kind === 'plan' ? (item.action === 'upgrade' ? '补差价' : '/ 30天') : '一次充值'}}</text></view></view>
+          <view class="good-bottom"><view><text class="benefit" wx:if="{{item.kind === 'plan' && item.benefit}}">约 {{item.benefit}} 倍<text class="benefit-note">免费版周额度</text></text><text class="benefit" wx:elif="{{item.kind === 'points' && item.credits}}">{{item.credits}}<text class="benefit-note">积分到账</text></text><text wx:else class="benefit-note">额度待开放</text><text wx:if="{{item.previousMultiplier}}" class="comparison">约为上一档的 {{item.previousMultiplier}} 倍</text></view><view wx:if="{{!item.blocked}}" class="selection">{{selected === item.id ? '✓' : ''}}</view></view>
+        </view>
+      </block>
+    </view>
+    <text class="platform-note">{{platform === 'ios' ? '当前为苹果设备，已显示苹果到账额度。' : '当前已显示安卓到账额度。'}}</text>
+    <view class="more-rows"><view class="more-row" bindtap="toggleRules"><text>购买与退款说明</text><text>{{rulesOpen ? '收起 −' : '展开 ＋'}}</text></view>
+      <view wx:if="{{rulesOpen}}" class="rules"><text>套餐有效30天，每7天恢复周额度，未用额度不累计；最后2天仍受套餐总额度限制。积分长期有效。</text><text>同一时间只有一个套餐：同档续费顺延到期日；升级按剩余天数补差价，到期日不变（仅安卓）；换低档需等当前套餐到期。</text><text>使用顺序：免费额度、套餐额度、积分。首次使用积分需单独同意。</text><text>安卓：购买后7天内、全部权益未使用可申请全额退款；已使用不退；套餐只能退最后购买的一期，升级相关订单请联系客服。苹果：按 Apple 规则申请，开发者不能主动退款。</text><text>未满14岁不可购买；14至17岁需监护人同意。一次购买，不自动续费。</text></view>
+      <view class="more-row" bindtap="openOrders"><text>订单与退款进度</text><text>查看 ›</text></view>
+    </view>
+    </block>
+  </block>
+  <view class="more-rows"><view class="more-row" bindtap="openSupport"><text>额度遇到问题</text><text>帮助与客服 ›</text></view></view>
+</view>
+<view wx:if="{{account && !account.legacy}}" class="bottom"><button class="btn" disabled="{{loading || !account || !selectedItem || !selectedItem.purchasable || buying}}" bindtap="buy">{{buying ? '正在发起…' : selectedItem && selectedItem.purchasable ? selectedItem.buyLabel + ' ' + selectedItem.price : '暂未开放购买'}}</button><text class="bottom-hint">{{selectedItem ? selectedItem.buyHint : (tab === 'plan' ? '有效期30天 · ' : '') + '一次购买，不自动续费'}}</text></view>

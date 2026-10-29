@@ -6,7 +6,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import type { AuthService } from "../auth/service.js";
-import type { Block, MarkdownRenderer } from "../render/markdown.js";
+import { hasDegradedRender, type Block, type MarkdownRenderer } from "../render/markdown.js";
 import { INK, toneSchema } from "../render/routes.js";
 import { MAX_INPUT } from "./judge.js";
 import { MAX_PARTS, MAX_TOTAL_INPUT } from "./answers.js";
@@ -71,9 +71,10 @@ export function registerLearnRoutes(
         return { formulaBlocks, keyBlocks };
       })();
       const entry = { at: Date.now(), blocks: found };
-      found.catch(() => {
+      const discard = () => {
         if (cardCache.get(cacheKey) === entry) cardCache.delete(cacheKey);
-      });
+      };
+      void found.then((blocks) => { if (hasDegradedRender(blocks)) discard(); }, discard);
       cardCache.set(cacheKey, entry);
     }
     return found;
@@ -124,9 +125,10 @@ export function registerLearnRoutes(
     if (hit && Date.now() - hit.at < cardTtlMs) return hit.value as Promise<T>;
     const value = make();
     const entry = { at: Date.now(), value };
-    value.catch(() => {
+    const discard = () => {
       if (blockCache.get(key) === entry) blockCache.delete(key);
-    });
+    };
+    void value.then((blocks) => { if (hasDegradedRender(blocks)) discard(); }, discard);
     blockCache.set(key, entry);
     return value;
   };

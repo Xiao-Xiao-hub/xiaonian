@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 解题页面：先确认题面与卡点，再发送、接收流式回答、作答或保存卡片；批改和讲一遍有独立页面。
  * 页面中的请求标识、账号快照和 alive 状态用于拦截过期回包；不能仅因离开页面就删除另一份新草稿。
@@ -439,7 +440,7 @@ function tipSeen() {
   }
 }
 
-Page(studyClock.track({
+Page(withShare(studyClock.track({
   data: {
     // 游客模式（utils/gate.js）：只有空页面，不发送任何内容。
     guest: false,
@@ -1126,6 +1127,8 @@ Page(studyClock.track({
     const draft = this.data.draft.trim();
     if (draft) tools.keep("teach", { threadId: thread.id, pointId: thread.pointId || "", name: thread.title || "讲一遍", draft });
     if (draft) this.setData({ draft: "" });
+    // Only this tap may start the check: a link from outside cannot set it.
+    getApp().globalData.teachFinish = thread.id;
     wx.navigateTo({ url: `/${tools.ROUTE.teach}?id=${encodeURIComponent(thread.id)}&finish=1` });
   },
   // ── 回复后的继续操作 ──
@@ -2154,4 +2157,4 @@ Page(studyClock.track({
     });
   },
   noop() {},
-}));
+})));

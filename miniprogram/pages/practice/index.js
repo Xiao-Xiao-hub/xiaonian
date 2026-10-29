@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 作答页：提交自测、题目或同类题答案，等待判定并展示反馈；重试沿用原提交标识。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -44,7 +45,7 @@ function keep(key, value) {
 function newKey() {
   return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
 }
-Page(studyClock.track({
+Page(withShare(studyClock.track({
   ...reviewMethods,
   data: {
     id: "",
@@ -501,4 +502,4 @@ Page(studyClock.track({
   toVariant() {
     wx.redirectTo({ url: `/pages/practice/index?id=${this.data.id}&mode=variant` });
   },
-}));
+})));

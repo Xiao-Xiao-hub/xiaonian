@@ -30,6 +30,7 @@ const pages = {
   ],
   users: ["用户管理", "USERS", "查找账号、停用或恢复，单独调整每日额度。"],
   jobs: ["任务总览", "JOBS", "关注任务是否完成，服务原因失败的任务可以重试。"],
+  commercial: ["商业与工单", "COMMERCIAL", "查看本库商业记录、待处理退款和用户提交的工单。"],
   ai: [
     "AI 接口",
     "MODELS",
@@ -153,6 +154,7 @@ const SCENARIOS = {
   recheck: ["批改与复核", "判定作答对错、复核答案，建议开高"],
   study: ["讲解与出题", "资料讲解、自测题、分级提示、同类题"],
   judge: ["判断", "卡片种类、场景、安全检查等原来交给 Jev 的判断"],
+  support: ["智能客服生成", "必须单独选择接口；留空时关闭客服大模型生成"],
 };
 const FORMATS = {
   none: "不传思考参数",
@@ -508,6 +510,19 @@ async function loadPage() {
           : null,
       ]),
     jobs: () => api("/v1/admin/jobs"),
+    commercial: () =>
+      Promise.all([
+        api("/v1/admin/commercial/settings"),
+        api("/v1/admin/commercial/overview"),
+        api("/v1/admin/commercial/orders?limit=50"),
+        api("/v1/admin/commercial/costs?limit=50"),
+        api("/v1/admin/commercial/pending?limit=50"),
+        api("/v1/admin/commercial/refunds?limit=50"),
+        api("/v1/admin/support/tickets?limit=50"),
+        api("/v1/admin/support/policy"),
+        api("/v1/admin/support/stats"),
+        api("/v1/admin/commercial/anomalies?limit=50"),
+      ]),
     ai: () => api("/v1/admin/ai"),
     settings: () => api("/v1/admin/settings"),
     bank: () => api("/v1/admin/bank"),
@@ -530,6 +545,19 @@ async function loadPage() {
     if (view === "feedback") renderFeedback(result.data);
     if (view === "users") renderUsers(result[0].data, result[1]?.data);
     if (view === "jobs") renderJobs(result.data);
+    if (view === "commercial")
+      renderCommercial(
+        result[0].data,
+        result[1].data,
+        dataList(result[2]),
+        dataList(result[3]),
+        result[4].data,
+        dataList(result[5]),
+        dataList(result[6]),
+        result[7].data,
+        result[8].data,
+        dataList(result[9]),
+      );
     if (view === "ai") renderAi(result.data);
     if (view === "settings") renderSettings(result.data);
     if (view === "bank") renderBank(result.data);
@@ -730,9 +758,17 @@ async function act(trigger, task, success) {
     if (trigger) trigger.disabled = false;
   }
 }
-// 删除等操作需要再次点击确认，不依赖浏览器原生弹窗。
+// 删除等操作需要再次点击确认，不依赖浏览器原生弹窗。4 秒内没点第二下或焦点移开就复位，
+// 免得过一会儿误点一下就直接执行。
 function confirmButton(label, onConfirm, className = "button small danger") {
   let armed = false;
+  let timer;
+  const disarm = () => {
+    armed = false;
+    clearTimeout(timer);
+    element.textContent = label;
+    element.classList.toggle("armed", false);
+  };
   const element = button(
     label,
     () => {
@@ -740,14 +776,17 @@ function confirmButton(label, onConfirm, className = "button small danger") {
         armed = true;
         element.textContent = `再点一次确认${label}`;
         element.classList.add("armed");
+        timer = setTimeout(disarm, 4000);
         return;
       }
-      armed = false;
-      element.textContent = label;
+      disarm();
       void onConfirm(element);
     },
     className,
   );
+  element.addEventListener("blur", () => {
+    if (armed) disarm();
+  });
   return element;
 }
 function shortTime(value) {
@@ -842,6 +881,384 @@ function trendPanel(rows, title = "近 7 日调用趋势") {
   return section.wrapper;
 }
 // ── 业务页面渲染 ──
+const money = (cents) => `¥${(Number(cents || 0) / 100).toFixed(2)}`;
+const timeMs = (value) =>
+  Number.isFinite(Number(value)) ? dateTime(new Date(Number(value)).toISOString()) : "—";
+const commercialStatus = (status) =>
+  ({ created: "待支付", paid: "已支付", delivered: "已到账", refunding: "退款处理中", refunded: "已退款", closed: "已关闭", open: "待处理", replied: "已回复", pending: "待处理", failed: "失败" })[status] || String(status || "未知");
+const ANOMALY_SOURCES = { callback: "支付推送", payment: "支付确认", background: "自动查单", manual: "人工处理", refund_sync: "退款同步", query_order: "查单" };
+const ANOMALY_PHASES = { query_order: "查单", deliver: "发放额度", notify_provide_goods: "通知发货", refund_query: "查退款", refund_callback: "退款推送" };
+const ANOMALY_CODES = {
+  NOTIFY_PROVIDE_GOODS_FAILED: "已发货，但通知微信发货失败",
+  REFUND_RETRY_STATUS_7_STALE: "重试退款后微信仍显示退款失败，额度已冻结待人工查单",
+  WECHAT_RESPONSE_INVALID: "微信返回内容无法识别",
+  WECHAT_QUERY_FAILED: "微信查单失败",
+  PAYMENT_PENDING: "收到推送，但订单尚未确认支付",
+  CALLBACK_INVALID: "支付推送内容无效",
+  CALLBACK_FAILED: "支付推送处理失败",
+  DELIVERY_CALLBACK_FAILED: "发货推送处理失败",
+  STATUS_7: "微信显示退款失败",
+  REFUND_CALLBACK_INVALID: "退款推送内容无效",
+  REFUND_CALLBACK_UNMATCHED: "退款推送找不到对应退款单",
+  REFUND_CALLBACK_ID_MISMATCH: "退款推送的单号对不上",
+  REFUND_CALLBACK_AFTER_LOCAL_FAILURE: "本地已按退款失败处理，之后又收到退款成功推送",
+  REFUND_CALLBACK_DETAILS_MISMATCH: "退款推送的金额或订单信息对不上",
+  PAYMENT_MISMATCH: "微信订单信息与本地订单对不上",
+  PAYMENT_CONFLICT: "支付结果与本地订单状态冲突",
+  ORDER_NOT_FOUND: "找不到对应订单",
+  PLAN_UPGRADE_PARTIAL: "升级已付款，但部分套餐在付款前已变化，没有全部换成新档；一段都没换成的可在订单里直接退款，其余请人工退差价",
+  PAYMENT_AMOUNT_MISMATCH: "微信付款金额与订单不一致，未发放额度",
+  ORDER_ACCOUNT_ERASED: "账号注销后收到付款确认；订单仍是“已支付”的没有发放额度，请核实后退款",
+};
+const orderStatus = (order) => order.accountErased ? `${commercialStatus(order.status)}（账号已注销）` : commercialStatus(order.status);
+const commercialAnomaly = (row) => {
+  const code = String(row.code || "");
+  const label = row.phase === "notify_provide_goods" ? ANOMALY_CODES.NOTIFY_PROVIDE_GOODS_FAILED
+    : ANOMALY_CODES[code] || (code.startsWith("WECHAT_API_") ? "微信接口返回错误" : "其他异常");
+  const where = [ANOMALY_SOURCES[row.source], ANOMALY_PHASES[row.phase]].filter(Boolean).join(" · ");
+  const value = node("span", where ? `${where}：${label}` : label, "cell-title");
+  if (code) value.append(node("span", code, "cell-detail mono"));
+  const segments = row.upgradeSegments;
+  if (segments) value.append(node("span",
+    `已换成新档 ${segments.converted.length} 段${segments.converted.length ? `（${segments.converted.join("、")}）` : ""}；未换成 ${segments.unconverted.length} 段${segments.unconverted.length ? `（${segments.unconverted.join("、")}）` : ""}`,
+    "cell-detail"));
+  return value;
+};
+const commercialGood = (order) => {
+  const value = node("span", order.goodName || order.goodId, "cell-title");
+  if (order.planAction === "upgrade") value.append(" ", badge("", "升级"));
+  if (order.supersededBy) value.append(" ", badge("unknown", "已被升级取代"));
+  value.append(node("span", order.goodId, "cell-detail mono"));
+  return value;
+};
+
+function commercialInteger(input, label, positive = false) {
+  const value = input.value.trim();
+  if (!/^(?:0|[1-9]\d*)$/.test(value))
+    throw new Error(`${label}必须是${positive ? "正" : "非负"}整数。`);
+  const numberValue = Number(value);
+  if (!Number.isSafeInteger(numberValue) || (positive && numberValue === 0))
+    throw new Error(`${label}超出允许范围。`);
+  return numberValue;
+}
+
+function renderCommercial(settings, overview, orders, costs, pending, refunds, tickets, supportPolicyView, supportStats, anomalies) {
+  const configuration = overview.configuration || {};
+  const stats = node("div", null, "stats-grid");
+  stats.append(
+    stat("本库记录净额", money(overview.orders?.recordedNetCents), "不是微信结算到账", true),
+    stat("已到账订单", number(overview.orders?.byStatus?.delivered || 0), `订单共 ${number(overview.orders?.total || 0)} 笔`),
+    stat("待补偿退款", number(overview.refunds?.pendingCompensation || 0), "人工核对后处理"),
+    stat("待完成计量", number(overview.usage?.pendingRecords || 0), `未知成本 ${number(overview.usage?.unknownFinishedCostRecords || 0)} 条`),
+  );
+  content.append(stats);
+  const setup = panel("商业状态", "金额、退款与成本只表示本库记录，不代表真实生产结算。");
+  setup.wrapper.append(
+    detailList([
+      ["目录", configuration.catalogApproved ? "已批准" : "未批准"],
+      ["支付", configuration.paymentConfigured ? "已配置" : "未配置"],
+      ["回调", configuration.callbackConfigured ? "已配置" : "未配置"],
+      ["支付异常记录", `未处理 ${number(overview.alerts?.unresolvedPaymentAnomalies || 0)} 条，累计 ${number(overview.alerts?.paymentAnomalies || 0)} 条`],
+      ["今日调用风险额", `${yuan((overview.costSafety?.riskMicroyuan || 0) / 1_000_000)} / 上限 ${yuan((overview.costSafety?.dailyCapMicroyuan || 0) / 1_000_000)}（含在途估计，超过后免费用户暂停 AI 到次日）`],
+      ["当前状态", configuration.enabled ? "可用" : `缺少：${(configuration.missing || []).map(key => ({ billingSwitch: "收费开关", catalog: "商品目录", payment: "支付通道", callback: "消息推送", accessToken: "微信接口凭据" })[key] || key).join("、") || "配置"}`],
+    ]),
+  );
+  content.append(setup.wrapper);
+
+  const anomalyPanel = panel("支付异常", "核对并处理实际问题后再标记；此操作仅记录处理结果，不修改订单或额度。");
+  anomalyPanel.wrapper.append(table(["订单", "异常", "时间", "处理"], (anomalies || []).map(row => {
+    if (row.resolvedAt) return [row.orderId, commercialAnomaly(row), shortTime(row.createdAt), `已处理：${row.resolutionReason}`];
+    const reason = control("input", { placeholder: "处理结果（必填）", label: "异常处理结果" });
+    const done = confirmButton("标记已处理", async trigger => {
+      if (!reason.value.trim()) return notice("请填写核对结果和处理措施。", "error");
+      await act(trigger, () => send(`/v1/admin/commercial/anomalies/${encodeURIComponent(row.id)}/resolve`, "POST", { reason: reason.value.trim() }), "异常已标记处理，原始记录仍保留。");
+    }, "button small");
+    const action = node("div", null, "stacked-inputs"); action.append(reason, done);
+    return [row.orderId, commercialAnomaly(row), shortTime(row.createdAt), action];
+  }), "暂无支付异常", "查单、发货或退款出现异常时会显示在这里。"));
+  content.append(anomalyPanel.wrapper);
+
+  const supportPolicy = supportPolicyView.policy || {};
+  const supportPanel = panel(
+    "客服策略与今日统计",
+    "条数限制和判断阈值保存后立即生效。成本数是远端调用的保守预留上限，不是实际成本。",
+  );
+  const perMinute = control("input", { type: "number", min: 1, max: 60, value: supportPolicy.perMinute, label: "每人每分钟消息数" });
+  const perDay = control("input", { type: "number", min: 1, max: 1000, value: supportPolicy.perDay, label: "每人每日消息数" });
+  const dailyCost = control("input", { type: "number", min: 0, value: supportPolicy.dailyCapMicroyuan, label: "全站每日成本上限" });
+  const rejectBelow = control("input", { type: "number", min: 0, max: 1, value: supportPolicy.rejectBelow, label: "直接拒绝阈值" });
+  const generateAt = control("input", { type: "number", min: 0, max: 1, value: supportPolicy.generateAt, label: "继续处理阈值" });
+  const injectionAt = control("input", { type: "number", min: 0, max: 1, value: supportPolicy.injectionAt ?? 0.3, label: "提示注入拒绝阈值" });
+  injectionAt.step = "0.01";
+  rejectBelow.step = "0.01";
+  generateAt.step = "0.01";
+  const supportReason = control("input", { placeholder: "修改原因（必填）", label: "修改原因" });
+  const supportFields = node("div", null, "form-grid");
+  supportFields.append(
+    field("每人每分钟", perMinute),
+    field("每人每日", perDay),
+    field("全站每日成本上限（微元）", dailyCost, "默认 0 表示不允许发起远端客服调用。"),
+    field("直接拒绝阈值", rejectBelow, "低于此值直接拒绝。"),
+    field("继续处理阈值", generateAt, "达到此值才进入知识库或生成层。"),
+    field("提示注入拒绝阈值", injectionAt, "达到此值直接拒绝，不进入生成层。"),
+  );
+  const saveSupport = confirmButton("保存客服策略", async (trigger) => {
+    const reason = supportReason.value.trim();
+    if (!reason) return notice("请填写修改原因。", "error");
+    let policy;
+    try {
+      const lower = Number(rejectBelow.value);
+      const upper = Number(generateAt.value);
+      const injection = Number(injectionAt.value);
+      if (!injectionAt.value.trim() || !Number.isFinite(injection) || injection < 0 || injection > 1) throw new Error("注入阈值须在0到1之间。");
+      if (!Number.isFinite(lower) || !Number.isFinite(upper) || lower < 0 || upper > 1 || lower >= upper)
+        throw new Error("判断阈值须满足 0 ≤ 直接拒绝阈值 < 继续处理阈值 ≤ 1。");
+      policy = {
+        perMinute: commercialInteger(perMinute, "每分钟消息数", true),
+        perDay: commercialInteger(perDay, "每日消息数", true),
+        dailyCapMicroyuan: commercialInteger(dailyCost, "每日成本上限"),
+        rejectBelow: lower,
+        generateAt: upper,
+        injectionAt: injection,
+      };
+      if (policy.perMinute > policy.perDay) throw new Error("每分钟消息数不能高于每日消息数。");
+    } catch (error) {
+      return notice(errorText(error), "error");
+    }
+    await act(trigger, () => send("/v1/admin/support/policy", "PUT", { policy, reason }), "客服策略已保存，下一条消息立即读取新值。");
+  }, "button small primary");
+  const layerNames = {
+    account: "本人账户模板", answer: "知识库答案", clarify: "需点选澄清", crisis: "危机固定响应",
+    fallback: "固定兜底", generate: "客服生成", injection: "提示注入拒绝", limit: "条数限制",
+    reject: "无关拒绝", unknown: "处理中或未知",
+  };
+  const layerRows = Object.entries(supportStats.requests?.byLayer || {})
+    .map(([layer, count]) => [layerNames[layer] || layer, number(count)]);
+  const pricingNames = {
+    not_configured: "未配置通道", unpriced: "未定价，不会调用",
+    priced: Number(supportPolicy.dailyCapMicroyuan) > 0 ? "已定价" : "已定价（每日成本上限为 0，暂不调用）",
+  };
+  supportPanel.wrapper.append(
+    supportFields,
+    toolbar(field("修改原因", supportReason), saveSupport),
+    detailList([
+      ["今日消息", number(supportStats.requests?.total || 0)],
+      ["重复消息", number(supportStats.requests?.duplicates || 0)],
+      ["保守成本占用", `${number(supportStats.costReservations?.occupiedMicroyuan || 0)} 微元（非实际成本）`],
+      ["实际成本", supportStats.costReservations?.actualCostMicroyuan == null ? "未知" : `${number(supportStats.costReservations.actualCostMicroyuan)} 微元`],
+      ["客服判断定价", pricingNames[supportStats.pricing?.judge] || "待核对"],
+      ["客服生成定价", pricingNames[supportStats.pricing?.generate] || "待核对"],
+      ["待处理工单", number(supportStats.tickets?.pending || 0)],
+      ["超过 72 小时", number(supportStats.tickets?.overdue72h || 0)],
+    ]),
+    table(["今日处理层", "数量"], layerRows, "暂无客服消息", "今天尚无客服处理记录。"),
+  );
+  content.append(supportPanel.wrapper);
+
+  const allowances = settings.allowances || {};
+  const prices = settings.prices || {};
+  const calibration = prices.calibration || {};
+  const settingsPanel = panel(
+    "计量配置",
+    "保存后仅影响后续调用和新的免费窗口；已保存的价格快照与当前免费桶不会被改写。付款开关不在此处修改。",
+  );
+  const freeDay = control("input", { type: "number", min: 0, value: allowances.freeDayCredits, label: "免费日积分" });
+  const freeWeek = control("input", { type: "number", min: 0, value: allowances.freeWeekCredits, label: "免费周积分" });
+  const freeMonth = control("input", { type: "number", min: 0, value: allowances.freeMonthCostMicroyuan, label: "全站月成本微元上限" });
+  const numerator = control("input", { type: "number", min: 0, value: calibration.numerator, label: "校准分子" });
+  const denominator = control("input", { type: "number", min: 1, value: calibration.denominator, label: "校准分母" });
+  const perCredit = control("input", { type: "number", min: 1, value: prices.microyuanPerCredit, label: "每积分微元" });
+  const jev = control("input", { type: "number", min: 0, value: prices.jev?.microyuanPerRequest ?? "", placeholder: "留空表示未配置", label: "Jev 每次微元价格" });
+  const ocr = control("input", { type: "number", min: 0, value: prices.ocr?.microyuanPerRequest ?? "", placeholder: "留空表示未配置", label: "OCR 每次微元价格" });
+  const dailyCap = control("input", { type: "number", min: 0, value: settings.costSafety?.dailyCapMicroyuan, label: "全站每日调用上限" });
+  const reason = control("input", { placeholder: "修改原因（必填）", label: "修改原因" });
+  const fields = node("div", null, "form-grid");
+  fields.append(
+    field("免费日积分", freeDay),
+    field("免费周积分", freeWeek),
+    field("全站月成本上限（微元）", freeMonth),
+    field("校准分子", numerator),
+    field("校准分母", denominator),
+    field("每积分微元", perCredit),
+    field("Jev 每次微元价格", jev, "留空表示未配置；明确填 0 表示零价。"),
+    field("OCR 每次微元价格", ocr, "留空表示未配置；明确填 0 表示零价。"),
+    field("全站每日调用上限（微元）", dailyCap, "免费用户当天的调用风险额超过后暂停；付费用户不受影响。0 表示暂停。"),
+  );
+  const save = confirmButton("保存计量配置", async (trigger) => {
+    const text = reason.value.trim();
+    if (!text) return notice("请填写修改原因。", "error");
+    const perRequest = (input, label) =>
+      input.value.trim() === "" ? undefined : { microyuanPerRequest: commercialInteger(input, label) };
+    let payload;
+    try {
+      const jevPrice = perRequest(jev, "Jev 每次微元价格");
+      const ocrPrice = perRequest(ocr, "OCR 每次微元价格");
+      payload = {
+        reason: text,
+        allowances: {
+          freeDayCredits: commercialInteger(freeDay, "免费日积分"),
+          freeWeekCredits: commercialInteger(freeWeek, "免费周积分"),
+          freeMonthCostMicroyuan: commercialInteger(freeMonth, "全站月成本上限"),
+        },
+        prices: {
+          calibration: {
+            numerator: commercialInteger(numerator, "校准分子"),
+            denominator: commercialInteger(denominator, "校准分母", true),
+          },
+          microyuanPerCredit: commercialInteger(perCredit, "每积分微元", true),
+          ...(jevPrice ? { jev: jevPrice } : {}),
+          ...(ocrPrice ? { ocr: ocrPrice } : {}),
+        },
+        costSafety: { dailyCapMicroyuan: commercialInteger(dailyCap, "全站每日调用上限") },
+      };
+    } catch (error) {
+      return notice(errorText(error), "error");
+    }
+    await act(trigger, () => send("/v1/admin/commercial/settings", "PUT", payload), "计量配置已保存，并已重新读取服务端值。");
+  }, "button small primary");
+  settingsPanel.wrapper.append(fields, toolbar(field("修改原因", reason), save));
+  content.append(settingsPanel.wrapper);
+
+  const orderPanel = panel("订单", "只显示订单编号、商品、金额和状态；不展示用户私密资料。");
+  orderPanel.wrapper.append(table(
+    ["订单", "商品", "金额", "平台", "状态", "时间", "操作"],
+    orders.map((order) => {
+      const action = node("span", "—", "muted");
+      const reconciliation = () => {
+        const reason = control("input", { placeholder: "查单原因（必填）", label: "查单原因" });
+        const sync = confirmButton("人工查单", async (trigger) => {
+          const text = reason.value.trim();
+          if (!text) return notice("请填写查单原因。", "error");
+          await act(
+            trigger,
+            () => send(`/v1/admin/commercial/orders/${encodeURIComponent(order.id)}/sync`, "POST", { reason: text }),
+            "已请求核实平台结果；仅在已验证支付后补齐订单权益，不会直接发放积分。",
+          );
+        }, "button small");
+        const wrap = node("div", null, "inline-actions");
+        wrap.append(reason, sync);
+        return wrap;
+      };
+      if (["paid", "delivered"].includes(order.status) && !order.refundId && order.refundBlockReason) {
+        const refund = button("申请退款", () => {}, "button small");
+        refund.disabled = true;
+        refund.title = order.refundBlockReason;
+        const wrap = node("div", null, "inline-actions");
+        wrap.append(refund, node("span", order.refundBlockReason, "muted"), reconciliation());
+        action.replaceWith(wrap);
+        return [order.id, commercialGood(order), money(order.amountCents), order.platform || "待确认", orderStatus(order), timeMs(order.paidAtMs || order.createdAtMs), wrap];
+      }
+      if (["paid", "delivered"].includes(order.status) && !order.refundId) {
+        const reason = control("input", { placeholder: "退款原因（必填）", label: "退款原因" });
+        const refund = confirmButton("申请退款", async (trigger) => {
+          const text = reason.value.trim();
+          if (!text) return notice("请先填写退款原因。", "error");
+          await act(trigger, () => send(`/v1/admin/commercial/orders/${encodeURIComponent(order.id)}/refund`, "POST", { reason: text, reasonCode: 0 }), "已提交退款请求，等待服务端确认。");
+        });
+        const wrap = node("div", null, "inline-actions"); wrap.append(reason, refund, reconciliation()); action.replaceWith(wrap);
+        return [order.id, commercialGood(order), money(order.amountCents), order.platform || "待确认", orderStatus(order), timeMs(order.paidAtMs || order.createdAtMs), wrap];
+      }
+      if (order.status === "created") {
+        const wrap = reconciliation();
+        action.replaceWith(wrap);
+        return [order.id, commercialGood(order), money(order.amountCents), order.platform || "待确认", orderStatus(order), timeMs(order.paidAtMs || order.createdAtMs), wrap];
+      }
+      return [order.id, commercialGood(order), money(order.amountCents), order.platform || "待确认", orderStatus(order), timeMs(order.paidAtMs || order.createdAtMs), action];
+    }),
+    "暂无订单", "本地测试或真实回调完成后会显示记录。",
+  ));
+  content.append(orderPanel.wrapper);
+
+  const pendingPanel = panel("待处理", "待支付订单、待补偿退款和未完成计量需要人工核对。");
+  pendingPanel.wrapper.append(table(
+    ["类型", "编号", "状态", "金额／说明"],
+    [
+      ...(pending.orders || []).map((row) => ["订单", row.id, commercialStatus(row.status), money(row.amountCents)]),
+      ...(pending.refunds || []).map((row) => ["退款", row.id, commercialStatus(row.status), money(row.amountCents)]),
+    ],
+    "没有待处理项目", "当前没有待支付订单或待补偿退款。",
+  ));
+  content.append(pendingPanel.wrapper);
+
+  const costPanel = panel("成本记录", "按保存时的价格快照记录；未知成本需要在运营侧核对。");
+  costPanel.wrapper.append(table(
+    ["来源", "类别", "状态", "成本", "完成时间"],
+    costs.map((row) => [row.source, row.kind, commercialStatus(row.status), row.costMicroyuan === null ? "待核对" : `${number(row.costMicroyuan)} 微元`, shortTime(row.finishedAt || row.createdAt)]),
+    "暂无成本记录", "产生可计量调用后会显示在这里。",
+  ));
+  content.append(costPanel.wrapper);
+
+  const refundPanel = panel("退款记录", "退款动作必须填写原因；按钮仅请求现有服务端退款流程。");
+  refundPanel.wrapper.append(table(
+    ["退款单", "订单", "金额", "状态", "尝试次数", "原因", "时间", "操作"],
+    refunds.map((row) => {
+      const action = node("div", null, "stacked-inputs");
+      const reason = control("input", { placeholder: "退款处理原因（必填）", label: "退款处理原因" });
+      // The server decides when a stuck refund may be resolved by hand (manualReviewAt).
+      if (row.status === "pending" && row.manualReviewAt) {
+        const review = row.manualReviewReason === "status7_after_retry" ? "重试后微信仍显示退款失败" : "提交结果未知";
+        if (Date.now() < row.manualReviewAt) {
+          action.append(node("span", `${review}；${dateTime(new Date(row.manualReviewAt).toISOString())}后可查单处理`, "muted"));
+        } else {
+          action.append(node("span", `${review}；可查单确认微信没有退款后恢复额度`, "muted"));
+          action.append(reason, confirmButton("查单后恢复额度", async trigger => {
+            if (!reason.value.trim()) return notice("请先填写退款处理原因。", "error");
+            await act(trigger, () => send(`/v1/admin/commercial/refunds/${encodeURIComponent(row.id)}/resolve-unknown`, "POST", { reason: reason.value.trim(), expectedAttempt: row.attempt }),
+              (result) => result?.status === "refunded" ? "查单显示微信已退款，已按退款完成处理。" : "已确认微信没有退款，额度已恢复；仍要退款时请重新提交。");
+          }));
+        }
+      } else if (row.status === "failed") {
+        action.append(reason, confirmButton("重新提交退款", async trigger => {
+          if (!reason.value.trim()) return notice("请先填写退款处理原因。", "error");
+          await act(trigger, () => send(`/v1/admin/commercial/orders/${encodeURIComponent(row.orderId)}/refund`, "POST", { reason: reason.value.trim(), reasonCode: row.reasonCode }), "已重新提交退款，等待微信确认。");
+        }));
+      } else action.append(node("span", row.status === "pending" ? "等待微信确认；出现异常会列在上方“支付异常”" : "—", "muted"));
+      return [row.id, row.orderId, money(row.amountCents), row.status === "pending" ? "等待微信确认" : commercialStatus(row.status), number(row.attempt), row.reason, timeMs(row.requestedAtMs), action];
+    }),
+    "暂无退款记录", "退款请求通过后会显示处理状态。",
+  ));
+  content.append(refundPanel.wrapper);
+
+  const ticketPanel = panel("工单", "仅展示运营处理所需内容；回复和关闭均需填写处理原因。");
+  ticketPanel.wrapper.append(table(
+    ["工单", "状态", "期限", "内容", "通知", "操作"],
+    tickets.map((ticket) => {
+      let replyRequest;
+      const replyText = control("input", { placeholder: "回复内容", label: "回复内容" });
+      const reason = control("input", { placeholder: "处理原因（必填）", label: "处理原因" });
+      const actions = node("div", null, "inline-actions");
+      if (ticket.status !== "closed") {
+        actions.append(
+          confirmButton("发送回复", async (trigger) => {
+            if (!replyText.value.trim() || !reason.value.trim()) return notice("回复内容和处理原因都不能为空。", "error");
+            const content = replyText.value.trim(), replyReason = reason.value.trim();
+            if (!replyRequest || replyRequest.content !== content || replyRequest.reason !== replyReason)
+              replyRequest = { content, reason: replyReason, idempotencyKey: crypto.randomUUID() };
+            await act(trigger, () => send(`/v1/admin/support/tickets/${encodeURIComponent(ticket.id)}/replies`, "POST", replyRequest), "已保存工单回复。");
+          }, "button small"),
+          confirmButton("关闭工单", async (trigger) => {
+            if (!reason.value.trim()) return notice("关闭工单前请填写处理原因。", "error");
+            await act(trigger, () => send(`/v1/admin/support/tickets/${encodeURIComponent(ticket.id)}/close`, "POST", { reason: reason.value.trim() }), "工单已关闭。");
+          }),
+        );
+      } else actions.append(node("span", "已关闭", "muted"));
+      const deliveryNames = { unconfigured: "未配置", missing: "无记录", pending: "待发送", sending: "发送中", sent: "已发送", failed: "发送失败", unknown: "状态未知，需核对", accepted: "已获一次授权", declined: "用户未订阅" };
+      const delivery = node("div", null, "stacked-inputs");
+      delivery.append(node("span", `邮件：${deliveryNames[ticket.mail?.status] || "无记录"}`), node("span", `订阅：${deliveryNames[ticket.notification?.status] || "未订阅"}`));
+      for (const [channel, label, state] of [["mail", "重试邮件", ticket.mail], ["notification", "重试订阅通知", ticket.notification]]) {
+        if (state?.status === "failed" || state?.status === "unknown") delivery.append(confirmButton(label, async trigger => {
+          if (!reason.value.trim()) return notice("请填写处理原因。", "error");
+          await act(trigger, () => send(`/v1/admin/support/tickets/${encodeURIComponent(ticket.id)}/${channel}/retry`, "POST", { reason: reason.value.trim() }), "已加入重试队列，请稍后查看结果。");
+        }, "button small"));
+      }
+      const form = node("div", null, "stacked-inputs"); form.append(replyText, reason, actions);
+      return [ticket.id, commercialStatus(ticket.status), shortTime(ticket.due_at || ticket.dueAt), ticket.content, delivery, form];
+    }),
+    "暂无工单", "用户提交需要运营处理的问题后会显示在这里。",
+  ));
+  content.append(ticketPanel.wrapper);
+}
+
 function renderOverview(summary, jobs, usage, todo) {
   const totals = jobTotals(jobs.kinds);
   const ledger = usageLedger(usage);
@@ -2149,12 +2566,15 @@ function renderAi(view) {
           state.ai.editing = endpoint.id;
           return loadPage();
         }),
-        button(endpoint.enabled ? "停用" : "启用", (event) =>
-          act(
-            event.currentTarget,
-            () => send(path, "PUT", { enabled: !endpoint.enabled }),
-            endpoint.enabled ? "已停用，不再参与调用。" : "已启用。",
-          ),
+        confirmButton(
+          endpoint.enabled ? "停用" : "启用",
+          (trigger) =>
+            act(
+              trigger,
+              () => send(path, "PUT", { enabled: !endpoint.enabled }),
+              endpoint.enabled ? "已停用，不再参与调用。" : "已启用。",
+            ),
+          "button small",
         ),
         confirmButton("删除", (trigger) => act(trigger, () => api(path, { method: "DELETE" }), "接口已删除。")),
       ),
@@ -2172,7 +2592,7 @@ function renderAi(view) {
   const selects = {};
   const grid = node("div", null, "form-grid");
   Object.entries(SCENARIOS).forEach(([key, [name, hint]]) => {
-    selects[key] = choose(LEVELS, view.thinking[key], name);
+    selects[key] = choose(key === "support" ? { off: "关闭思考" } : LEVELS, view.thinking[key], name);
     grid.append(field(name, selects[key], hint));
   });
   const saveThinking = button(
@@ -2195,7 +2615,7 @@ function renderAi(view) {
   thinking.wrapper.append(thinkingBody);
   content.append(thinking.wrapper);
 
-  // 按场景选择接口；留空时跟随全局接口顺序。
+  // 按场景选择接口；客服必须显式选择，其他场景留空时跟随全局接口顺序。
   const routes = view.routes && typeof view.routes === "object" ? view.routes : {};
   const routeOptions = { "": "跟随全局顺序" };
   endpoints.forEach((endpoint) => {
@@ -2203,24 +2623,34 @@ function renderAi(view) {
   });
   const routing = panel(
     "按场景选择接口",
-    "留空沿用全局顺序；每个场景只显示当前列表的第一个接口。",
+    "客服必须单独选择接口，留空即关闭生成；其他场景留空沿用全局顺序。每个场景只显示当前列表的第一个接口。",
   );
   const routeGrid = node("div", null, "form-grid");
+  // 选好后统一点保存；只提交改过的场景，没动的场景保留原来的整串接口列表。
+  const picked = {};
   Object.entries(SCENARIOS).forEach(([key, [name, hint]]) => {
     const current = Array.isArray(routes[key]) ? routes[key][0] || "" : "";
-    const select = choose(routeOptions, current, name);
+    const options = key === "support"
+      ? { ...routeOptions, "": "未配置（客服生成关闭）" }
+      : routeOptions;
+    const select = choose(options, current, name);
     select.addEventListener("change", (event) => {
       const value = event.currentTarget.value;
-      act(
-        event.currentTarget,
-        () => send("/v1/admin/ai/routes", "PUT", { [key]: value ? [value] : [] }),
-        "接口选择已保存，下一次调用生效。",
-      );
+      if (value === current) delete picked[key];
+      else picked[key] = value ? [value] : [];
     });
     routeGrid.append(field(name, select, hint));
   });
+  const saveRoutes = confirmButton(
+    "保存接口选择",
+    (trigger) => {
+      if (!Object.keys(picked).length) return notice("还没有改动。");
+      return act(trigger, () => send("/v1/admin/ai/routes", "PUT", picked), "接口选择已保存，下一次调用生效。");
+    },
+    "button small primary",
+  );
   const routingBody = node("div", null, "panel-body");
-  routingBody.append(routeGrid);
+  routingBody.append(routeGrid, toolbar(saveRoutes));
   routing.wrapper.append(routingBody);
   content.append(routing.wrapper);
 }
@@ -2237,7 +2667,7 @@ function renderBudget(budget) {
     inputs[key] = control("input", { type: "number", min: 0, max: 100000, value: budget.current[key], label: name });
     grid.append(field(name, inputs[key], `部署默认 ${budget.defaults[key]}`));
   });
-  const save = button(
+  const save = confirmButton(
     "保存",
     () => {
       const body = {};
@@ -2302,7 +2732,7 @@ function renderPrices(prices) {
     rows.append(line);
   };
   prices.rows.forEach(addRow);
-  const save = button(
+  const save = confirmButton(
     "保存价格",
     () => {
       const list = [];
@@ -2354,7 +2784,7 @@ function renderSettings(data) {
     });
     grid.append(field(name, inputs[bucket], `部署默认 ${defaults[bucket]}`));
   });
-  const save = button(
+  const save = confirmButton(
     "保存",
     () => {
       const body = {};

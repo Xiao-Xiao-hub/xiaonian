@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 随心记详情：查看原话与补充，发起整理、编辑事项或关联知识点；保留旧笔记访问路径。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -42,7 +43,7 @@ function jobText(job) {
   if (job.status === "failed") return "这次没理完，你写的都还在。" + api.jobMessage(job);
   return "";
 }
-Page({
+Page(withShare({
   data: {
     note: null, title: "", editing: false, loading: false, busy: false,
     error: "", editError: "", when: "", groups: [], supplement: "", supplementError: "",
@@ -52,7 +53,11 @@ Page({
   },
   onLoad(query) {
     this.id = query.id;
-    this.autoOrganize = query.organize === "1";
+    // Only with the mark an in-app tap leaves: a link from another mini program
+    // cannot start a paid organize on someone's note.
+    const app = typeof getApp === "function" ? getApp() : null;
+    this.autoOrganize = query.organize === "1" && Boolean(app && app.globalData.noteOrganize === query.id);
+    if (app) delete app.globalData.noteOrganize;
     if (query.pointId) this.setData({ context: { pointId: query.pointId, name: query.pointName || "这个知识点" } });
   },
   onShow() {
@@ -328,4 +333,4 @@ Page({
       if (this.active(epoch, account) && !api.needsConsent(error)) { this.setData({ error: noteError(error) }); this.watch(this.data.note.aiJob); }
     }).finally(() => { if (this.active(epoch, account)) this.setData({ busy: false }); });
   },
-});
+}));

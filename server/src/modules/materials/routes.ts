@@ -6,6 +6,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { AppError } from "../../shared/domain.js";
+import { finishUpload } from "../../shared/upload-admission.js";
 import type { AuthService } from "../auth/service.js";
 import { publicJob, type JobRunner } from "../jobs/runner.js";
 import { IMAGE_LIMIT, MaterialService } from "./service.js";
@@ -60,8 +61,11 @@ export function registerMaterialRoutes(
         if (code === "FST_INVALID_MULTIPART_CONTENT_TYPE")
           throw new AppError(400, "IMAGE_REQUIRED", "先选一张图");
         throw error;
+      } finally {
+        finishUpload(req);
       }
       // Refuse before saving, so a rejected upload leaves no empty material behind.
+      runner.checkQueue(user.id);
       runner.checkQuota(user.id, "ocr");
       const material = materials.createFromImage(user.id, { ...query, data });
       const { job } = runner.enqueue({

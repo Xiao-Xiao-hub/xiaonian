@@ -370,6 +370,7 @@ function harness() {
   });
   const requests = [];
   const timers = [];
+  const pending = [];
   const windowEvents = {};
   const documentEvents = {};
   let custom;
@@ -446,8 +447,9 @@ function harness() {
         windowEvents[name] = handler;
       },
     },
-    setTimeout: (_, ms) => {
+    setTimeout: (fn, ms) => {
       timers.push(ms);
+      pending.push({ fn, ms });
       return 1;
     },
     clearTimeout: () => {},
@@ -461,6 +463,7 @@ function harness() {
     get,
     requests,
     timers,
+    pending,
     windowEvents,
     context,
     override: (handler) => {
@@ -748,8 +751,37 @@ test("场景接口下拉只显示多端点列表首项，旧列表项不被覆�
   assert.equal(sent(app, "PUT", "/v1/admin/ai/routes").length, 0);
   route.value = "";
   await route.listeners.change({ currentTarget: route });
+  assert.equal(sent(app, "PUT", "/v1/admin/ai/routes").length, 0);
+  const save = buttonNamed(content, "保存接口选择");
+  click(save);
+  assert.equal(sent(app, "PUT", "/v1/admin/ai/routes").length, 0);
+  await click(save);
   const [saved] = sent(app, "PUT", "/v1/admin/ai/routes");
   assert.deepEqual(JSON.parse(saved.options.body), { "chat.study": [] });
+});
+
+test("二次确认几秒内没点第二下或焦点移开就复位，之后误点一下不会执行", async () => {
+  const app = harness();
+  await settle();
+  await app.login();
+  await app.navigate("settings");
+  const content = app.get("#page-content");
+  const save = buttonNamed(content, "保存");
+  click(save);
+  assert.equal(save.textContent, "再点一次确认保存");
+  const reset = app.pending.filter((item) => item.ms === 4000).at(-1);
+  assert.ok(reset);
+  reset.fn();
+  assert.equal(save.textContent, "保存");
+  assert.doesNotMatch(save.className, /armed/);
+  click(save);
+  assert.equal(sent(app, "PUT", "/v1/admin/settings/limits").length, 0);
+  save.listeners.blur();
+  assert.equal(save.textContent, "保存");
+  click(save);
+  assert.equal(sent(app, "PUT", "/v1/admin/settings/limits").length, 0);
+  await click(save);
+  assert.equal(sent(app, "PUT", "/v1/admin/settings/limits").length, 1);
 });
 
 test("额度设置拒绝非整数，题库能跳到该知识点的反馈", async () => {
@@ -760,7 +792,9 @@ test("额度设置拒绝非整数，题库能跳到该知识点的反馈", async
   const content = app.get("#page-content");
   const input = find(content, (item) => item.tagName === "input");
   input.value = "1.5";
-  await click(buttonNamed(content, "保存"));
+  const save = buttonNamed(content, "保存");
+  click(save);
+  await click(save);
   assert.equal(sent(app, "PUT", "/v1/admin/settings/limits").length, 0);
   assert.match(app.get("#notice").textContent, /0 或正整数/);
   await app.navigate("bank");

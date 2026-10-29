@@ -90,7 +90,7 @@ function fixture({ state = "ok", study, missing = [], fail = [], nickname = "小
   };
   vm.runInNewContext(read("pages/profile/index.js"), {
     Page: (x) => (definition = x),
-    require: (n) => deps[n.split("/").at(-1)],
+    require: (n) => n.endsWith("/share") ? { withShare: (page) => page } : deps[n.split("/").at(-1)],
     getApp: () => ({ globalData: {} }),
     setTimeout,
     clearTimeout,
@@ -152,12 +152,13 @@ test("学习时间: 累计天数, two streaks and an 18-week map that ends with 
   await settle();
   await settle();
   const s = p.data.study;
-  assert.deepEqual([s.total, s.current, s.best, s.todayMin], [42, 5, 14, 25]);
-  // days, not hours or minutes (the user asked for 累计天数).
+  assert.deepEqual([s.total, s.minutes, s.current, s.todayMin], [42, 2180, 5, 25]);
+  // The three numbers the user asked for (2026-10-25): 累计学习天数, 累计学习分钟, 连续学习天数.
   const nums = read("pages/profile/index.wxml").match(/<view class="nums">[\s\S]*?<\/view>\s*<view class="heat">/)[0];
-  assert.equal((nums.match(/class="num"/g) || []).length, 3);
-  assert.match(nums, /\{\{study\.total\}\}<text class="num-u">天<\/text><\/view><text class="num-k">累计学习<\/text>/);
-  assert.doesNotMatch(nums, /小时|分钟/);
+  assert.deepEqual([...nums.matchAll(/<view class="num-v">\{\{study\.(\w+)\}\}<\/view><text class="num-k">([^<]+)<\/text>/g)].map((m) => [m[1], m[2]]), [
+    ["total", "累计学习天数"], ["minutes", "累计学习分钟"], ["current", "连续学习天数"],
+  ]);
+  assert.doesNotMatch(nums, /最高连续|小时/);
   assert.equal(s.columns.length, 18);
   for (const col of s.columns) assert.equal(col.cells.length, 7);
   const last = s.columns[17].cells;
@@ -206,20 +207,37 @@ test("five levels: none, ≤15, ≤30, ≤60 and more than an hour", async () =>
   assert.equal(p.data.study.total, 8);
 });
 
-test("tapping a day shows its minutes under the map; today and the future do not", async () => {
+test("tapping a week opens its seven days under the map; a second tap closes it", async () => {
   const { p } = fixture();
   await p.load();
-  const tap = (w, i) => p.pickDay({ currentTarget: { dataset: { w, i } } });
-  tap(17, 2);
-  assert.deepEqual({ ...p.data.picked }, { day: "2026-10-14", label: "10月14日", min: 61 });
-  tap(17, 2);
+  const cols = p.data.study.columns;
+  assert.deepEqual([cols[17].sum, cols[17].al], [191, "10月12日起的一周，共 191 分钟"]);
+  assert.equal(cols[16].al, "10月5日起的一周，共 0 分钟");
+  const tap = (w) => p.pickWeek({ currentTarget: { dataset: { w } } });
+  tap(17);
+  const { days, ...head } = p.data.picked;
+  assert.deepEqual(head, { w: 17, label: "10月12日–18日", min: 191 });
+  assert.deepEqual(
+    plain(days.map((d) => [d.wd, d.min, d.td, d.fu])),
+    [
+      ["一", 30, false, false],
+      ["二", 60, false, false],
+      ["三", 61, false, false],
+      ["四", 15, false, false],
+      ["五", 25, true, false],
+      ["六", "", false, true],
+      ["日", "", false, true],
+    ],
+  );
+  tap(17);
   assert.equal(p.data.picked, null, "a second tap goes back to today");
-  tap(17, 1);
-  tap(17, 4);
-  assert.equal(p.data.picked, null, "today is the default line");
-  tap(17, 6);
-  assert.equal(p.data.picked, null);
+  tap(15);
+  assert.equal(p.data.picked.label, "9月28日–10月4日", "a week across two months names both");
+  tap(16);
+  assert.deepEqual([p.data.picked.w, p.data.picked.min], [16, 0]);
   const wxml = read("pages/profile/index.wxml");
+  assert.match(wxml, /class="col \{\{picked\.w === w \? 'pk' : ''\}\}" data-w="\{\{w\}\}" bindtap="pickWeek" aria-role="button" aria-label="\{\{col\.al\}\}"/);
+  assert.doesNotMatch(wxml, /pickDay/);
   assert.match(wxml, /今天 <text class="hf-b">\{\{study\.todayMin\}\}<\/text> 分钟/);
   assert.match(wxml, /只给自己看，不排行，不和别人比。/);
   assert.match(wxml, /少<\/text>(<view class="hk l\d" \/>){5}<text>多/);

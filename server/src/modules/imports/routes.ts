@@ -6,6 +6,7 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { AppError } from "../../shared/domain.js";
+import { finishUpload } from "../../shared/upload-admission.js";
 import type { AuthService } from "../auth/service.js";
 import type { JobRunner } from "../jobs/runner.js";
 import { CARD_KINDS } from "../cards/types.js";
@@ -69,6 +70,8 @@ async function upload(req: FastifyRequest, limit: number) {
     )
       throw new AppError(400, "FILE_REQUIRED", "选一个文件吧");
     throw error;
+  } finally {
+    finishUpload(req);
   }
 }
 

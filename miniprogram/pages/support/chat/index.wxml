@@ -1,0 +1,24 @@
+<view class="support-page">
+  <view class="ai-line">AI 生成可能有误，注意核实</view>
+  <view class="support-hero">
+    <image wx:if="{{!hiBroken}}" class="mascot" src="{{hi.src}}" webp="{{hi.webp}}" mode="aspectFit" binderror="hiError" />
+    <view><view class="hero-title">说说你遇到的事</view><view class="hero-note">使用、额度、订单问题都可以问。</view></view>
+  </view>
+  <view wx:if="{{loading}}" class="empty">正在连接帮助服务…</view>
+  <view wx:elif="{{unavailable}}" class="empty"><view>帮助服务暂不可用</view><view class="hint">请稍后重试，你已提交的工单可在下方查看。</view><button class="secondary" bindtap="retry">重新尝试</button></view>
+  <block wx:else>
+    <view wx:if="{{error}}" class="error">{{error}}</view>
+    <view wx:if="{{turns.length}}" class="turns">
+      <view wx:for="{{turns}}" wx:key="id" class="turn">
+        <view class="bubble mine">{{item.text}}</view>
+        <view class="bubble answer">{{item.answer}}</view>
+        <button wx:if="{{item.resourcePath}}" class="text-action" data-path="{{item.resourcePath}}" bindtap="resource">查看帮助资源</button>
+        <button wx:if="{{item.ticketEligible}}" class="text-action" data-id="{{item.id}}" bindtap="ticket">提交工单</button>
+      </view>
+    </view>
+    <button wx:if="{{turns.length >= maxTurns}}" class="secondary" bindtap="newSession">开始新一轮</button>
+    <view wx:else class="composer"><textarea value="{{draft}}" maxlength="200" placeholder="描述遇到的问题，最多 200 字" bindinput="input" /><view class="compose-foot"><text>还可输入 {{remaining}} 字</text><button class="primary" loading="{{sending}}" disabled="{{sending}}" bindtap="send">发送</button></view></view>
+    <view wx:if="{{faqs.length}}" class="faq"><view class="faq-title">常见问题</view><view wx:for="{{faqs}}" wx:key="id" class="faq-item"><button class="faq-question" data-id="{{item.id}}" bindtap="faq">{{item.title}}</button><view wx:if="{{openFaq === item.id}}" class="faq-answer">{{item.answer}}</view></view></view>
+  </block>
+  <button class="orders-link" bindtap="tickets">查看我的工单</button>
+</view>

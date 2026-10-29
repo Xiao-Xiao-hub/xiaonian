@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 题库入口：按章节与知识点浏览练习，导航到具体作答页；题目事实来源仍是服务端题库。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -12,7 +13,7 @@ const gate = require("../../utils/gate");
 const bank = require("../../utils/bank");
 const { retryText, backTo, ROUTES } = require("../../utils/learn");
 
-Page({
+Page(withShare({
   data: {
     loading: true,
     error: "",
@@ -88,4 +89,4 @@ Page({
     if (this.data.guest || gate.state() === "guest") return gate.ask();
     wx.navigateTo({ url: `/${ROUTES.point}?id=${encodeURIComponent(id)}&index=${index}` });
   },
-});
+}));

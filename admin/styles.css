@@ -925,6 +925,7 @@ tbody tr:hover {
   gap: 12px;
 }
 .detail-list {
+  padding: 0 var(--panel-pad, 24px);
   margin: 0;
 }
 .detail-list > div {
@@ -1172,6 +1173,12 @@ textarea.input {
 .button.danger.armed:hover:not(:disabled) {
   background: var(--red);
   border-color: var(--red);
+  color: white;
+}
+.button.armed:not(.danger),
+.button.armed:not(.danger):hover:not(:disabled) {
+  background: var(--amber);
+  border-color: var(--amber);
   color: white;
 }
 .card-list {

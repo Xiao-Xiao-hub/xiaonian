@@ -1,6 +1,8 @@
 import { createHash, createHmac } from "node:crypto";
 import { z } from "zod";
 import type { UsageMeter } from "../shared/usage-ledger.js";
+import { boundedResponseText } from "./response-limits.js";
+import type { CommercialMeter } from "../shared/commercial-meter.js";
 
 export type OcrLine = {
   text: string;
@@ -161,6 +163,7 @@ export type TencentOcrOptions = {
   endpoint?: string;
   timeoutMs: number;
   usageMeter?: UsageMeter;
+  commercialMeter?: Pick<CommercialMeter, "run">;
 };
 
 export class TencentOcr {
@@ -181,6 +184,23 @@ export class TencentOcr {
   }
 
   async recognize(image: Buffer, signal?: AbortSignal): Promise<OcrResult> {
+    const invoke = () => this.recognizeNow(image, signal);
+    return this.opts.commercialMeter
+      ? this.opts.commercialMeter.run(
+          {
+            kind: "ocr",
+            provider: this.endpoint,
+            model: "GeneralBasicOCR",
+            source: "ocr.tencent",
+          },
+          invoke,
+          () => ({ requests: 1 }),
+          signal,
+        )
+      : invoke();
+  }
+
+  private async recognizeNow(image: Buffer, signal?: AbortSignal): Promise<OcrResult> {
     const { secretId, secretKey, timeoutMs } = this.opts;
     if (!secretId || !secretKey)
       throw new OcrError("OCR_NOT_CONFIGURED", "现在认不了图，过会儿再试，或者直接打字");
@@ -226,7 +246,8 @@ export class TencentOcr {
         signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
       });
       status = res.status;
-      body = status >= 500 ? null : await res.json().catch(() => null);
+      const text = await boundedResponseText(res);
+      try { body = JSON.parse(text); } catch { body = null; }
       const api = body as { Response?: { Error?: { Code?: string } } } | null;
       finishUsage?.({
         status: res.ok && !api?.Response?.Error ? "succeeded" : "failed",

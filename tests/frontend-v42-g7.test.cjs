@@ -505,12 +505,26 @@ test("解题: 讲完了 in a 讲一遍 opens the key-point check on 讲一遍, w
   page.setData({ thread: { id: "t9", mode: "teach", title: "链式法则" }, draft: "最后补一句" });
   page.act(tap({ key: "teachDone" }));
   assert.equal(h.nav.at(-1), "/pages/teach/index?id=t9&finish=1");
+  assert.equal(h.app.globalData.teachFinish, "t9", "the in-app mark that lets 讲一遍 start the check");
   assert.equal(h.sent.length, 0, "no 讲完了 message");
   assert.equal(h.store["tool_draft:teach:one"].draft, "最后补一句");
   assert.equal(page.data.draft, "");
 });
 
 // ---- 讲一遍 -------------------------------------------------------------------
+test("讲一遍: &finish=1 from a link, without the in-app mark, only reopens the chat", async () => {
+  h.routes["GET /v1/chat/threads/t1"] = () => ({
+    thread: { id: "t1", title: "链式法则", pointId: "p1" },
+    messages: [{ id: "u1", role: "user", kind: "text", status: "done", content: "外面导完", blocks: para("外面导完") }],
+  });
+  const page = load("pages/teach/index.js");
+  page.onLoad({ id: "t1", finish: "1" });
+  page.onShow();
+  await settle();
+  assert.equal(h.calls.filter((c) => c.method === "POST").length, 0, "nothing was sent or spent");
+  assert.equal(page.data.stage, "talk");
+});
+
 test("讲一遍: 讲完了 takes the unsent text and says what was not compared; a failed reply keeps its error", async () => {
   const review = (said) => ({
     id: "r1",
@@ -527,7 +541,9 @@ test("讲一遍: 讲完了 takes the unsent text and says what was not compared;
   h.routes["POST /v1/chat/threads/t1/teach-review"] = () => ({ fallback: false, message: review({ seen: 3, total: 5 }) });
   h.store["tool_draft:teach:one"] = { threadId: "t1", pointId: "p1", name: "链式法则", draft: "最后补一句" };
   const page = load("pages/teach/index.js");
+  h.app.globalData.teachFinish = "t1";
   page.onLoad({ id: "t1", finish: "1" });
+  assert.equal(h.app.globalData.teachFinish, undefined, "the mark is used once");
   assert.equal(page.data.draft, "最后补一句", "the text left on 解题 came along");
   page.onShow();
   await settle();

@@ -8,6 +8,12 @@ import { dirname } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import type { User } from "./domain.js";
 import { now as businessNow, type Clock } from "./time.js";
+import { COMMERCIAL_SCHEMA } from "./commercial-schema.js";
+import { COMMERCIAL_ORDERS_SCHEMA } from "../modules/commercial/orders-schema.js";
+import { COMMERCIAL_REFUNDS_SCHEMA } from "../modules/commercial/refunds-schema.js";
+import { SUPPORT_TICKETS_SCHEMA } from "../modules/support/tickets-schema.js";
+import { SUPPORT_SESSION_SCHEMA } from "../modules/support/session-schema.js";
+import { SUPPORT_NOTIFICATION_SCHEMA } from "../modules/support/notification-schema.js";
 export const digest = (text: string) =>
   createHash("sha256").update(text).digest("hex");
 type Audit = {
@@ -18,6 +24,34 @@ type Audit = {
   details: Record<string, unknown>;
   createdAt: string;
 };
+/** Queues parallel plan orders of each user by payment time (v25). It moves
+ * whole orders only and is a no-op on an already queued chain. */
+export const PLAN_CHAIN_SHIFT_SQL = `
+    CREATE TEMP TABLE plan_chain_shift AS
+    WITH RECURSIVE seg AS (
+      SELECT o.id,o.user_id,MIN(b.starts_at) s,MAX(b.ends_at) e,
+        ROW_NUMBER() OVER (PARTITION BY o.user_id ORDER BY o.paid_at,o.id) n
+      FROM commercial_orders o
+      JOIN commercial_order_grants g ON g.order_id=o.id
+      JOIN commercial_buckets b ON b.id=g.bucket_id AND b.kind='plan_total' AND b.ends_at IS NOT NULL
+      WHERE o.good_id LIKE 'plan\\_%' ESCAPE '\\' AND o.paid_at IS NOT NULL
+        AND o.status='delivered' AND o.superseded_by IS NULL
+      GROUP BY o.id
+    ), walk(id,user_id,n,shift,chain_end) AS (
+      SELECT id,user_id,n,0,e FROM seg WHERE n=1
+      UNION ALL
+      SELECT seg.id,seg.user_id,seg.n,MAX(0,walk.chain_end-seg.s),MAX(seg.s,walk.chain_end)+(seg.e-seg.s)
+      FROM walk JOIN seg ON seg.user_id=walk.user_id AND seg.n=walk.n+1
+    )
+    SELECT id,shift FROM walk WHERE shift>0;
+    UPDATE commercial_buckets SET
+      starts_at=starts_at+(SELECT p.shift FROM plan_chain_shift p JOIN commercial_order_grants g ON g.order_id=p.id WHERE g.bucket_id=commercial_buckets.id),
+      ends_at=ends_at+(SELECT p.shift FROM plan_chain_shift p JOIN commercial_order_grants g ON g.order_id=p.id WHERE g.bucket_id=commercial_buckets.id)
+    WHERE kind IN ('plan_total','plan_week') AND id IN (
+      SELECT g.bucket_id FROM commercial_order_grants g JOIN plan_chain_shift p ON p.id=g.order_id
+    );
+    DROP TABLE plan_chain_shift;
+`;
 // Append-only: a released entry is never edited; new tables come in a new entry.
 export const MIGRATIONS = [
   `
@@ -348,9 +382,59 @@ export const MIGRATIONS = [
         SELECT 'card_'||s.note_id, n.user_id, 'supplement', 'user', json_object('text',s.text), s.created_at
         FROM note_supplements s JOIN notes n ON n.id=s.note_id;
       `,
+  COMMERCIAL_SCHEMA,
+  COMMERCIAL_ORDERS_SCHEMA,
+  COMMERCIAL_REFUNDS_SCHEMA,
+  SUPPORT_TICKETS_SCHEMA,
+  SUPPORT_SESSION_SCHEMA,
+  SUPPORT_NOTIFICATION_SCHEMA,
+  // v23: refund attempts must survive audit retention; reply keys belong to a
+  // ticket and preserve old replies (NULL keys) without inventing identifiers.
+  `
+    ALTER TABLE commercial_refunds ADD COLUMN attempt INTEGER NOT NULL DEFAULT 1 CHECK(attempt>=1);
+    UPDATE commercial_refunds SET attempt=MAX(1,(
+      SELECT COUNT(*) FROM audit WHERE resource_id=commercial_refunds.order_id
+      AND action IN ('commercial.refund.requested','commercial.refund.retried')
+    ));
+    ALTER TABLE ticket_replies ADD COLUMN idempotency_key TEXT
+      CHECK(idempotency_key IS NULL OR length(idempotency_key) BETWEEN 1 AND 128);
+    CREATE UNIQUE INDEX ticket_replies_idempotency ON ticket_replies(ticket_id,idempotency_key)
+      WHERE idempotency_key IS NOT NULL;
+  `,
+  // v24: retain detached transactions without retaining the deleted account.
+  // Historical migrations and their foreign keys remain unchanged.
+  `
+    ALTER TABLE users ADD COLUMN erased_at INTEGER;
+    ALTER TABLE commercial_orders ADD COLUMN buyer_openid TEXT NOT NULL DEFAULT '';
+    ALTER TABLE commercial_orders ADD COLUMN account_erased_at INTEGER;
+    ALTER TABLE commercial_orders ADD COLUMN delivered_at INTEGER;
+    ALTER TABLE commercial_orders ADD COLUMN closed_at INTEGER;
+    UPDATE commercial_orders SET buyer_openid=(SELECT openid FROM users WHERE id=commercial_orders.user_id);
+    UPDATE commercial_orders SET delivered_at=COALESCE((
+      SELECT MAX(CAST(unixepoch(b.created_at,'subsec')*1000 AS INTEGER))
+      FROM commercial_order_grants g JOIN commercial_buckets b ON b.id=g.bucket_id
+      WHERE g.order_id=commercial_orders.id
+    ),paid_at) WHERE status IN ('delivered','refunding','refunded');
+    UPDATE commercial_orders SET closed_at=COALESCE((
+      SELECT MAX(CAST(unixepoch(a.created_at,'subsec')*1000 AS INTEGER)) FROM audit a
+      WHERE a.resource_id=commercial_orders.id AND a.action='commercial.order.closed'
+    ),CAST(unixepoch('subsec')*1000 AS INTEGER)) WHERE status='closed';
+    CREATE INDEX commercial_orders_erased ON commercial_orders(account_erased_at,status);
+    ALTER TABLE commercial_refunds ADD COLUMN status7_first_seen_at INTEGER;
+  `,
+  // v25: one plan at a time. superseded_by names the upgrade order that
+  // replaced a plan order's remaining time. Plans that were granted in
+  // parallel are queued by payment time: each later order's buckets move as a
+  // whole to the end of the previous one, keeping every ledger entry. Rerunning
+  // the shift computes zero for an already queued chain.
+  `
+    ALTER TABLE commercial_orders ADD COLUMN superseded_by TEXT;
+    ${PLAN_CHAIN_SHIFT_SQL}
+  `,
 ];
 export class SqliteStore {
   readonly db: DatabaseSync;
+  private transactionDepth = 0;
   constructor(
     path: string,
     private clock: Clock = businessNow,
@@ -529,18 +613,32 @@ export class SqliteStore {
     return this.clock().toISOString();
   }
   transaction<T>(fn: () => T): T {
-    this.db.exec("BEGIN IMMEDIATE");
+    // Business commits may call the monetary ledger. Savepoints keep those
+    // inner writes under the same outer commit instead of committing funds
+    // before the answer/order is durably saved.
+    const depth = this.transactionDepth;
+    const savepoint = `app_nested_${depth}`;
+    this.db.exec(depth === 0 ? "BEGIN IMMEDIATE" : `SAVEPOINT ${savepoint}`);
+    this.transactionDepth++;
     try {
       const result = fn();
-      this.db.exec("COMMIT");
+      if (result && typeof (result as { then?: unknown }).then === "function")
+        throw new TypeError("SQLite事务必须同步完成");
+      this.db.exec(depth === 0 ? "COMMIT" : `RELEASE SAVEPOINT ${savepoint}`);
       return result;
     } catch (error) {
-      this.db.exec("ROLLBACK");
+      if (depth === 0) this.db.exec("ROLLBACK");
+      else {
+        this.db.exec(`ROLLBACK TO SAVEPOINT ${savepoint}`);
+        this.db.exec(`RELEASE SAVEPOINT ${savepoint}`);
+      }
       throw error;
+    } finally {
+      this.transactionDepth--;
     }
   }
   getUser(id: string): User | undefined {
-    const row = this.db.prepare("SELECT data FROM users WHERE id=?").get(id) as
+    const row = this.db.prepare("SELECT data FROM users WHERE id=? AND erased_at IS NULL").get(id) as
       | { data: string }
       | undefined;
     return row ? (JSON.parse(row.data) as User) : undefined;

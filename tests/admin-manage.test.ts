@@ -241,6 +241,28 @@ test("a banned account keeps export, erase and logout; every other route answers
   }
 });
 
+test("an erased placeholder account cannot be banned or given a quota, and leaves no audit", async () => {
+  const { app, store, admin } = setup();
+  try {
+    const a = await learner(app, "erased");
+    store.db.prepare("UPDATE users SET erased_at=? WHERE id=?").run(Date.now(), a.userId);
+    const ban = await admin("PUT", `/v1/admin/users/${a.userId}/ban`, { banned: true });
+    assert.equal(ban.statusCode, 404, ban.body);
+    const quota = await admin("PUT", `/v1/admin/users/${a.userId}/quota`, { notes: 1 });
+    assert.equal(quota.statusCode, 404, quota.body);
+    const row = store.db.prepare("SELECT banned_at,quota FROM users WHERE id=?").get(a.userId) as
+      { banned_at: string | null; quota: string | null };
+    assert.equal(row.banned_at, null);
+    assert.equal(row.quota, null);
+    const audits = store.db.prepare(
+      "SELECT COUNT(*) AS n FROM audit WHERE resource_id=? AND action IN ('user.banned','user.quota.updated')",
+    ).get(a.userId) as { n: number };
+    assert.equal(audits.n, 0);
+  } finally {
+    await app.close();
+  }
+});
+
 test("global limits and per-account overrides apply at once to every charging path", async () => {
   const { app, admin, get } = setup();
   try {

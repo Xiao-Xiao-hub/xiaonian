@@ -15,7 +15,6 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   PRIVACY_VERSION,
-  PREVIOUS_PRIVACY_VERSION,
 } from "../server/src/shared/domain.js";
 import { SqliteStore } from "../server/src/shared/store.js";
 import {
@@ -95,12 +94,17 @@ function fixture() {
   };
 }
 
-test("profile writes require current consent; old consent and withdrawal retain basic account access", async (t) => {
+test("profile writes require profile-era consent; earlier consent and withdrawal retain basic account access", async (t) => {
   const f = fixture();
   t.after(() => f.app.close());
-  const { call } = await login(f.app);
-  for (const version of [null, PREVIOUS_PRIVACY_VERSION]) {
-    if (version) await agree(call, version);
+  const { call, user } = await login(f.app);
+  for (const version of [null, "2026-10-20.1"]) {
+    if (version) {
+      const stored = f.store.getUser(user.id)!;
+      stored.ageBand = "adult";
+      stored.consents = [{ kind: "docs", version, at: f.store.now() }];
+      f.store.db.prepare("UPDATE users SET data=? WHERE id=?").run(JSON.stringify(stored), user.id);
+    }
     const denied = await call("PATCH", "/v1/me/profile", {
       nickname: "新昵称",
     });
@@ -125,6 +129,30 @@ test("profile writes require current consent; old consent and withdrawal retain 
       .nickname,
     "开发者",
   );
+});
+
+test("profile permission survives later privacy versions and still requires matching child guardian consent", async t => {
+  const f = fixture(); t.after(() => f.app.close());
+  const { call, user } = await login(f.app);
+  for (const version of ["2026-10-20.2", "2026-10-20.10", "2026-10-24.1", "2026-10-25.1"]) {
+    const stored = f.store.getUser(user.id)!;
+    stored.ageBand = "adult";
+    stored.consents = [{ kind: "docs", version, at: f.store.now() }];
+    const save = () => f.store.db.prepare("UPDATE users SET data=? WHERE id=?").run(JSON.stringify(stored), user.id);
+    save();
+    assert.equal((await call("PATCH", "/v1/me/profile", { nickname: "允许更新" })).statusCode, 200);
+    stored.ageBand = "child";
+    stored.consents.push({ kind: "guardian", scope: "basic", version: "2026-10-20.1", at: f.store.now() });
+    save();
+    assert.equal((await call("PATCH", "/v1/me/profile", { nickname: "还没监护确认" })).statusCode, 403);
+    stored.consents.push({ kind: "guardian", scope: "basic", version, at: f.store.now() });
+    save();
+    assert.equal((await call("PATCH", "/v1/me/profile", { nickname: "监护确认后" })).statusCode, 200);
+    assert.equal((await call("POST", "/v1/me/profile", multipart().payload, multipart().headers)).statusCode, 200);
+    stored.consents.push({ kind: "withdraw", version, at: f.store.now() });
+    save();
+    assert.equal((await call("PATCH", "/v1/me/profile", { nickname: "撤回后拒绝" })).statusCode, 403);
+  }
 });
 
 test("a child needs the current basic guardian agreement before optional profile writes", async (t) => {

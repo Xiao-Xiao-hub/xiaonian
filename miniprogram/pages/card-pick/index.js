@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 卡片选择页：供对话或其他功能选择本人卡片，完成后把选择结果交回调用流程。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -37,7 +38,7 @@ const doneText = (mode, count) =>
         ? `带这 ${count} 张去聊`
         : "不带卡了";
 
-Page({
+Page(withShare({
     data: {
       loading: false,
       selectingAll: false,
@@ -379,4 +380,4 @@ Page({
       };
       wx.navigateBack();
     },
-  });
+  }));

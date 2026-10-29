@@ -365,37 +365,114 @@ test("restore confirmation belongs to the account that opened it", async () => {
   assert.equal(mod("utils/auth.js").getUser().nickname, "另一个账号");
 });
 
-test("welcome suggests optional profile for adult and child, but skips a saved or declined profile", async () => {
+test("welcome completes login without detouring through personal profile setup", async () => {
   const auth = mod("utils/auth.js");
   auth.saveConsent = async () => {};
   for (const age of ["adult", "child"]) {
     const welcome = openPage("pages/welcome/index.js");
     welcome.pick({ currentTarget: { dataset: { age } } });
     await settle();
-    assert.equal(moves.at(-1), "/pages/profile/index");
-    assert.equal(app.globalData.profileSetup.owner, "A");
-    assert.equal(app.globalData.profileSetup.next, "/pages/onboard/index");
+    assert.equal(moves.at(-1), "/pages/onboard/index");
+    assert.equal(app.globalData.profileSetup, undefined);
   }
-  mod("utils/profile.js").markPrompted("A");
+  storage.set("zhiye_onboarded", "1");
   const returning = openPage("pages/welcome/index.js");
   returning.pick({ currentTarget: { dataset: { age: "adult" } } });
   await settle();
-  assert.equal(moves.at(-1), "/pages/onboard/index");
-  mod("utils/profile.js").clearPrompt("A");
-  signIn(user("A", "已设置"));
-  const named = openPage("pages/welcome/index.js");
-  named.pick({ currentTarget: { dataset: { age: "adult" } } });
-  await settle();
-  assert.equal(moves.at(-1), "/pages/onboard/index");
+  assert.equal(moves.at(-1), "/pages/notes/index");
 });
 
-test("a profile refreshed from the server is not prompted again from an older local session", async () => {
+test("opening My page never expands a profile editor", async () => {
   const page = openPage();
-  app.globalData.profileSetup = { owner: "A", next: "/pages/onboard/index" };
-  page.load = async () => { signIn(user("A", "其他设备已设置")); };
+  page.load = async () => {};
   await page.onShow();
   assert.equal(page.data.editingProfile, false);
-  assert.equal(mod("utils/profile.js").prompted("A"), true);
-  assert.deepEqual(moves, ["/pages/onboard/index"]);
-  assert.equal(app.globalData.profileSetup, undefined);
+  assert.deepEqual(moves, []);
+});
+
+test("the existing round header avatar opens the native picker and saves without an extra form", async () => {
+  const page = openPage();
+  page.beginAvatar();
+  await page.changeAvatar({ detail: { avatarUrl: "/synthetic/new-avatar.jpg" } });
+  assert.equal(uploads.length, 1);
+  assert.equal(uploads[0].filePath, "/synthetic/new-avatar.jpg");
+  assert.equal(page.data.editingProfile, false);
+  assert.equal(mod("utils/auth.js").getUser().avatar.version, "avatar-new");
+  const fs = require("node:fs");
+  const wxml = fs.readFileSync(path.join(root, "pages/profile/index.wxml"), "utf8");
+  assert.doesNotMatch(wxml, /profile-editor|edit-profile|设置头像和昵称|先跳过/);
+  assert.match(wxml, /class="me-av"[^>]*open-type="chooseAvatar"[^>]*bindchooseavatar="changeAvatar"/);
+});
+
+test("cancelled picker and a picker from a previous account cannot replace the avatar", async () => {
+  const page = openPage();
+  page.beginAvatar();
+  await page.changeAvatar({ detail: {} });
+  assert.equal(uploads.length, 0);
+  page.beginAvatar();
+  signIn(user("B"));
+  await page.changeAvatar({ detail: { avatarUrl: "/synthetic/previous-account.jpg" } });
+  assert.equal(uploads.length, 0);
+});
+
+test("authorization completing after an account change cannot save the previous avatar to a new editor", async () => {
+  let authorization;
+  wx.getPrivacySetting = (options) => options.success({ needAuthorization: true });
+  wx.requirePrivacyAuthorize = (options) => { authorization = options; };
+  const page = openPage();
+  page.beginAvatar();
+  const saving = page.changeAvatar({ detail: { avatarUrl: "/synthetic/previous-account.jpg" } });
+  signIn(user("B"));
+  page.discardProfile();
+  wx.getPrivacySetting = (options) => options.success({ needAuthorization: false });
+  await page.editProfile("nickname");
+  authorization.success();
+  await saving;
+  assert.equal(uploads.length, 0);
+  assert.equal(mod("utils/auth.js").getUser().id, "B");
+});
+
+test("inline nickname waits for the native review, then saves on finishing the field", async () => {
+  const page = openPage();
+  await page.editNickname();
+  page.nicknameInput(event(page, { value: "小溪" }));
+  page.nicknameBlur(event(page, { value: "小溪" }));
+  assert.equal(requests.length, 0);
+  page.nicknameReview(event(page, { pass: true, timeout: false }));
+  await settle();
+  assert.equal(requests.length, 1);
+  assert.equal(page.data.name, "小溪");
+  assert.equal(page.data.editingProfile, false);
+});
+
+test("clearing the inline nickname and leaving the field restores the saved name", async () => {
+  signIn(user("A", "小溪"));
+  const page = openPage();
+  await page.editNickname();
+  assert.equal(page.originalNickname, "小溪");
+  page.nicknameInput(event(page, { value: "  " }));
+  page.nicknameBlur(event(page, { value: "  " }));
+  await settle();
+  assert.equal(requests.length, 0);
+  assert.equal(page.data.editingProfile, false);
+  assert.equal(page.data.profileMode, "");
+  assert.equal(page.data.nicknamePending, false);
+  assert.equal(mod("utils/auth.js").getUser().nickname, "小溪");
+});
+
+test("inline nickname also saves when review precedes blur, and never saves a rejected value", async () => {
+  const page = openPage();
+  await page.editNickname();
+  page.nicknameInput(event(page, { value: "小河" }));
+  page.nicknameReview(event(page, { pass: true }));
+  page.nicknameBlur(event(page, { value: "小河" }));
+  await settle();
+  assert.equal(page.data.name, "小河");
+  await page.editNickname();
+  page.nicknameInput(event(page, { value: "待检查" }));
+  page.nicknameBlur(event(page, { value: "待检查" }));
+  page.nicknameReview(event(page, { pass: false }));
+  await settle();
+  assert.equal(requests.length, 1);
+  assert.equal(page.data.name, "小河");
 });

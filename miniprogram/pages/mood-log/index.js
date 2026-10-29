@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 心情记录页：查看与管理当前账号的心情记录；撤回或删除需走服务端接口。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -28,7 +29,7 @@ function summary(threads, counts) {
   return { extraText: parts.join("、"), hasAny: Boolean(threads.length || parts.length) };
 }
 
-Page({
+Page(withShare({
   data: {
     loading: false, busy: false, error: "", threads: [], linkedThreads: [], brainstorms: [],
     counts: EMPTY, tab: "", extraOpen: false, extraText: "", hasAny: false, swipeId: "", consentedAt: "",
@@ -146,4 +147,4 @@ Page({
       },
     });
   },
-});
+}));

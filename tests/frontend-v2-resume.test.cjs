@@ -13,6 +13,7 @@ function harness(relative, api, component = true) {
     chats = [];
   const context = {
     require(name) {
+      if (name.endsWith("/share")) return { withShare: (page) => page };
       if (name.endsWith("/api")) return api;
       if (name.endsWith("/auth"))
         return {

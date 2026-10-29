@@ -8,7 +8,9 @@ import { randomUUID } from "node:crypto";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { Budget } from "../../shared/budget.js";
+import { runWithoutBillingUser } from "../../shared/call-context.js";
 import { AppError } from "../../shared/domain.js";
+import { reserveUploadBytes } from "../../shared/upload-budget.js";
 import type { SqliteStore } from "../../shared/store.js";
 import { chinaDayStart, now as businessNow } from "../../shared/time.js";
 import { logEvent } from "../../shared/events.js";
@@ -82,6 +84,8 @@ import { BANNED_PHRASES } from "../safety/banned-phrases.js";
 import { IDENTITY_RULE } from "../../shared/identity.js";
 import {
   defaultImportFileTools,
+  documentReadError,
+  readPlainText,
   type ImportFileTools,
 } from "../imports/parser.js";
 import { IMPORT_FILE_LIMIT } from "../imports/service.js";
@@ -793,6 +797,14 @@ const toMessage = (row: Record<string, unknown>): Message => ({
 });
 // ── 服务实例与运行中状态 ──
 // 以下集合只存在于当前进程；它们约束并发和重试，不替代数据库中的完成记录。
+// Render one page's nested collections in order, so a long answer does not
+// reserve a worker slot for every option, step or homework item at once.
+async function renderInOrder<T, R>(items: readonly T[], render: (item: T, index: number) => Promise<R>) {
+  const rendered: R[] = [];
+  for (const [index, item] of items.entries()) rendered.push(await render(item, index));
+  return rendered;
+}
+
 export class ChatService {
   // 每个会话同一时刻只允许一个回答流程；streams 另外保存取消控制器，供删会话等操作中止连接。
   private readonly active = new Set<string>();
@@ -860,6 +872,9 @@ export class ChatService {
   }
   private stamp() {
     return new Date(this.clock()).toISOString();
+  }
+  finishSendBilling(success: boolean) {
+    this.deps.budget?.finishCall(success);
   }
   private needsBreak(threadId: string) {
     const stamps = this.messages(threadId)
@@ -1625,12 +1640,14 @@ export class ChatService {
     createdAt: string,
     usage?: unknown,
   ) {
-    this.db
-      .prepare(
-        "INSERT OR IGNORE INTO quota_receipts(source,source_id,user_id,kind,created_at) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM users WHERE id=?)",
-      )
-      .run(source, id, userId, kind, createdAt, userId);
-    this.deps.budget?.charge(userId, source, id, usage);
+    this.deps.store.transaction(() => {
+      this.db
+        .prepare(
+          "INSERT OR IGNORE INTO quota_receipts(source,source_id,user_id,kind,created_at) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM users WHERE id=?)",
+        )
+        .run(source, id, userId, kind, createdAt, userId);
+      this.deps.budget?.charge(userId, source, id, usage);
+    });
   }
   // ---- threads -----------------------------------------------------------
   private own(userId: string, threadId: string) {
@@ -1881,9 +1898,10 @@ export class ChatService {
   }
   async thread(userId: string, threadId: string, tone: string) {
     const thread = this.own(userId, threadId);
-    const messages = await Promise.all(
-      this.messages(threadId).map((m) => this.view(userId, m, tone)),
-    );
+    // One page occupies one rendering slot, regardless of its history length.
+    const messages = [];
+    for (const message of this.messages(threadId))
+      messages.push(await this.view(userId, message, tone));
     return { thread: await this.threadView(thread, tone), messages };
   }
   private async threadView(thread: Thread, tone: string) {
@@ -1947,8 +1965,8 @@ export class ChatService {
         ? this.deps.mistakes.forMaterial(userId, row.material_id)?.status === "open"
         : false;
     };
-    const items = await Promise.all(
-      homework.items.map(async (item, index) => ({
+    const items = await renderInOrder(
+      homework.items, async (item, index) => ({
         index,
         no: item.no || String(index + 1),
         status: this.gradingLost(threadId, index, item) ? "failed" : item.status,
@@ -1965,7 +1983,7 @@ export class ChatService {
         work: item.steps.length
           ? await this.deps.markdown.render(numbered(item.steps), tone)
           : [],
-      })),
+      }),
     );
     const count = (status: string, verdict?: string) =>
       items.filter(
@@ -2099,8 +2117,8 @@ export class ChatService {
           verdict: d.verdict,
           summary: d.summary,
           by: d.by,
-          steps: await Promise.all(
-            d.steps.map(async (s, i) => ({
+          steps: await renderInOrder(
+            d.steps, async (s, i) => ({
               no: i + 1,
               // a record graded before G7 kept "ok" after the
               // first error; read now, it is carried over, as new ones are.
@@ -2111,7 +2129,7 @@ export class ChatService {
               text: work[i] ?? "",
               blocks: await render(work[i] ?? ""),
               note: s.note,
-            })),
+            }),
           ),
           first: d.first
             ? {
@@ -2131,18 +2149,18 @@ export class ChatService {
         ...base,
         blocks,
         review: {
-          points: await Promise.all(
-            r.points.map(async (p) => ({
+          points: await renderInOrder(
+            r.points, async (p) => ({
               ...p,
               blocks: await this.deps.markdown.render(p.text, tone),
-            })),
+            }),
           ),
-          wrong: await Promise.all(
-            r.wrong.map(async (w) => ({
+          wrong: await renderInOrder(
+            r.wrong, async (w) => ({
               quote: w.quote,
               why: await this.deps.markdown.render(w.why, tone),
               fix: w.fix ? await this.deps.markdown.render(w.fix, tone) : [],
-            })),
+            }),
           ),
           best: r.best,
           pointId: r.pointId,
@@ -2172,11 +2190,11 @@ export class ChatService {
           // the steps, only once the answer may be seen.
           ...(s.options?.length
             ? {
-                options: await Promise.all(
-                  s.options.map(async (text, i) => ({
+                options: await renderInOrder(
+                  s.options, async (text, i) => ({
                     id: CHOICE_IDS[i],
                     blocks: await this.deps.markdown.render(text, tone),
-                  })),
+                  }),
                 ),
                 correct:
                   s.revealed && typeof s.correct === "number"
@@ -2807,18 +2825,25 @@ export class ChatService {
     if (patch.charged !== undefined)
       (sets.push("charged=?"), args.push(patch.charged ? 1 : 0));
     if (!sets.length) return;
-    this.db
-      .prepare(`UPDATE messages SET ${sets.join(",")} WHERE id=?`)
-      .run(...args, id);
-    // A charged message spends its usage, like charge; the
-    // trigger writes its receipt. Once per message.
-    if (patch.charged && this.deps.budget) {
-      const row = this.db
-        .prepare("SELECT user_id,usage FROM messages WHERE id=?")
-        .get(id) as { user_id: string; usage: string | null } | undefined;
-      if (row?.usage)
-        this.deps.budget.charge(row.user_id, "chat", id, JSON.parse(row.usage));
-    }
+    this.deps.store.transaction(() => {
+      this.db
+        .prepare(`UPDATE messages SET ${sets.join(",")} WHERE id=?`)
+        .run(...args, id);
+      // A charged message spends its usage, like charge; the trigger writes
+      // its receipt. Once per message.
+      if (patch.charged && this.deps.budget) {
+        const row = this.db
+          .prepare("SELECT user_id,usage FROM messages WHERE id=?")
+          .get(id) as { user_id: string; usage: string | null } | undefined;
+        if (row)
+          this.deps.budget.charge(
+            row.user_id,
+            "chat",
+            id,
+            row.usage ? JSON.parse(row.usage) : undefined,
+          );
+      }
+    });
   }
   // The conversation as the model sees it: the last few finished turns.
   // The problem's own result, when the program can work it out : the
@@ -3224,10 +3249,6 @@ export class ChatService {
       logEvent(this.deps.store, userId, "chat_guide_violation", {
         kind: "banned_phrase",
       });
-    if (reply.kind === "reply")
-      this.charge("chat", reply.id, userId, reply.kind, reply.createdAt, [
-        result.usage,
-      ]);
     if (guided) {
       this.update(reply.id, {
         content: visible,
@@ -3427,15 +3448,17 @@ export class ChatService {
         ? hintRecheckPrompt(result.findings)
         : recheckPrompt(result.text, result.findings),
     ];
-    const second = await this.stream(
-      userId,
-      thread,
-      again,
-      messages,
-      tone,
-      emit,
-      hint ? undefined : "recheck",
-      grading,
+    const second = await runWithoutBillingUser(() =>
+      this.stream(
+        userId,
+        thread,
+        again,
+        messages,
+        tone,
+        emit,
+        hint ? undefined : "recheck",
+        grading,
+      ),
     );
     if (!second) return null;
     // A hint keeps its checks hidden, as stream stored them.
@@ -3485,6 +3508,7 @@ export class ChatService {
       const id = newId("img");
       const createdAt = this.stamp();
       const relative = `${userId}/chat/${id}.${type}`;
+      reserveUploadBytes(this.uploadRoot, userId, data.length);
       mkdirSync(join(this.uploadRoot, userId, "chat"), {
         recursive: true,
         mode: 0o700,
@@ -3558,15 +3582,15 @@ export class ChatService {
       return {
         imageId: id,
         type: scan.type,
-        problems: await Promise.all(
-          problems.map(async (p) => {
+        problems: await renderInOrder(
+          problems, async (p) => {
             const text = unnumbered(p.text);
             return {
               text,
               unclear: p.unclear,
               blocks: await this.deps.markdown.render(text, tone),
             };
-          }),
+          },
         ),
         solution: scan.solution
           ? {
@@ -3596,6 +3620,7 @@ export class ChatService {
   ) {
     if (input.threadId) this.own(userId, input.threadId);
     this.dropStale(userId);
+    this.checkPendingAttachments(userId, input.data.length);
     const full = input.name.trim() || "附件";
     // A long name keeps its extension, which says what kind of file it is.
     const fullExt = extOf(full);
@@ -3621,6 +3646,7 @@ export class ChatService {
           id = newId("att"),
           createdAt = this.stamp();
         const relative = `${userId}/chat/${imageId}.${image}`;
+        reserveUploadBytes(this.uploadRoot, userId, input.data.length);
         mkdirSync(join(this.uploadRoot, userId, "chat"), {
           recursive: true,
           mode: 0o700,
@@ -3694,6 +3720,7 @@ export class ChatService {
           throw new AppError(404, "NOT_FOUND", "没找到你的账号，退出再进来试试");
         // Checked again: another upload may have used the last one meanwhile.
         this.deps.runner.checkQuota(userId, "import");
+        this.checkPendingAttachments(userId, input.data.length);
         if (input.threadId) this.own(userId, input.threadId);
         this.db
           .prepare(
@@ -3722,6 +3749,18 @@ export class ChatService {
       this.quotaActive.delete(key);
     }
   }
+  private checkPendingAttachments(userId: string, incoming: number) {
+    const own = this.db.prepare(
+      "SELECT COUNT(*) AS count, COALESCE(SUM(size),0) AS bytes FROM chat_attachments WHERE user_id=? AND message_id IS NULL",
+    ).get(userId) as { count: number; bytes: number };
+    const all = this.db.prepare(
+      "SELECT COALESCE(SUM(size),0) AS bytes FROM chat_attachments WHERE message_id IS NULL",
+    ).get() as { bytes: number };
+    if (own.count >= 20 || own.bytes + incoming > 20 * 1024 * 1024 || all.bytes + incoming > 256 * 1024 * 1024) {
+      console.warn(JSON.stringify({ event: "upload_storage_rejected", reason: "pending_attachments" }));
+      throw new AppError(429, "ATTACHMENT_STORAGE_LIMIT", "待发送的附件太多了，移除一些后再试");
+    }
+  }
   // The import module's readers, from the bytes in memory.
   // upto: a PDF is read until it has more text than this.
   private async readFile(type: FileType, data: Buffer, upto = FILE_TEXT_LIMIT) {
@@ -3743,12 +3782,8 @@ export class ChatService {
           if (chars(parts.join("")) > upto) break;
         }
         text = parts.join("\n\n");
-      } catch {
-        throw new AppError(
-          400,
-          "FILE_READ_FAILED",
-          "这个 PDF 打不开（可能加了密或坏了）",
-        );
+      } catch (error) {
+        throw documentReadError(error, "FILE_READ_FAILED", "这个 PDF 打不开（可能加了密或坏了）");
       }
       if (chars(text) < SCAN_TEXT_BELOW)
         throw new AppError(
@@ -3763,11 +3798,9 @@ export class ChatService {
         if (data[0] !== 0x50 || data[1] !== 0x4b) throw new Error("not zip");
         text = await tools.readDocx(data);
       } else
-        text = new TextDecoder("utf-8", { fatal: true, ignoreBOM: false })
-          .decode(data)
-          .replace(/\r\n?/g, "\n");
-    } catch {
-      throw new AppError(400, "FILE_READ_FAILED", "这个文件打不开，换一份试试");
+        text = readPlainText(data, false).replace(/\r\n?/g, "\n");
+    } catch (error) {
+      throw documentReadError(error, "FILE_READ_FAILED", "这个文件打不开，换一份试试");
     }
     if (!chars(text))
       throw new AppError(400, "FILE_EMPTY", "文件里没有读到文字");
@@ -4818,11 +4851,17 @@ export class ChatService {
           throw error;
         }
         usage.push(made.usage);
+        // Account deletion cascades the thread. Stop before any follow-up
+        // verification can start another account-attributed provider call.
+        if (!this.deps.store.getUser(userId)) this.own(userId, thread.id);
         const checked = await this.checkMade(userId, made.data, null, {});
         if (!checked) continue;
         const messageId = newId("msg");
         const createdAt = this.stamp();
-        this.charge("chat", messageId, userId, "similar", createdAt, usage);
+        // Legacy quota receipts survive content deletion. Commercial holds are
+        // released instead because no result was delivered to the learner.
+        if (!this.deps.budget?.commercialEnabled)
+          this.charge("chat", messageId, userId, "similar", createdAt, usage);
         // The provider may finish after deletion. Keep the quota receipt, but
         // never recreate the removed conversation or expose a foreign-key error.
         this.own(userId, thread.id);

@@ -1,0 +1,2 @@
+@import "../chat/index.wxss";
+.ticket-list { margin-top: 22rpx; }.ticket-card { padding: 26rpx; margin-bottom: 18rpx; border-radius: 24rpx; background:var(--card); box-shadow:0 8rpx 22rpx rgba(44,107,188,.08); }.ticket-top { display:flex; justify-content:space-between; color:var(--primary); font-size:26rpx; }.ticket-content { margin-top:14rpx; font-size:28rpx; line-height:1.6; color:var(--body); }

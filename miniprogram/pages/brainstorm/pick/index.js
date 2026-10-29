@@ -1,3 +1,4 @@
+const { withShare } = require("../../../utils/share");
 /*
  * 头脑风暴选卡页：从本人卡片中选择输入，查看组合建议并发起整理任务。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -25,7 +26,7 @@ const choices = (items) =>
 const clientId = () =>
   `brainstorm-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-Page({
+Page(withShare({
     data: {
       loading: false,
       selectingAll: false,
@@ -506,4 +507,4 @@ Page({
           if (this.active(epoch, account)) this.setData({ starting: false });
         });
     },
-  });
+  }));

@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 章节页：展示指定章节的学习内容与进度，衔接知识点、地图和练习入口。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -11,7 +12,7 @@ const studyClock = require("../../utils/study-clock");
 // tiers point by point (only the next rank's tier open at first), 剩下的我都会
 // and the ⋯ menu (这章先放着).
 // 连做本章 is not built yet.
-Page(studyClock.track({
+Page(withShare(studyClock.track({
   data: {
     loading: true,
     error: "",
@@ -132,4 +133,4 @@ Page(studyClock.track({
   goMap() {
     backTo(ROUTES.map);
   },
-}));
+})));

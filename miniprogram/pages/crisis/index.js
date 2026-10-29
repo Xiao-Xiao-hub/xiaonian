@@ -1,8 +1,9 @@
+const { withShare } = require("../../utils/share");
 /*
  * 危机求助页：展示求助与紧急联系入口；不继续普通对话引导，不作专业医疗判断。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
  */
-Page({
+Page(withShare({
   callHotline() {
     wx.makePhoneCall({ phoneNumber: "12356" });
   },
@@ -19,4 +20,4 @@ Page({
     // Opened with nothing under it: back to 聊一聊.
     wx.switchTab({ url: "/pages/talk/index" });
   },
-});
+}));

@@ -182,20 +182,20 @@ export function registerAdminManageRoutes(
           ),
         },
         users: {
-          total: Number(one("SELECT COUNT(*) AS n FROM users").n),
+          total: Number(one("SELECT COUNT(*) AS n FROM users WHERE erased_at IS NULL").n),
           banned: Number(
-            one("SELECT COUNT(*) AS n FROM users WHERE banned_at IS NOT NULL")
+            one("SELECT COUNT(*) AS n FROM users WHERE erased_at IS NULL AND banned_at IS NOT NULL")
               .n,
           ),
           newToday: Number(
             one(
-              "SELECT COUNT(*) AS n FROM users WHERE json_extract(data,'$.createdAt')>=?",
+              "SELECT COUNT(*) AS n FROM users WHERE erased_at IS NULL AND json_extract(data,'$.createdAt')>=?",
               chinaDayStart(businessMs()),
             ).n,
           ),
           overrides: Number(
             one(
-              "SELECT COUNT(*) AS n FROM users WHERE quota IS NOT NULL AND quota<>'{}'",
+              "SELECT COUNT(*) AS n FROM users WHERE erased_at IS NULL AND quota IS NOT NULL AND quota<>'{}'",
             ).n,
           ),
         },
@@ -327,7 +327,7 @@ export function registerAdminManageRoutes(
       })
       .strict()
       .parse(req.query ?? {});
-    const where: string[] = [];
+    const where: string[] = ["u.erased_at IS NULL"];
     const args: string[] = [];
     if (q.q) {
       where.push(
@@ -367,7 +367,7 @@ export function registerAdminManageRoutes(
   });
   const detail = (id: string) => {
     const row = one(
-      `SELECT u.id,u.data,u.banned_at,u.ban_reason,${lastActive} AS last_active FROM users u WHERE u.id=?`,
+      `SELECT u.id,u.data,u.banned_at,u.ban_reason,${lastActive} AS last_active FROM users u WHERE u.id=? AND u.erased_at IS NULL`,
       id,
     );
     if (!row) throw new AppError(404, "NOT_FOUND", "没有这个用户");
@@ -432,7 +432,7 @@ export function registerAdminManageRoutes(
       .parse(req.body);
     store.transaction(() => {
       const changed = db
-        .prepare("UPDATE users SET banned_at=?,ban_reason=? WHERE id=?")
+        .prepare("UPDATE users SET banned_at=?,ban_reason=? WHERE id=? AND erased_at IS NULL")
         .run(
           body.banned ? store.now() : null,
           body.banned ? body.reason || null : null,
@@ -481,7 +481,7 @@ export function registerAdminManageRoutes(
       }
       if (Object.keys(own).length) next.budget = own;
       const changed = db
-        .prepare("UPDATE users SET quota=? WHERE id=?")
+        .prepare("UPDATE users SET quota=? WHERE id=? AND erased_at IS NULL")
         .run(
           Object.keys(next).length ? JSON.stringify(next) : null,
           id,

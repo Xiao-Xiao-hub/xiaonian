@@ -781,6 +781,7 @@ function resumeCard(item, reply = {}) {
   let definition;
   const context = {
     require(name) {
+      if (name.endsWith("/share")) return { withShare: (page) => page };
       if (name.endsWith("/api"))
         return {
           post: async (url) => (url.endsWith("/act") ? { item: { ...item, state: "done" }, ...reply } : { kind: "item", item }),

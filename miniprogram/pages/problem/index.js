@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 题目学习页：按需展开分层提示、参考答案与同类练习；作答流程由 practice 页面承担。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -20,7 +21,7 @@ function variantText(hints) {
   const kind = hints.data.variant;
   return kind === undefined ? VARIANT.numbers : VARIANT[kind] || "";
 }
-Page(studyClock.track({
+Page(withShare(studyClock.track({
   ...reviewMethods,
   data: {
     id: "",
@@ -205,4 +206,4 @@ Page(studyClock.track({
           .catch((error) => !api.needsConsent(error) && this.setData({ error: errorText(error) })),
     });
   },
-}));
+})));

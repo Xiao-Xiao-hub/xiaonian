@@ -12,7 +12,7 @@
       <view class="pp">感谢你使用晓念！我们非常重视你的个人信息和隐私保护。为了更好地保障你的权益，请你认真阅读<text class="lk" data-doc="user-agreement" bindtap="openDoc">《用户协议》</text>、<text class="lk" data-doc="privacy-policy" bindtap="openDoc">《隐私政策》</text>和<text class="lk" data-doc="children-privacy" bindtap="openDoc">《儿童隐私政策》</text>的全部内容，同意并接受全部条款后开始使用我们的产品和服务。并特向你说明以下信息：</view>
       <view class="pp">1. 我们只处理你主动写下、拍下、选择或导入的内容，以及由此生成的卡片、对话和学习记录；你可以自愿设置头像和昵称，不设置也不影响使用；不获取手机号、位置和通讯录。</view>
       <view class="pp">2. 使用 AI 功能时，相关内容会发给我们委托的大模型服务方处理。大模型生成的内容可能有误，请注意核实。</view>
-      <view class="pp">3. 你可以在“我的”里导出数据、删除内容、撤回同意或注销账号。</view>
+      <view class="pp">3. 你可以在“我的”里导出数据、删除内容、撤回同意或注销账号；注销后订单和退款记录另存 3 年，只用于对账和退款。</view>
       <view class="pp">4. 未满 14 周岁的，需要监护人阅读并同意<text class="lk" data-doc="children-privacy" bindtap="openDoc">《儿童隐私政策》</text>后才能使用。</view>
     </scroll-view>
   </view>

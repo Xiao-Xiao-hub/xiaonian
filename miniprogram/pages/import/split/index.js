@@ -1,3 +1,4 @@
+const { withShare } = require("../../../utils/share");
 /*
  * 拆卡确认页：查看导入生成的候选卡，编辑和选择后保存；保留未读完内容的继续处理入口。
  * 页面中的请求标识、账号快照和 alive 状态用于拦截过期回包；不能仅因离开页面就删除另一份新草稿。
@@ -25,7 +26,7 @@ const owner = () => (auth.getUser() || {}).id || "";
 const imported = (result) => result && (result.import || result);
 const uniq = (values) => Array.from(new Set(values));
 
-Page({
+Page(withShare({
     data: {
       loading: false,
       saving: false,
@@ -741,4 +742,4 @@ Page({
         },
       });
     },
-  });
+  }));

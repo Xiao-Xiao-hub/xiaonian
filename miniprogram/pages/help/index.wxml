@@ -30,6 +30,11 @@
 
   <text class="sec-k">反馈与隐私</text>
   <view class="rows">
+    <view class="item" hover-class="pressed" bindtap="openSupport"><view class="copy"><text class="title">帮助与客服</text><text class="snippet">常见问题与在线客服</text></view><view class="chev" /></view>
+    <block wx:for="{{supportKnowledge}}" wx:key="id">
+      <view class="item" hover-class="pressed" data-id="support-{{item.id}}" bindtap="toggle"><text class="copy title">{{item.title}}</text><view class="chev {{open['support-' + item.id] ? 'up' : 'down'}}" /></view>
+      <view wx:if="{{open['support-' + item.id]}}" class="body"><text class="para">{{item.answer}}</text></view>
+    </block>
     <view class="item fb"><view class="copy"><text class="title">意见反馈</text><text class="snippet">哪里不好用，告诉我们</text></view><view class="chev" /><button class="fb-btn" open-type="feedback" aria-label="意见反馈" /></view>
     <block wx:for="{{privacy}}" wx:key="id">
       <view class="item" hover-class="pressed" data-id="{{item.id}}" bindtap="toggle"><text class="copy title">{{item.title}}</text><view class="chev {{open[item.id] ? 'up' : 'down'}}" /></view>

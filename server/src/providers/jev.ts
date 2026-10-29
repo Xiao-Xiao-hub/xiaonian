@@ -4,7 +4,11 @@
  */
 import { setTimeout as realSleep } from "node:timers/promises";
 import { z } from "zod";
+import { bindCallContext } from "../shared/call-context.js";
+import type { CommercialMeter } from "../shared/commercial-meter.js";
 import type { UsageMeter } from "../shared/usage-ledger.js";
+import { boundedResponseText } from "./response-limits.js";
+import { checkInputComplexity } from "../shared/request-safety.js";
 
 export type JevQuestion =
   | { type: "noul"; instructions: string }
@@ -65,7 +69,7 @@ export class JevError extends Error {
     super(messages[code], { cause });
     this.name = "JevError";
     this.code = code;
-    this.billing = code === "JEV_TIMEOUT" ? "unknown" : "none";
+    this.billing = ["JEV_TIMEOUT", "JEV_UNAVAILABLE", "JEV_BAD_OUTPUT"].includes(code) ? "unknown" : "none";
     this.detail = detail;
   }
 }
@@ -125,6 +129,7 @@ export type JevOptions = {
   model?: string;
   timeoutMs: number;
   usageMeter?: UsageMeter;
+  commercialMeter?: Pick<CommercialMeter, "run"> & Partial<Pick<CommercialMeter, "action">>;
 };
 
 const RETRY_DELAYS_MS = [500, 1500];
@@ -147,6 +152,7 @@ export class Jev {
   private readonly model: string;
   private readonly timeoutMs: number;
   private readonly usageMeter: UsageMeter | undefined;
+  private readonly commercialMeter: (Pick<CommercialMeter, "run"> & Partial<Pick<CommercialMeter, "action">>) | undefined;
   private foregroundCalls = 0;
   private foregroundWaiters = 0;
   private backgroundActive: Promise<void> | undefined;
@@ -165,6 +171,7 @@ export class Jev {
     this.model = opts.model ?? "jev-1.13.0";
     this.timeoutMs = opts.timeoutMs;
     this.usageMeter = opts.usageMeter;
+    this.commercialMeter = opts.commercialMeter;
   }
 
   private readonly answer: JevOptions["answer"];
@@ -179,6 +186,8 @@ export class Jev {
     questions: Q,
     signal?: AbortSignal,
   ): Promise<JevAnswers<Q>> {
+    if (this.foregroundWaiters + this.foregroundCalls >= 32)
+      throw new JevError("JEV_BUSY");
     this.foregroundWaiters += 1;
     let admitted = false;
     try {
@@ -204,10 +213,12 @@ export class Jev {
     signal?: AbortSignal,
   ): Promise<T> {
     if (signal?.aborted) return Promise.reject(abortReason(signal));
+    if (this.backgroundQueue.length >= 32) return Promise.reject(new JevError("JEV_BUSY"));
 
     return new Promise<T>((resolve, reject) => {
       const entry: BackgroundEntry<T> = {
-        run,
+        run: bindCallContext((judge) => this.commercialMeter?.action
+          ? this.commercialMeter.action(() => run(judge)) : run(judge)),
         signal,
         resolve,
         reject,
@@ -248,15 +259,36 @@ export class Jev {
     } else {
       if (!this.apiKey) throw new JevError("JEV_NOT_CONFIGURED");
       const body = JSON.stringify({ state, model: this.model, questions });
+      let transportParsed = false;
       try {
-        const text = await this.send(this.apiKey, body, signal);
-        try {
-          json = JSON.parse(text);
-        } catch (err) {
-          throw new JevError("JEV_BAD_OUTPUT", "response is not JSON", err);
-        }
+        const invoke = async () => {
+          const text = await this.send(this.apiKey!, body, signal);
+          let result: unknown;
+          try {
+            result = JSON.parse(text);
+          } catch (err) {
+            throw new JevError("JEV_BAD_OUTPUT", "response is not JSON", err);
+          }
+          try { checkInputComplexity(result); }
+          catch (error) { throw new JevError("JEV_BAD_OUTPUT", "response complexity limit exceeded", error); }
+          transportParsed = true;
+          return this.parseAnswers(result, questions);
+        };
+        return this.commercialMeter
+          ? await this.commercialMeter.run(
+              {
+                kind: "jev",
+                provider: new URL(this.url).host,
+                model: this.model,
+                source: "jev",
+              },
+              invoke,
+              () => ({ requests: 1 }),
+              signal,
+            )
+          : await invoke();
       } catch (err) {
-        if (!this.fallback || signal?.aborted || !(err instanceof JevError))
+        if (transportParsed || !this.fallback || signal?.aborted || !(err instanceof JevError))
           throw err;
         try {
           json = await this.fallback({ state, questions }, signal);
@@ -266,6 +298,13 @@ export class Jev {
         }
       }
     }
+    return this.parseAnswers(json, questions);
+  }
+
+  private parseAnswers<Q extends Record<string, JevQuestion>>(
+    json: unknown,
+    questions: Q,
+  ): JevAnswers<Q> {
     const parsed = responseSchema.safeParse(json);
     if (!parsed.success)
       throw new JevError("JEV_BAD_OUTPUT", "response has no answers object");
@@ -431,7 +470,7 @@ export class Jev {
         body,
         signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
       });
-      const text = await res.text();
+      const text = await boundedResponseText(res);
       finishUsage?.({ status: res.ok ? "succeeded" : "failed" });
       return { status: res.status, text };
     } catch (err) {

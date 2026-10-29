@@ -2079,6 +2079,30 @@ test("an account deletion confirmation is bound to the account that opened it", 
   assert.equal(profile.data.error, "换了账号，退出这页再进来");
 });
 
+test("an account with unfinished orders is not deleted and is pointed to its orders", async () => {
+  const sessions = mod("utils/session.js"), auth = mod("utils/auth.js");
+  sessions.setSession(sessionBody("A").data);
+  auth.recordConsent();
+  const profile = page("pages/profile/index.js");
+  const dialogs = [], pages = [];
+  wx.showModal = opts => { dialogs.push(opts); };
+  wx.navigateTo = opts => { pages.push(opts.url); };
+  const message = "有订单还没处理完（刚下单、已付款待到账或正在退款），处理完再注销。有疑问可以在客服里提工单。";
+  serve({ "DELETE /v1/me": () => [409, { code: "ACCOUNT_OPEN_ORDERS", message }] });
+  profile.deleteAccount();
+  assert.match(dialogs[0].content, /没用完的套餐和积分也会作废/);
+  assert.match(dialogs[0].content, /订单和退款记录另存 3 年/);
+  dialogs[0].success({ confirm: true });
+  await microtasksUntil(() => dialogs.length === 2 && !profile.data.busy);
+  assert.equal(dialogs[1].title, "暂时不能注销");
+  assert.equal(dialogs[1].content, message);
+  assert.equal(profile.data.error, "");
+  dialogs[1].success({ confirm: true });
+  assert.deepEqual(pages, ["/pages/commercial/orders/index"]);
+  assert.equal(sessions.getSession().user.id, "A");
+  assert.equal(auth.hasConsent(), true);
+});
+
 test("finishing an earlier account deletion preserves a newly signed in account", async () => {
   const sessions = mod("utils/session.js"), auth = mod("utils/auth.js");
   sessions.setSession(sessionBody("A").data);
@@ -2161,4 +2185,32 @@ test("tool pages avoid banned phrases and model names", () => {
       for (const phrase of banned) assert.ok(!text.includes(phrase), `${name}: ${phrase}`);
       assert.doesNotMatch(text, /GLM|glm-|DeepSeek|GPT|Qwen|Claude|Gemini|Hunyuan|混元/, name);
     }
+});
+
+
+test("returning to the app restores an expired authorized login without prompting for profile", async () => {
+  envVersion = "trial";
+  mod("utils/config.js").API_BASE_URL = "https://api.example.test";
+  let codeCalls = 0;
+  wx.login = (opts) => { codeCalls++; opts.success({ code: "one-time-code" }); };
+  const calls = serve({ "POST /v1/auth/wechat-login": () => [200, sessionBody("returning-user")] });
+  let application;
+  global.App = (value) => { application = value; };
+  mod("app.js");
+  const auth = mod("utils/auth.js");
+  application.onShow();
+  await Promise.resolve();
+  assert.equal(codeCalls, 0, "no login before user consent");
+  auth.enterGuest();
+  application.onShow();
+  await Promise.resolve();
+  assert.equal(codeCalls, 0, "guest choice is respected");
+  auth.recordConsent();
+  mod("utils/session.js").setSession({ ...sessionBody("old-user").data, expiresAt: new Date(Date.now()-1000).toISOString() });
+  application.onShow();
+  await auth.login();
+  assert.equal(codeCalls, 1, "app and page share one login");
+  assert.equal(calls.length, 1);
+  application.onShow();
+  assert.equal(codeCalls, 1, "valid session is reused");
 });

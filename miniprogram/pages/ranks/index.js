@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 段位说明：展示地图进度对应的阶段与规则，不在本地授予经验或修改学习记录。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -35,7 +36,7 @@ function recordOf(s) {
   const days = s.totalDays !== undefined ? s.totalDays : (s.days || []).length;
   return { days: Number(days) || 0, streak: Number(s.currentStreak) || 0, today: timeText(s.today) };
 }
-Page({
+Page(withShare({
   data: {
     ranks: RANKS.map((rank) => ({ rank, stamp: STAMP[rank], line: RANK_LINES[rank] })),
     // need(6) and need(3) in the sentence, then the 中值与应用 table.
@@ -108,5 +109,5 @@ Page({
     const key = event.currentTarget.dataset.key;
     this.setData({ open: { ...this.data.open, [key]: !this.data.open[key] } });
   },
-});
+}));
 module.exports = { recordOf, timeText };

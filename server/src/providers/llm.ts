@@ -6,6 +6,8 @@
 import type { output, ZodTypeAny } from "zod";
 import { jobStreamMs } from "../shared/job-deadline.js";
 import type { UsageEnd, UsageMeter } from "../shared/usage-ledger.js";
+import { boundedResponseText, MAX_PROVIDER_RESPONSE_BYTES } from "./response-limits.js";
+import { checkInputComplexity } from "../shared/request-safety.js";
 
 // Fixed client identity; the sub2api codex_cli_only whitelist matches it.
 const CLIENT_HEADERS = { "user-agent": "zhiye-server/1.0", originator: "zhiye_server" };
@@ -34,7 +36,7 @@ export type LlmUsage = {
 // is a second, reasoning pass after the program found a conflict.
 export const SCENARIOS = [
   "chat.study", "chat.life", "chat.mood", "card_tidy", "import_split",
-  "brainstorm", "map_stuck", "vision", "recheck", "study", "judge",
+  "brainstorm", "map_stuck", "vision", "recheck", "study", "judge", "support",
 ] as const;
 export type CanonicalScenario = (typeof SCENARIOS)[number];
 export type Scenario = CanonicalScenario | "ask" | "notes" | "photo";
@@ -97,6 +99,8 @@ export type ChatOptions = {
   extraBody: Record<string, unknown>;
   // Thinking tokens count toward max_tokens, so callers' limits get this on top.
   thinkingTokens?: number;
+  // Set only by the commercial router, including the reasoning allowance.
+  outputTokenLimit?: number;
   timeoutMs: number;
   usageMeter?: UsageMeter;
   // Admin alias recorded in the usage ledger; `test` marks admin test calls.
@@ -175,9 +179,36 @@ const requestText = (messages: ChatMessage[]) =>
         : m.content.map((part) => (part.type === "text" ? part.text : "")).join(""),
     )
     .join("");
+const validTokenCount = (value: unknown): value is number =>
+  typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 const reported = (usage?: TokenUsage) =>
-  typeof usage?.prompt_tokens === "number" ||
-  typeof usage?.completion_tokens === "number";
+  validTokenCount(usage?.prompt_tokens) && validTokenCount(usage?.completion_tokens);
+// Only failed calls need the additional message/image allowance. Successful
+// unreported usage retains the existing text estimate used for user billing.
+const failureInputTokens = (messages: ChatMessage[]) =>
+  estimateTokens(requestText(messages)) + 256 + messages.reduce((sum, message) =>
+    sum + 64 + (Array.isArray(message.content)
+      ? message.content.filter(part => part.type === "image_url").length * 1024 : 0), 0);
+function failureWithUsage(error: unknown, usage: LlmUsage, billing: "none" | "unknown") {
+  // A job can cancel several calls with one AbortSignal. Its shared reason
+  // must not carry mutable per-call usage, or later failures overwrite earlier
+  // receipts. Preserve ProviderError for the router's failover classification.
+  const failure = error instanceof ProviderError
+    ? new ProviderError(error.code, error.message, billing)
+    : error instanceof DOMException ? new DOMException(error.message, error.name)
+    : error instanceof Error ? new Error(error.message, { cause: error }) : new Error("AI 调用已中断");
+  if (error instanceof Error && !(failure instanceof DOMException)) {
+    Object.assign(failure, error);
+    failure.name = error.name;
+  }
+  return Object.assign(failure, { usage, billing });
+}
+function checkResponseComplexity(parsed: unknown, usage: LlmUsage) {
+  try { checkInputComplexity(parsed); }
+  catch {
+    throw Object.assign(new ProviderError("AI_BAD_OUTPUT", "AI 返回的内容格式不对，请重试", "unknown"), { usage });
+  }
+}
 // OpenAI-compatible chat endpoint: JSON mode for structured results, streaming for chat.
 export class ChatModel {
   constructor(
@@ -198,10 +229,12 @@ export class ChatModel {
     if (options.maxTokens !== undefined &&
       (!Number.isSafeInteger(options.maxTokens) || options.maxTokens < 1))
       throw new Error("maxTokens must be a positive integer");
+    const requested = options.maxTokens === undefined ? undefined : options.maxTokens + (this.opts.thinkingTokens ?? 0);
+    const maximum = this.opts.outputTokenLimit === undefined ? requested : Math.min(requested ?? this.opts.outputTokenLimit, this.opts.outputTokenLimit);
     return {
-      ...(options.maxTokens === undefined
+      ...(maximum === undefined
         ? {}
-        : { max_tokens: options.maxTokens + (this.opts.thinkingTokens ?? 0) }),
+        : { max_tokens: maximum }),
       ...(options.jsonMode ? { response_format: { type: "json_object" } } : {}),
     };
   }
@@ -249,12 +282,15 @@ export class ChatModel {
         );
       } catch (error) {
         const failedUsage = (error as { usage?: LlmUsage })?.usage;
+        const priorCalls = usage.calls;
         if (failedUsage) merge(failedUsage);
-        if (error instanceof ProviderError) Object.assign(error, { usage });
-        throw error;
+        const billing = priorCalls > 0 || (error as { billing?: unknown })?.billing !== "none" ? "unknown" : "none";
+        throw failureWithUsage(error, usage, billing);
       }
       merge(result.usage);
-      const checked = schema.safeParse(parseJson(result.text));
+      const parsed = parseJson(result.text);
+      checkResponseComplexity(parsed, usage);
+      const checked = schema.safeParse(parsed);
       if (checked.success) return { data: checked.data as output<S>, usage };
     }
     throw Object.assign(new ProviderError(
@@ -303,6 +339,7 @@ export class ChatModel {
         problem = "不是合法的 JSON";
         continue;
       }
+      checkResponseComplexity(parsed, usage);
       const result = schema.safeParse(parsed);
       if (result.success) return { data: result.data as output<S>, usage };
       problem = result.error.issues
@@ -311,7 +348,7 @@ export class ChatModel {
         .join("；");
     }
     throw Object.assign(
-      new ProviderError("AI_BAD_OUTPUT", "AI 返回的内容格式不对，请重试"),
+      new ProviderError("AI_BAD_OUTPUT", "AI 返回的内容格式不对，请重试", "unknown"),
       { usage },
     );
   }
@@ -351,11 +388,19 @@ export class ChatModel {
     let text = "";
     let thought = "";
     let received = false;
+    let sent = false;
     let finishUsage: ((result: UsageEnd) => void) | undefined;
     let outcome: UsageEnd["status"] = "unknown";
     let reportedPrompt: unknown;
     let reportedCompletion: unknown;
     let reportedCached: unknown;
+    const estimateMissing = (failure: boolean) => {
+      if (reported({ prompt_tokens: reportedPrompt, completion_tokens: reportedCompletion })) return;
+      usage.promptTokens = validTokenCount(reportedPrompt) ? reportedPrompt
+        : failure ? failureInputTokens(messages) : estimateTokens(requestText(messages));
+      usage.completionTokens = validTokenCount(reportedCompletion) ? reportedCompletion : estimateTokens(thought + text);
+      usage.estimated = true;
+    };
     try {
       let response: Response | undefined;
       for (let attempt = 0; !response; attempt++) {
@@ -368,6 +413,7 @@ export class ChatModel {
           scene: this.scene(options),
         });
         try {
+          sent = true;
           response = await this.fetcher(
             `${this.opts.baseUrl.replace(/\/+$/, "")}/chat/completions`,
             {
@@ -406,18 +452,25 @@ export class ChatModel {
         outcome = "failed";
         throw statusError(
           response.status,
-          await response.text().catch(() => ""),
+          await boundedResponseText(response),
         );
       }
       if (!response.body)
         throw new ProviderError(
           "AI_UNAVAILABLE",
           "AI 服务暂时不可用，请稍后重试",
+          "unknown",
         );
       const decoder = new TextDecoder();
       let buffer = "";
+      let receivedBytes = 0;
       for await (const chunk of response.body) {
         poke();
+        receivedBytes += chunk.byteLength;
+        if (receivedBytes > MAX_PROVIDER_RESPONSE_BYTES) {
+          idle.abort();
+          throw new ProviderError("AI_RESPONSE_TOO_LARGE", "AI 返回内容过长，请缩小问题范围", "unknown");
+        }
         buffer += decoder.decode(chunk as Uint8Array, { stream: true });
         let end: number;
         while ((end = buffer.indexOf("\n")) >= 0) {
@@ -442,8 +495,8 @@ export class ChatModel {
           if (event.usage) {
             reportedPrompt = event.usage.prompt_tokens;
             reportedCompletion = event.usage.completion_tokens;
-            usage.promptTokens = Number(event.usage.prompt_tokens) || 0;
-            usage.completionTokens = Number(event.usage.completion_tokens) || 0;
+            usage.promptTokens = validTokenCount(reportedPrompt) ? reportedPrompt : 0;
+            usage.completionTokens = validTokenCount(reportedCompletion) ? reportedCompletion : 0;
             reportedCached = cachedTokens(event.usage);
             if (reportedCached !== undefined) usage.cachedTokens = Number(reportedCached);
           }
@@ -463,16 +516,7 @@ export class ChatModel {
           }
         }
       }
-      if (
-        !reported({
-          prompt_tokens: reportedPrompt,
-          completion_tokens: reportedCompletion,
-        })
-      ) {
-        usage.promptTokens = estimateTokens(requestText(messages));
-        usage.completionTokens = estimateTokens(thought + text);
-        usage.estimated = true;
-      }
+      estimateMissing(false);
       outcome = "succeeded";
       if (options.truncateAsError && usage.finishReason === "length") {
         outcome = "failed";
@@ -481,17 +525,18 @@ export class ChatModel {
         ), { usage });
       }
     } catch (error) {
-      if (error instanceof ProviderError) throw error;
-      if (options.signal?.aborted) throw options.signal.reason ?? error;
       const timedOut = idle.signal.aborted || cap.aborted;
-      throw Object.assign(
-        new ProviderError(
+      const billing = error instanceof ProviderError ? error.billing
+        : !sent || connectFailed(error) && !received ? "none" : "unknown";
+      if (billing === "unknown") estimateMissing(true);
+      const failure = options.signal?.aborted ? options.signal.reason ?? error
+        : error instanceof ProviderError ? error
+        : new ProviderError(
           timedOut ? "AI_TIMEOUT" : "AI_UNAVAILABLE",
           timedOut ? "AI 回答超时，请重试" : "AI 服务连接中断，请重试",
-          received || !connectFailed(error) ? "unknown" : "none",
-        ),
-        { usage, partial: text },
-      );
+          billing,
+        );
+      throw Object.assign(failureWithUsage(failure, usage, billing), { partial: text });
     } finally {
       clearTimeout(timer);
       usage.ms = Date.now() - started;
@@ -502,7 +547,8 @@ export class ChatModel {
         cachedTokens: reportedCached,
       });
     }
-    if (!text.trim())
+    if (!text.trim()) {
+      estimateMissing(true);
       throw Object.assign(
         new ProviderError(
           "AI_BAD_OUTPUT",
@@ -511,6 +557,7 @@ export class ChatModel {
         ),
         { usage },
       );
+    }
     return { text, usage };
   }
   private async complete(
@@ -519,113 +566,107 @@ export class ChatModel {
     signal?: AbortSignal,
     options: LlmRequestOptions = {},
   ) {
+    const started = Date.now();
     const timeout = AbortSignal.timeout(this.opts.timeoutMs);
-    const failed = (error: unknown): never => {
-      if (signal?.aborted) throw signal.reason ?? error;
-      if (timeout.aborted)
-        throw new ProviderError(
-          "AI_TIMEOUT",
-          "AI 生成超时。重试可能再次产生调用费用",
-          "unknown",
-        );
-      if (connectFailed(error))
-        throw new ProviderError(
-          "AI_UNAVAILABLE",
-          "AI 服务暂时无法连接，请稍后重试",
-        );
-      // The request may have reached the model before the connection broke.
-      throw new ProviderError(
-        "AI_UNAVAILABLE",
-        "AI 服务连接中断，结果未知。重试可能再次产生调用费用",
-        "unknown",
-      );
-    };
+    const priorCalls = usage.calls;
     let response: Response | undefined;
     let body: unknown;
     let raw = "";
-    for (let attempt = 0; !response; attempt++) {
-      signal?.throwIfAborted();
-      const finishUsage = this.opts.usageMeter?.start({
-        source: this.opts.test ? "llm.test" : "llm.json",
-        provider: usage.provider,
-        model: usage.model,
-        endpoint: this.opts.endpoint,
-        scene: this.scene(options),
-      });
-      try {
-        response = await this.fetcher(
-          `${this.opts.baseUrl.replace(/\/+$/, "")}/chat/completions`,
-          {
-            method: "POST",
-            headers: {
-              authorization: `Bearer ${this.opts.apiKey}`,
-              ...CLIENT_HEADERS,
-              "content-type": "application/json",
-            },
-            body: JSON.stringify({
-              model: this.opts.model,
-              messages,
-              temperature: 0.3,
-              response_format: { type: "json_object" },
-              ...this.opts.extraBody,
-              ...this.requestBody(options),
-            }),
-            signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
-          },
-        );
-        usage.calls++;
-        raw = await response.text().catch(() => "");
-        body = parseBody(raw);
-        const reported = body as
-          | {
-              usage?: TokenUsage;
-            }
-          | undefined;
-        finishUsage?.({
-          status: response.ok ? "succeeded" : "failed",
-          promptTokens: reported?.usage?.prompt_tokens,
-          completionTokens: reported?.usage?.completion_tokens,
-          cachedTokens: cachedTokens(reported?.usage),
+    let sent = false;
+    let accounted = false;
+    let responseCounted = false;
+    const account = (failure: boolean) => {
+      if (accounted) return;
+      accounted = true;
+      const data = body as { choices?: { message?: { content?: unknown; reasoning_content?: unknown } }[]; usage?: TokenUsage } | undefined;
+      const content = data?.choices?.[0]?.message?.content;
+      const thought = data?.choices?.[0]?.message?.reasoning_content;
+      if (!responseCounted) usage.calls++;
+      usage.promptTokens += validTokenCount(data?.usage?.prompt_tokens) ? data.usage.prompt_tokens
+        : failure ? failureInputTokens(messages) : estimateTokens(requestText(messages));
+      usage.completionTokens += validTokenCount(data?.usage?.completion_tokens) ? data.usage.completion_tokens
+        : estimateTokens((failure && typeof thought === "string" ? thought : "") + (typeof content === "string" ? content : ""));
+      const cached = cachedTokens(data?.usage);
+      if (cached !== undefined) usage.cachedTokens = (usage.cachedTokens ?? 0) + cached;
+      if (!reported(data?.usage)) usage.estimated = true;
+    };
+    try {
+      for (let attempt = 0; !response; attempt++) {
+        signal?.throwIfAborted();
+        const finishUsage = this.opts.usageMeter?.start({
+          source: this.opts.test ? "llm.test" : "llm.json",
+          provider: usage.provider,
+          model: usage.model,
+          endpoint: this.opts.endpoint,
+          scene: this.scene(options),
         });
-      } catch (error) {
-        finishUsage?.({ status: connectFailed(error) ? "failed" : "unknown" });
-        if (
-          attempt === 0 &&
-          connectFailed(error) &&
-          !timeout.aborted &&
-          !signal?.aborted
-        )
-          continue;
-        return failed(error);
-      }
-    }
-    if (timeout.aborted || signal?.aborted) return failed(undefined);
-    if (!response.ok) throw statusError(response.status, raw);
-    const data = body as
-      | {
-          choices?: { message?: { content?: unknown }; finish_reason?: string }[];
-          usage?: TokenUsage;
+        try {
+          sent = true;
+          response = await this.fetcher(
+            `${this.opts.baseUrl.replace(/\/+$/, "")}/chat/completions`,
+            {
+              method: "POST",
+              headers: {
+                authorization: `Bearer ${this.opts.apiKey}`,
+                ...CLIENT_HEADERS,
+                "content-type": "application/json",
+              },
+              body: JSON.stringify({
+                model: this.opts.model,
+                messages,
+                temperature: 0.3,
+                response_format: { type: "json_object" },
+                ...this.opts.extraBody,
+                ...this.requestBody(options),
+              }),
+              signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
+            },
+          );
+          usage.calls++;
+          responseCounted = true;
+          raw = await boundedResponseText(response);
+          body = parseBody(raw);
+          const reported = body as { usage?: TokenUsage } | undefined;
+          finishUsage?.({
+            status: response.ok ? "succeeded" : "failed",
+            promptTokens: reported?.usage?.prompt_tokens,
+            completionTokens: reported?.usage?.completion_tokens,
+            cachedTokens: cachedTokens(reported?.usage),
+          });
+        } catch (error) {
+          finishUsage?.({ status: connectFailed(error) ? "failed" : "unknown" });
+          if (attempt === 0 && connectFailed(error) && !timeout.aborted && !signal?.aborted)
+            continue;
+          throw error;
         }
-      | undefined;
-    usage.promptTokens += Number(data?.usage?.prompt_tokens) || 0;
-    usage.completionTokens += Number(data?.usage?.completion_tokens) || 0;
-    const cached = cachedTokens(data?.usage);
-    if (cached !== undefined) usage.cachedTokens = (usage.cachedTokens ?? 0) + cached;
-    const finishReason = data?.choices?.[0]?.finish_reason;
-    if (finishReason !== undefined) usage.finishReason = finishReason;
-    else delete usage.finishReason;
-    if (usage.finishReason === "length")
-      throw Object.assign(new ProviderError(
-        "OUTPUT_TRUNCATED", "AI 返回的内容格式不对，请重试", "unknown",
-      ), { usage });
-    const content = data?.choices?.[0]?.message?.content;
-    if (typeof content !== "string")
-      throw new ProviderError("AI_BAD_OUTPUT", "AI 返回的内容格式不对，请重试");
-    if (!reported(data?.usage)) {
-      usage.promptTokens += estimateTokens(requestText(messages));
-      usage.completionTokens += estimateTokens(content);
-      usage.estimated = true;
+      }
+      if (timeout.aborted || signal?.aborted) throw signal?.reason ?? new Error("Provider timeout");
+      if (!response.ok) throw statusError(response.status, raw);
+      const data = body as { choices?: { message?: { content?: unknown }; finish_reason?: string }[] } | undefined;
+      const finishReason = data?.choices?.[0]?.finish_reason;
+      if (finishReason !== undefined) usage.finishReason = finishReason;
+      else delete usage.finishReason;
+      if (usage.finishReason === "length")
+        throw new ProviderError("OUTPUT_TRUNCATED", "AI 返回的内容格式不对，请重试", "unknown");
+      const content = data?.choices?.[0]?.message?.content;
+      if (typeof content !== "string")
+        throw new ProviderError("AI_BAD_OUTPUT", "AI 返回的内容格式不对，请重试", "unknown");
+      account(false);
+      return content;
+    } catch (error) {
+      const localBilling = error instanceof ProviderError ? error.billing
+        : !sent || connectFailed(error) ? "none" : "unknown";
+      if (localBilling === "unknown") account(true);
+      const billing = priorCalls > 0 || localBilling === "unknown" ? "unknown" : "none";
+      const failure = signal?.aborted ? signal.reason ?? error
+        : error instanceof ProviderError ? error
+        : new ProviderError(timeout.aborted ? "AI_TIMEOUT" : "AI_UNAVAILABLE",
+          timeout.aborted ? "AI 生成超时。重试可能再次产生调用费用"
+            : localBilling === "none" ? "AI 服务暂时无法连接，请稍后重试"
+            : "AI 服务连接中断，结果未知。重试可能再次产生调用费用", billing);
+      throw failureWithUsage(failure, usage, billing);
+    } finally {
+      usage.ms += Date.now() - started;
     }
-    return content;
   }
 }

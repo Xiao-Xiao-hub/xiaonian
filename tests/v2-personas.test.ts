@@ -194,9 +194,9 @@ function mountNotes(call: any, userId: string, file = "pages/notes/index.js") {
               }
             : name.endsWith("/gate")
               ? { check: () => true, state: () => "ok" }
-            : name.endsWith("/chat-entry")
+            : name.endsWith("/chat-entry") || name.endsWith("/share")
               ? vm.runInContext(
-                  `(function (module) {${readFileSync(join(miniRoot, "utils/chat-entry.js"), "utf8")}\nreturn module.exports;})`,
+                  `(function (module) {${readFileSync(join(miniRoot, "utils", `${name.split("/").at(-1)}.js`), "utf8")}\nreturn module.exports;})`,
                   sandbox,
                 )({ exports: {} })
             : name.endsWith("/theme")

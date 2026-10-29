@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
-import { SqliteStore } from "../server/src/shared/store.js";
+import { MIGRATIONS, SqliteStore } from "../server/src/shared/store.js";
 import { fakeServices, makeApp } from "./fixtures.js";
 
 // 提醒频率 : card_reminders holds day / week; cards.remind_on stays the
@@ -35,7 +35,10 @@ function fixture(t: TestContext, start = "2026-10-17T02:00:00.000Z") {
     const settled = async (id: string) => {
       for (let i = 0; i < 500; i++) {
         const detail = (await call("GET", `/v1/cards/${id}`)).json().data;
-        if (!detail.aiJob || !["queued", "running"].includes(detail.aiJob.status))
+        if (
+          !detail.aiJob ||
+          !["queued", "running"].includes(detail.aiJob.status)
+        )
           return detail;
         await new Promise((resolve) => setTimeout(resolve, 2));
       }
@@ -60,7 +63,10 @@ const rows = (store: SqliteStore, cardId: string) =>
 test("old clients: no remindEvery sent, the card says null and nothing is stored", async (t) => {
   const { login, store } = fixture(t);
   const me = await login("re-old");
-  const made = await me.call("POST", "/v1/cards", { text: "周末想整理一下错题", type: "idea" });
+  const made = await me.call("POST", "/v1/cards", {
+    text: "周末想整理一下错题",
+    type: "idea",
+  });
   assert.equal(made.statusCode, 200, made.body);
   const card = made.json().data.card;
   assert.equal(card.remindEvery, null);
@@ -75,12 +81,14 @@ test("old clients: no remindEvery sent, the card says null and nothing is stored
   assert.equal(dated.json().data.card.remindEvery, null);
   assert.deepEqual(rows(store, card.id), []);
   // The cards table keeps its columns: the new table carries the frequency.
-  const columns = store.db.prepare("PRAGMA table_info(cards)").all() as { name: string }[];
+  const columns = store.db.prepare("PRAGMA table_info(cards)").all() as {
+    name: string;
+  }[];
   assert.ok(!columns.some((c) => /every|remind_every/.test(c.name)));
   const version = store.db
     .prepare("SELECT MAX(version) AS v FROM schema_migrations")
     .get() as { v: number };
-  assert.equal(version.v, 16);
+  assert.equal(version.v, MIGRATIONS.length);
 });
 
 test("saving with 每天 starts tomorrow; an answer moves it on from today, 不再提起 ends it", async (t) => {
@@ -100,14 +108,19 @@ test("saving with 每天 starts tomorrow; an answer moves it on from today, 不�
   // Answered three days late: the next one is tomorrow, not a day already gone.
   setNow("2026-10-21T02:00:00.000Z");
   const list = async () =>
-    ((await me.call("GET", "/v1/resume")).json().data as {
-      id: string;
-      srcId: string;
-      kind: string;
-      dueOn: string;
-    }[]).filter((i) => i.srcId === card.id && i.kind === "chat"); // an idea's reminder asks 接着聊
+    (
+      (await me.call("GET", "/v1/resume")).json().data as {
+        id: string;
+        srcId: string;
+        kind: string;
+        dueOn: string;
+      }[]
+    ).filter((i) => i.srcId === card.id && i.kind === "chat"); // an idea's reminder asks 接着聊
   let items = await list();
-  assert.deepEqual(items.map((i) => i.dueOn), ["2026-10-18"]);
+  assert.deepEqual(
+    items.map((i) => i.dueOn),
+    ["2026-10-18"],
+  );
   const answered = await me.call("POST", `/v1/resume/${items[0]!.id}/act`, {
     action: "answer",
     text: "背完了今天的",
@@ -117,7 +130,10 @@ test("saving with 每天 starts tomorrow; an answer moves it on from today, 不�
   assert.equal(detail.remindOn, "2026-10-22");
   assert.equal(detail.remindEvery, "day");
   items = await list();
-  assert.deepEqual(items.map((i) => i.dueOn), ["2026-10-22"]);
+  assert.deepEqual(
+    items.map((i) => i.dueOn),
+    ["2026-10-22"],
+  );
   // 还在进行 counts as no answer elsewhere; here it waits for the next day
   // instead of a three-day snooze.
   setNow("2026-10-22T02:00:00.000Z");
@@ -129,7 +145,10 @@ test("saving with 每天 starts tomorrow; an answer moves it on from today, 不�
   detail = await me.settled(card.id);
   assert.equal(detail.remindOn, "2026-10-23");
   items = await list();
-  assert.deepEqual(items.map((i) => i.dueOn), ["2026-10-23"]);
+  assert.deepEqual(
+    items.map((i) => i.dueOn),
+    ["2026-10-23"],
+  );
   // Undo puts the date back.
   const undone = await me.call("POST", "/v1/resume/undo", {
     token: going.json().data.undoToken,
@@ -159,11 +178,17 @@ test("saving with 每天 starts tomorrow; an answer moves it on from today, 不�
 test("PATCH sets 每周, a picked date keeps it, 不提醒 or remindEvery null turns it off", async (t) => {
   const { login, store } = fixture(t);
   const me = await login("re-week");
-  const made = await me.call("POST", "/v1/cards", { text: "这周想把极限复习完", type: "idea" });
+  const made = await me.call("POST", "/v1/cards", {
+    text: "这周想把极限复习完",
+    type: "idea",
+  });
   const id = made.json().data.card.id as string;
   let detail = await me.settled(id);
   // A card with reminders off: a frequency turns them on for set dates.
-  const off = await me.call("PATCH", `/v1/cards/${id}`, { version: detail.version, resume: "off" });
+  const off = await me.call("PATCH", `/v1/cards/${id}`, {
+    version: detail.version,
+    resume: "off",
+  });
   const weekly = await me.call("PATCH", `/v1/cards/${id}`, {
     version: off.json().data.card.version,
     remindEvery: "week",
@@ -181,7 +206,10 @@ test("PATCH sets 每周, a picked date keeps it, 不提醒 or remindEvery null t
   card = picked.json().data.card;
   assert.equal(card.remindOn, "2026-10-20");
   assert.equal(card.remindEvery, "week");
-  const stop = await me.call("PATCH", `/v1/cards/${id}`, { version: card.version, remindOn: null });
+  const stop = await me.call("PATCH", `/v1/cards/${id}`, {
+    version: card.version,
+    remindOn: null,
+  });
   card = stop.json().data.card;
   assert.equal(card.remindOn, null);
   assert.equal(card.remindEvery, null);
@@ -219,11 +247,13 @@ test("closing the card from 回顾 ends the frequency", async (t) => {
   });
   const id = made.json().data.card.id as string;
   await me.settled(id);
-  const items = ((await me.call("GET", "/v1/resume")).json().data as {
-    id: string;
-    srcId: string;
-    kind: string;
-  }[]).filter((i) => i.srcId === id && i.kind === "chat"); // an idea's reminder asks 接着聊
+  const items = (
+    (await me.call("GET", "/v1/resume")).json().data as {
+      id: string;
+      srcId: string;
+      kind: string;
+    }[]
+  ).filter((i) => i.srcId === id && i.kind === "chat"); // an idea's reminder asks 接着聊
   assert.equal(items.length, 1);
   const done = await me.call("POST", `/v1/resume/${items[0]!.id}/act`, {
     action: "answer",
@@ -239,8 +269,20 @@ test("closing the card from 回顾 ends the frequency", async (t) => {
 test("stats count each type; the frequency is exported and goes with the card and the account", async (t) => {
   const { login, store } = fixture(t);
   const me = await login("re-export");
-  const a = (await me.call("POST", "/v1/cards", { text: "一个灵感", type: "spark", remindEvery: "week" })).json().data.card;
-  const b = (await me.call("POST", "/v1/cards", { text: "一个问题怎么解", type: "question", remindEvery: "day" })).json().data.card;
+  const a = (
+    await me.call("POST", "/v1/cards", {
+      text: "一个灵感",
+      type: "spark",
+      remindEvery: "week",
+    })
+  ).json().data.card;
+  const b = (
+    await me.call("POST", "/v1/cards", {
+      text: "一个问题怎么解",
+      type: "question",
+      remindEvery: "day",
+    })
+  ).json().data.card;
   await me.settled(a.id);
   await me.settled(b.id);
   const stats = (await me.call("GET", "/v1/cards/stats")).json().data;
@@ -248,7 +290,10 @@ test("stats count each type; the frequency is exported and goes with the card an
   assert.equal(stats.total, 2);
   const exported = (await me.call("GET", "/v1/me/export")).json();
   assert.deepEqual(
-    exported.cardReminders.map((r: { cardId: string; every: string }) => [r.cardId, r.every]),
+    exported.cardReminders.map((r: { cardId: string; every: string }) => [
+      r.cardId,
+      r.every,
+    ]),
     [
       [a.id, "week"],
       [b.id, "day"],

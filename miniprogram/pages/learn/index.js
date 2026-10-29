@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 学习首页：汇总学习入口、进度及工具导航；地图和具体练习由各自页面承担。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -200,7 +201,7 @@ function view(map, owner, stats) {
   };
 }
 
-Page(studyClock.track({
+Page(withShare(studyClock.track({
   data: {
     guest: false,
     loading: true,
@@ -394,4 +395,4 @@ Page(studyClock.track({
     const id = this.data.card && this.data.card.nextId;
     if (id) backTo(ROUTES.chapter, id);
   },
-}));
+})));

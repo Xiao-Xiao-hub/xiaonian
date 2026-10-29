@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 我的页面：读取用量和个人设置，处理导出、退出及注销；账号变更后同步清理本地状态。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -78,7 +79,10 @@ function heat(days, today) {
       const m = minutes[day] || 0;
       cells.push({ day, min: m, lv: level(m), td: ms === end, fu: ms > end });
     }
-    columns.push({ key: cells[0].day, cells });
+    const sum = cells.reduce((total, c) => total + (c.fu ? 0 : c.min), 0);
+    // A whole week is the tap target (a day cell is too small to hit), and
+    // its name is what a screen reader announces.
+    columns.push({ key: cells[0].day, cells, sum, al: `${dayText(cells[0].day)}起的一周，共 ${sum} 分钟` });
   }
   // A month name over the week its 1st falls in; the first column gets its own
   // month when no name would sit right next to it.
@@ -90,6 +94,7 @@ function heat(days, today) {
     months[0] = `${Number(columns[0].cells[0].day.slice(5, 7))}月`;
   return { columns, months };
 }
+const WEEKDAYS = ["一", "二", "三", "四", "五", "六", "日"];
 function dayText(day) {
   return `${Number(day.slice(5, 7))}月${Number(day.slice(8, 10))}日`;
 }
@@ -103,8 +108,8 @@ function studyView(s) {
     today: s.day,
     todayMin: Number(s.today) || 0,
     total: Number.isFinite(total) ? total : (s.days || []).length,
+    minutes: Number(s.totalMinutes) || 0,
     current: Number(s.currentStreak) || 0,
-    best: Number(s.bestStreak) || 0,
     ...heat(s.days, s.day),
   };
 }
@@ -117,6 +122,8 @@ const ICONS = {
   resume: asset("ic-alarm-clock.webp"),
   export: asset("ic-inbox-tray.webp"),
   help: asset("ic-open-book.webp"),
+  gem: asset("ic-gem-stone.webp"),
+  headphone: asset("ic-headphone.webp"),
 };
 const EMPTY = {
   name: "",
@@ -136,7 +143,7 @@ const EMPTY = {
   studyTime: true,
   prefs: false,
 };
-Page({
+Page(withShare({
   data: {
     guest: false,
     ...EMPTY,
@@ -156,6 +163,7 @@ Page({
     profileSaving: false,
     profileWaiting: false,
     profileError: "",
+    profileMode: "",
     profileFirst: false,
     profileEditId: 0,
     draftNickname: "",
@@ -172,6 +180,7 @@ Page({
     }
     // A guest sees the page without anything personal and sends nothing.
     if (gate.state() === "guest") {
+      this.avatarSelection = null;
       this.discardProfile();
       this.loadVersion = (this.loadVersion || 0) + 1;
       this.owner = undefined;
@@ -181,6 +190,7 @@ Page({
     const owner = (auth.getUser() || {}).id;
     if (owner !== this.owner || this.data.guest ||
       (this.data.editingProfile && this.editGeneration !== auth.consentGeneration())) {
+      this.avatarSelection = null;
       this.discardProfile();
       this.setData({ ...EMPTY });
     }
@@ -189,19 +199,7 @@ Page({
     const completed = this.completedProfile;
     this.completedProfile = null;
     if (completed) this.acceptProfile(completed.user, completed.id, completed.message);
-    return this.load().then(() => {
-      const intent = getApp().globalData.profileSetup;
-      const user = auth.getUser();
-      if (!intent || !user || intent.owner !== user.id || this.alive === false) return;
-      delete getApp().globalData.profileSetup;
-      if (profile.prompted(user.id) || profile.displayName(user) || user.avatar) {
-        profile.markPrompted(user.id);
-        wx.reLaunch({ url: intent.next });
-        return;
-      }
-      this.profileSetupReturn = intent.next;
-      this.editProfile(true);
-    });
+    return this.load();
   },
   onHide() {
     this.alive = false;
@@ -370,6 +368,31 @@ Page({
   editActive(id = this.editId) {
     return this.alive !== false && this.editCurrent(id);
   },
+  beginAvatar() {
+    if (this.data.loading || this.data.profileSaving || this.data.profileAuthorizing || this.data.profileMode === "nickname") return;
+    const user = auth.getUser();
+    this.avatarSelection = user && auth.hasConsent()
+      ? { owner: user.id, generation: auth.consentGeneration() }
+      : null;
+  },
+  async changeAvatar(event) {
+    const selection = this.avatarSelection;
+    this.avatarSelection = null;
+    const filePath = event.detail && event.detail.avatarUrl;
+    if (!selection || selection.owner !== (auth.getUser() || {}).id ||
+      selection.generation !== auth.consentGeneration() || !auth.hasConsent() ||
+      typeof filePath !== "string" || !filePath) return;
+    // 原生选择完成即保存，只更新头像；不在页面插入资料表单。
+    const opening = this.editProfile("avatar");
+    const id = this.editId;
+    await opening;
+    if (!this.editCurrent(id) || selection.owner !== this.editOwner || !this.data.profileReady) return;
+    return this.commitProfile({ avatar: filePath, changed: false, nickname: this.originalNickname });
+  },
+  editNickname() {
+    if (this.data.loading || this.data.profileSaving) return;
+    return this.editProfile("nickname");
+  },
   async editProfile(first = false) {
     if (this.data.guest) return gate.ask();
     if (this.data.profileSaving || this.data.profileAuthorizing) return;
@@ -384,12 +407,17 @@ Page({
     this.reviewState = "unchanged";
     this.setData({
       editingProfile: true, profileFirst: first === true, profileEditId: id,
+      profileMode: typeof first === "string" ? first : "",
       nicknameInputId: 0,
       draftNickname: this.originalNickname, draftAvatar: "",
       profileCanReset: Boolean(this.originalNickname || user.avatar),
       profileUnsupported: !profile.supported(),
     });
     if (!this.data.profileUnsupported) await this.authorizeProfile();
+    else if (this.data.profileMode) {
+      wx.showToast({ title: "请升级微信后修改资料", icon: "none" });
+      this.discardProfile();
+    }
   },
   async authorizeProfile() {
     if (this.data.profileAuthorizing) return;
@@ -397,9 +425,15 @@ Page({
     this.setData({ profileAuthorizing: true, profileError: "" });
     try {
       await profile.authorize();
-      if (this.editActive(id)) this.setData({ profileReady: true });
+      if (this.editCurrent(id)) this.setData({ profileReady: true });
     } catch (error) {
-      if (this.editActive(id)) this.setData({ profileError: errorText(error) });
+      if (this.editCurrent(id)) {
+        this.setData({ profileError: errorText(error) });
+        if (this.data.profileMode) {
+          wx.showToast({ title: errorText(error), icon: "none" });
+          this.discardProfile();
+        }
+      }
     } finally {
       if (this.editCurrent(id)) this.setData({ profileAuthorizing: false });
     }
@@ -413,6 +447,7 @@ Page({
       editingProfile: false, profileReady: false, profileAuthorizing: false,
       profileUnsupported: false, profileSaving: false, profileWaiting: false,
       profileError: "", profileFirst: false, draftNickname: "", draftAvatar: "",
+      profileMode: "",
       nicknamePending: false,
       profileCanReset: false,
     });
@@ -457,8 +492,14 @@ Page({
       this.pendingProfileSave = null;
       this.setData({ draftNickname: value, profileWaiting: false });
     }
-    if (value === this.originalNickname || (this.reviewState === "passed" && this.reviewValue === value)) return;
-    this.waitNicknameReview();
+    // 原位修改没有取消按钮：清空后离开输入框等同放弃，恢复原昵称。
+    if (value === this.originalNickname || (this.data.profileMode === "nickname" && !value.trim())) {
+      if (this.data.profileMode === "nickname") this.cancelProfile();
+      return;
+    }
+    if (!(this.reviewState === "passed" && this.reviewValue === value)) this.waitNicknameReview();
+    if (this.data.profileMode === "nickname")
+      this.saveProfile({ detail: { value: { nickname: value } } });
   },
   waitNicknameReview() {
     this.reviewState = "pending";
@@ -474,6 +515,8 @@ Page({
         nicknameInputId: this.data.nicknameInputId + 1,
         profileError: "昵称检查暂时没有完成，请重新填写后再保存",
       });
+      if (this.data.profileMode === "nickname" && this.alive !== false)
+        wx.showToast({ title: "昵称检查超时，请重新填写", icon: "none" });
     }, 10000);
   },
   nicknameReview(event) {
@@ -490,6 +533,8 @@ Page({
       profileError: accepted ? "" : "昵称没有通过检查，请换一个昵称后再保存",
       ...(!accepted ? { draftNickname: "", nicknameInputId: this.data.nicknameInputId + 1 } : {}),
     });
+    if (!accepted && this.data.profileMode === "nickname" && this.alive !== false)
+      wx.showToast({ title: "昵称未通过检查，请重新填写", icon: "none" });
     if (accepted && pending && pending.nickname === this.reviewValue) this.commitProfile(pending);
   },
   saveProfile(event) {
@@ -500,8 +545,11 @@ Page({
       return this.setData({ profileError: "昵称正在更新，请确认内容后再保存" });
     const nickname = value.trim();
     const changed = value !== this.originalNickname;
-    if (changed && (!nickname || nickname.length > 24))
-      return this.setData({ profileError: "昵称需要 1–24 个字，请重新填写" });
+    if (changed && (!nickname || nickname.length > 24)) {
+      this.setData({ profileError: "昵称需要 1–24 个字，请重新填写" });
+      if (this.data.profileMode === "nickname") wx.showToast({ title: this.data.profileError, icon: "none" });
+      return;
+    }
     const pending = { nickname: value, changed, avatar: this.data.draftAvatar };
     if (changed && !(this.reviewState === "passed" && this.reviewValue === value)) {
       if (this.reviewState === "failed" || this.reviewState === "timeout")
@@ -524,7 +572,12 @@ Page({
         : await api.patch("/v1/me/profile", { nickname: draft.nickname.trim() });
       this.acceptProfile(user, id, "资料已保存");
     } catch (error) {
-      if (this.editCurrent(id)) this.setData({ profileError: errorText(error) });
+      if (this.editCurrent(id)) {
+        this.setData({ profileError: errorText(error) });
+        if (this.data.profileMode && this.alive !== false)
+          wx.showToast({ title: errorText(error), icon: "none" });
+        if (this.data.profileMode === "avatar") this.discardProfile();
+      }
     } finally {
       if (this.editCurrent(id)) this.setData({ profileSaving: false });
     }
@@ -574,27 +627,35 @@ Page({
     });
   },
   // Tapping a day shows its minutes under the map; tapping it again goes back to today.
-  pickDay(event) {
-    const { w, i } = event.currentTarget.dataset;
-    const c = this.data.study && this.data.study.columns[w].cells[i];
-    if (!c || c.fu) return;
-    const same = this.data.picked && this.data.picked.day === c.day;
+  pickWeek(event) {
+    const w = Number(event.currentTarget.dataset.w);
+    const col = this.data.study && this.data.study.columns[w];
+    if (!col) return;
+    if (this.data.picked && this.data.picked.w === w) {
+      this.setData({ picked: null });
+      return;
+    }
+    const first = col.cells[0].day;
+    const last = col.cells[6].day;
+    const end = first.slice(0, 7) === last.slice(0, 7) ? `${Number(last.slice(8, 10))}日` : dayText(last);
     this.setData({
-      picked: same || c.td ? null : { day: c.day, label: dayText(c.day), min: c.min },
+      picked: {
+        w,
+        label: `${dayText(first)}–${end}`,
+        min: col.sum,
+        days: col.cells.map((c, i) => ({ k: c.day, wd: WEEKDAYS[i], min: c.fu ? "" : c.min, td: c.td, fu: c.fu })),
+      },
     });
   },
   iconError(event) {
     this.setData({ [`broken.${event.currentTarget.dataset.k}`]: true });
   },
   toggleUsage() {
-    this.setData({ usageOpen: !this.data.usageOpen });
+    this.openUsage();
   },
-  // The counts (V4.2: the budget) sit under that row; bring them into view.
   openUsage() {
-    this.setData({ usageOpen: true }, () => {
-      if (typeof wx.pageScrollTo === "function")
-        wx.pageScrollTo({ selector: ".usage", duration: 300 });
-    });
+    if (!gate.check()) return;
+    wx.navigateTo({ url: "/pages/commercial/center/index" });
   },
   // An empty filter clears every filter on the 卡片 tab: all cards.
   openCards() {
@@ -608,6 +669,9 @@ Page({
   openResume() {
     if (this.data.guest) return gate.ask();
     wx.navigateTo({ url: "/pages/resume-settings/index" });
+  },
+  openSupport() {
+    wx.navigateTo({ url: "/pages/support/chat/index" });
   },
   openHelp() {
     wx.navigateTo({ url: "/pages/help/index" });
@@ -752,7 +816,7 @@ Page({
     wx.showModal({
       title: "注销账号？",
       content:
-        "你放进来的资料和原图、随心记里的内容、生成的讲解提示和题目、做题和回头看看的记录、学习时长都会删掉，找不回来。想留着的话，先导出一份；导出的是 JSON 文件，不含原图。",
+        "你放进来的资料和原图、随心记里的内容、生成的讲解提示和题目、做题和回头看看的记录、学习时长都会删掉，找不回来；没用完的套餐和积分也会作废。订单和退款记录另存 3 年，只用于对账和退款。想留着的话，先导出一份；导出的是 JSON 文件，不含原图。",
       confirmText: "注销",
       confirmColor: "#c0392b",
       success: ({ confirm }) => {
@@ -794,7 +858,19 @@ Page({
             wx.showToast({ title: "账号注销了", icon: "none" });
             wx.switchTab({ url: "/pages/notes/index" });
           })
-          .catch((error) => this.setData({ error: errorText(error) }))
+          .catch((error) => {
+            // The server refuses while an order is unfinished (D130).
+            if (error && error.code === "ACCOUNT_OPEN_ORDERS")
+              return wx.showModal({
+                title: "暂时不能注销",
+                content: error.message,
+                confirmText: "看订单",
+                success: ({ confirm }) => {
+                  if (confirm) wx.navigateTo({ url: "/pages/commercial/orders/index" });
+                },
+              });
+            this.setData({ error: errorText(error) });
+          })
           .finally(() => this.setData({ busy: false }));
       },
       fail: () => {
@@ -802,4 +878,4 @@ Page({
       },
     });
   },
-});
+}));

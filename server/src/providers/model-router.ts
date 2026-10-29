@@ -5,9 +5,11 @@
 import { randomUUID } from "node:crypto";
 import { z, type output, type ZodTypeAny } from "zod";
 import type { SqliteStore } from "../shared/store.js";
+import type { CommercialMeter } from "../shared/commercial-meter.js";
 import type { UsageMeter } from "../shared/usage-ledger.js";
 import {
   ChatModel,
+  estimateTokens,
   ProviderError,
   SCENARIOS,
   type ChatMessage,
@@ -43,6 +45,7 @@ export const DEFAULT_THINKING: Record<
   recheck: "high",
   study: "low",
   judge: "low",
+  support: "off",
 };
 const BUDGET = { low: 1024, medium: 4096, high: 16384, max: 32768 };
 const LEGACY_SCENARIO: Partial<Record<(typeof SCENARIOS)[number], string>> = {
@@ -51,6 +54,15 @@ const LEGACY_SCENARIO: Partial<Record<(typeof SCENARIOS)[number], string>> = {
   vision: "photo",
 };
 const isGlm53 = (model: string) => /^glm-5\.3(?:-|$)/i.test(model);
+// Support answers are bounded to 640 visible tokens. GLM-5.3 always thinks
+// (reasoning_effort low at the cheapest) and counts thinking toward
+// max_tokens, so it gets a fixed 1024-token allowance on top.
+export const SUPPORT_ANSWER_TOKENS = 640;
+export const SUPPORT_GLM_THINKING_TOKENS = 1024;
+export const supportThinkingTokens = (model: string) =>
+  isGlm53(model) ? SUPPORT_GLM_THINKING_TOKENS : 0;
+export const supportOutputTokens = (model: string) =>
+  SUPPORT_ANSWER_TOKENS + supportThinkingTokens(model);
 const glmThinkingBody = (level: ThinkingLevel) => ({
   thinking: { type: "enabled" },
   reasoning_effort:
@@ -163,6 +175,7 @@ export class ModelRouter {
     private readonly store: SqliteStore,
     private readonly opts: {
       usageMeter?: UsageMeter;
+      commercialMeter?: Pick<CommercialMeter, "run"> & Partial<Pick<CommercialMeter, "enforcing">>;
       fetcher?: typeof fetch;
       now?: () => number;
     } = {},
@@ -185,7 +198,7 @@ export class ModelRouter {
     return Object.fromEntries(
       SCENARIOS.map((s) => [
         s,
-        (LEVELS as readonly string[]).includes(
+        s === "support" ? "off" : (LEVELS as readonly string[]).includes(
           saved[s] ?? saved[LEGACY_SCENARIO[s] ?? ""] ?? "",
         )
           ? saved[s] ?? saved[LEGACY_SCENARIO[s] ?? ""]
@@ -217,6 +230,19 @@ export class ModelRouter {
       (e) => e.enabled && (!image || e.vision),
     );
     const route = this.routes()[normalized];
+    // Customer support is merchant-funded and needs an explicitly selected
+    // route with a supported thinking-disable switch, or a GLM-5.3 model whose
+    // thinking is pinned to low with a fixed budget. Never inherit all study
+    // endpoints, including other models that always think.
+    if (normalized === "support") {
+      if (!route?.length) return [];
+      return route.flatMap(id => {
+        const endpoint = usable.find(item => item.id === id);
+        return endpoint && (isGlm53(endpoint.model) ||
+          ["thinking_type", "enable_thinking"].includes(endpoint.thinkingFormat))
+          ? [endpoint] : [];
+      }).slice(0, 1);
+    }
     const selected = route?.length
       ? route
           .map((id) => usable.find((endpoint) => endpoint.id === id))
@@ -245,6 +271,7 @@ export class ModelRouter {
     level: ThinkingLevel,
     test = false,
     scenario?: Scenario,
+    outputTokenLimit?: number,
   ) {
     return new ChatModel(
       {
@@ -252,13 +279,17 @@ export class ModelRouter {
         apiKey: endpoint.apiKey,
         model: endpoint.model,
         extraBody: {
-          ...endpoint.extraBody,
+          ...(scenario === "support"
+            ? Object.fromEntries(Object.entries(endpoint.extraBody).filter(([key]) =>
+              !["thinking", "thinking_budget", "enable_thinking", "reasoning_effort"].includes(key)))
+            : endpoint.extraBody),
           ...(isGlm53(endpoint.model)
             ? glmThinkingBody(level)
             : thinkingBody(endpoint.thinkingFormat, level)),
         },
         // Some models think even when off, so off still gets room.
-        thinkingTokens: BUDGET[level === "off" ? "medium" : level],
+        thinkingTokens: scenario === "support" ? supportThinkingTokens(endpoint.model) : BUDGET[level === "off" ? "medium" : level],
+        outputTokenLimit,
         timeoutMs: endpoint.timeoutMs,
         usageMeter: this.opts.usageMeter,
         endpoint: endpoint.alias,
@@ -284,6 +315,7 @@ export class ModelRouter {
     scenario: Scenario,
     messages: ChatMessage[],
     call: (model: ChatModel) => Promise<T>,
+    limits: { maxTokens?: number; attempts?: number; signal?: AbortSignal } = {},
   ): Promise<T> {
     const normalized = normalizeScenario(scenario);
     const list = this.candidates(normalized, messages);
@@ -293,7 +325,52 @@ export class ModelRouter {
     let last: ProviderError | undefined;
     for (const endpoint of list) {
       try {
-        const result = await call(this.model(endpoint, level, false, normalized));
+        const enforced = this.opts.commercialMeter?.enforcing === true;
+        const output = normalized === "support"
+          ? Math.min(limits.maxTokens ?? SUPPORT_ANSWER_TOKENS, SUPPORT_ANSWER_TOKENS) + supportThinkingTokens(endpoint.model)
+          : (limits.maxTokens ?? 2048) + BUDGET[level === "off" ? "medium" : level];
+        const attempts = limits.attempts ?? 2;
+        // Input is conservatively reserved by UTF-8 bytes, with bounded image
+        // and corrective-prompt allowance. Provider-reported overrun is kept
+        // as merchant cost and visible on the accounting record.
+        const input = messages.reduce((sum, message) => sum + 64 + (typeof message.content === "string"
+          ? Buffer.byteLength(message.content, "utf8")
+          : message.content.reduce((n, part) => n + (part.type === "text" ? Buffer.byteLength(part.text, "utf8") : 32768), 0)), 256);
+        // Site-wide risk uses one ordinary attempt, not the purchased-credit
+        // upper reservation. 1024 output tokens is within the observed
+        // 200–1600 average range; images get a separate 1024-token estimate.
+        const riskInput = messages.reduce((sum, message) => sum + 64 + (typeof message.content === "string"
+          ? estimateTokens(message.content)
+          : message.content.reduce((n, part) => n + (part.type === "text" ? estimateTokens(part.text) : 1024), 0)), 256);
+        // Keep pre-hardening output behavior: ordinary calls use the provider
+        // default unless the caller explicitly asks for a token limit. Their
+        // reservation is an estimate; reported overruns remain merchant cost.
+        const invoke = () => call(this.model(endpoint, level, false, normalized, enforced || normalized === "support" ? output : undefined));
+        const result = this.opts.commercialMeter
+          ? await this.opts.commercialMeter.run(
+              {
+                kind: "llm",
+                provider: new URL(endpoint.baseUrl).host,
+                model: endpoint.model,
+                source: normalized,
+                upperUsage: { inputTokens: input * attempts + (attempts > 1 ? 8192 : 0), outputTokens: output * attempts },
+                riskUsage: { inputTokens: riskInput, outputTokens: Math.min(output, 1024) },
+              },
+              invoke,
+              (value) => {
+                const usage = (value as { usage?: LlmUsage }).usage;
+                if (!usage) throw new TypeError("大模型调用缺少用量");
+                return {
+                  inputTokens: usage.promptTokens,
+                  cachedInputTokens: usage.cachedTokens,
+                  outputTokens: usage.completionTokens,
+                  requests: usage.calls,
+                  estimated: usage.estimated,
+                };
+              },
+              limits.signal,
+            )
+          : await invoke();
         this.succeeded(endpoint.id);
         return result;
       } catch (error) {
@@ -332,17 +409,17 @@ export class ModelRouter {
         router.run(options.scenario ?? scenario, messages, (m) => {
           const { scenario: _scenario, ...rest } = options;
           return m.json(messages, schema, signal, rest);
-        }),
+        }, { maxTokens: options.maxTokens, attempts: 1 + (options.jsonRetries ?? ((options.scenario ?? scenario) === "map_stuck" ? 0 : 1)), signal }),
       stream: (messages, handlers, options = {}) => {
         const { scenario: override, ...rest } = options;
         return router.run(override ?? scenario, messages, (m) =>
-          m.stream(messages, handlers, rest),
+          m.stream(messages, handlers, rest), { maxTokens: rest.maxTokens, attempts: 1, signal: rest.signal },
         );
       },
       streamJson: (messages, schema, options: StreamJsonOptions) => {
         const { scenario: override, ...rest } = options;
         return router.run(override ?? scenario, messages, (m) =>
-          m.streamJson(messages, schema, rest),
+          m.streamJson(messages, schema, rest), { maxTokens: rest.maxTokens, attempts: 1 + (rest.jsonRetries ?? ((override ?? scenario) === "map_stuck" ? 0 : 1)), signal: rest.signal },
         );
       },
     };

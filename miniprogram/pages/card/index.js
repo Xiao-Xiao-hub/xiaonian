@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 卡片详情：查看来源、编辑自己的内容、整理、标签、提醒、关联和合并后的原卡。
  * 页面中的请求标识、账号快照和 alive 状态用于拦截过期回包；不能仅因离开页面就删除另一份新草稿。
@@ -227,7 +228,7 @@ function asksFor(card, base) {
   return asks;
 }
 
-Page(studyClock.track({
+Page(withShare(studyClock.track({
     data: {
       guestBlocked: false,
       linksOpen: false,
@@ -1394,4 +1395,4 @@ Page(studyClock.track({
     backHome() {
       wx.switchTab({ url: "/pages/notes/index" });
     },
-}));
+})));

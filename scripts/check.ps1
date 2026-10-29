@@ -57,10 +57,14 @@ $compileTempCreated = $false
 $tempParent = $null
 $exitCode = 0
 $savedTimezone = $env:TZ
+$savedPythonUtf8 = $env:PYTHONUTF8
 
 Push-Location -LiteralPath $taskRoot
 try {
     $env:TZ = $Timezone
+    # Git emits UTF-8 paths. Force Python's implicit subprocess text decoding
+    # to match it, including when the Windows user/temp path contains Chinese.
+    $env:PYTHONUTF8 = '1'
     Write-Host "check: timezone $Timezone; test files run one at a time"
     $node = Find-Application 'node.exe'
     # npm.cmd avoids dependence on the execution policy for npm.ps1.
@@ -129,7 +133,8 @@ try {
         }
         foreach ($file in $wxssFiles) {
             $relative = './' + $file.FullName.Substring($miniRoot.Length + 1).Replace('\', '/')
-            if (-not (Invoke-Compiler $wcsc $relative (Join-Path $compileTemp 'out.css'))) {
+            $styleDependencies = @($wxssFiles | Where-Object { $_.FullName -ne $file.FullName } | ForEach-Object { './' + $_.FullName.Substring($miniRoot.Length + 1).Replace('\', '/') })
+            if (-not (Invoke-Compiler $wcsc $relative (Join-Path $compileTemp 'out.css') $styleDependencies)) {
                 $compilationFailed = $true
             }
         }
@@ -160,6 +165,12 @@ finally {
     }
     else {
         $env:TZ = $savedTimezone
+    }
+    if ($null -eq $savedPythonUtf8) {
+        Remove-Item -LiteralPath Env:PYTHONUTF8 -ErrorAction SilentlyContinue
+    }
+    else {
+        $env:PYTHONUTF8 = $savedPythonUtf8
     }
     try {
         if ($compileTempCreated -and (Test-Path -LiteralPath $compileTemp)) {

@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 统一批改页：接收草稿或整页照片，确认输入后批改，允许逐题重试并重新打开历史。
  * 页面中的请求标识、账号快照和 alive 状态用于拦截过期回包；不能仅因离开页面就删除另一份新草稿。
@@ -134,7 +135,7 @@ function when(iso) {
 }
 
 // V4.2 FX5b : time on this page counts as study (utils/study-clock).
-Page(studyClock.track({
+Page(withShare(studyClock.track({
   data: {
     usageText: "",
     guest: false,
@@ -754,4 +755,4 @@ Page(studyClock.track({
   openMistakes() {
     wx.navigateTo({ url: "/pages/mistakes/index" });
   },
-}));
+})));

@@ -1,3 +1,4 @@
+const { withShare } = require("../../../utils/share");
 /*
  * 头脑风暴过程页：等待整理任务并展示分组与差异，衔接后续结论选择。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -39,7 +40,7 @@ const OFFLINE = "网不太好，连上后接着看";
 // What this page edits; the conclude page keeps the rest of the draft.
 const EDITED = ["groups", "tensions", "more", "ask"];
 
-Page({
+Page(withShare({
     data: {
       loading: true,
       saving: false,
@@ -623,4 +624,4 @@ Page({
         },
       });
     },
-  });
+  }));

@@ -93,6 +93,14 @@
   "lazyCodeLoading": "requiredComponents",
   "subPackages": [
     {
+      "root": "pages/commercial",
+      "pages": ["center/index", "orders/index", "order/index"]
+    },
+    {
+      "root": "pages/support",
+      "pages": ["chat/index", "tickets/index", "ticket/index"]
+    },
+    {
       "root": "pages/import",
       "pages": ["source/index", "split/index"]
     },

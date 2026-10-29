@@ -19,6 +19,7 @@ import { NoteService } from "../notes/service.js";
 import { StudyTimeService } from "../study-time/service.js";
 import { BUCKETS, type Bucket } from "../../shared/limits.js";
 import type { Budget } from "../../shared/budget.js";
+import { detachCommercialAccount } from "../commercial/retention.js";
 type Row = Record<string, unknown>;
 const parse = (value: unknown) =>
   value === null || value === undefined ? null : JSON.parse(String(value));
@@ -29,7 +30,9 @@ const parse = (value: unknown) =>
 const AI_LABEL = "AI 生成";
 const AI_MARK = { aiGenerated: true, aiLabel: AI_LABEL } as const;
 const aiFields = <T extends object>(row: T, fields: string[]) =>
-  fields.length ? { ...row, aiLabel: AI_LABEL, aiGeneratedFields: fields } : row;
+  fields.length
+    ? { ...row, aiLabel: AI_LABEL, aiGeneratedFields: fields }
+    : row;
 const filled = (value: unknown) =>
   value !== null &&
   value !== undefined &&
@@ -52,7 +55,7 @@ const judged = (result: unknown) => {
 // The consent records kept per account; older ones are dropped.
 const MAX_CONSENTS = 50;
 const AI_NOTE =
-  "本文件含 AI 生成内容：标有 \"aiLabel\": \"AI 生成\" 的记录含大模型生成的内容；其中带 \"aiGenerated\": true 的整条由大模型生成，\"aiGeneratedFields\" 列出的字段由大模型生成或辅助生成，其余是你自己写下或选择的内容。AI 生成可能有误，注意核实。各条记录的 id 是内容编号。";
+  '本文件含 AI 生成内容：标有 "aiLabel": "AI 生成" 的记录含大模型生成的内容；其中带 "aiGenerated": true 的整条由大模型生成，"aiGeneratedFields" 列出的字段由大模型生成或辅助生成，其余是你自己写下或选择的内容。AI 生成可能有误，注意核实。各条记录的 id 是内容编号。';
 export class AccountService {
   constructor(
     private store: SqliteStore,
@@ -162,9 +165,7 @@ export class AccountService {
   }
   // The latest agreement to the documents; nulls before the first one.
   consentOf(user: User) {
-    const last = (user.consents ?? [])
-      .filter((c) => c.kind === "docs")
-      .at(-1);
+    const last = (user.consents ?? []).filter((c) => c.kind === "docs").at(-1);
     return {
       ageBand: user.ageBand ?? null,
       version: last?.version ?? null,
@@ -203,7 +204,10 @@ export class AccountService {
               this.runner.usedToday(userId, bucket),
               stopped,
             )
-          : { used: this.runner.usedToday(userId, bucket), limit: limit(bucket) },
+          : {
+              used: this.runner.usedToday(userId, bucket),
+              limit: limit(bucket),
+            },
       ]),
     ) as Record<Bucket, { used: number; limit: number }>;
     return {
@@ -339,7 +343,11 @@ export class AccountService {
       size: a.size,
       type: a.type,
       ...(a.kind === "file"
-        ? { text: a.text, truncated: Number(a.chars) > Array.from(String(a.text ?? "")).length }
+        ? {
+            text: a.text,
+            truncated:
+              Number(a.chars) > Array.from(String(a.text ?? "")).length,
+          }
         : {}),
       createdAt: a.created_at,
     }));
@@ -347,7 +355,9 @@ export class AccountService {
       "SELECT material_id,source,answer,cause,chapter,wrong,status,due_on,created_at,updated_at,mastered_at,mastered_by,map_point_id,map_version FROM mistakes WHERE user_id=? ORDER BY created_at,rowid",
       user.id,
     ).map((k) => ({
-      ...(filled(k.cause) ? { aiLabel: AI_LABEL, aiGeneratedFields: ["cause"] } : {}),
+      ...(filled(k.cause)
+        ? { aiLabel: AI_LABEL, aiGeneratedFields: ["cause"] }
+        : {}),
       materialId: k.material_id,
       source: k.source,
       answer: k.answer,
@@ -408,7 +418,7 @@ export class AccountService {
             name === "red"
               ? value === 1
               : // 0.6.0 题库 : per-problem answers, as an object;
-              // V4.2 卡点 help likewise.
+                // V4.2 卡点 help likewise.
                 ["attempts", "stuck_help"].includes(name) &&
                   typeof value === "string"
                 ? JSON.parse(value)
@@ -418,7 +428,10 @@ export class AccountService {
         // the 卡点 help's reply is written by the model.
         const help = point.stuckHelp as { reply?: object } | null | undefined;
         return help?.reply
-          ? { ...point, stuckHelp: { ...help, reply: { ...help.reply, ...AI_MARK } } }
+          ? {
+              ...point,
+              stuckHelp: { ...help, reply: { ...help.reply, ...AI_MARK } },
+            }
           : point;
       }),
       hiddenChapters: all(
@@ -443,6 +456,36 @@ export class AccountService {
       })),
     };
     const exportedAt = this.store.now();
+    const commercialOrders = all(
+      "SELECT id,good_id,amount_cents,catalog_version,env,status,paid_at,created_at,snapshot FROM commercial_orders WHERE user_id=? ORDER BY created_at,rowid",
+      user.id,
+    ).map((order) => {
+      const snapshot = parse(order.snapshot) as {
+        purchaseConsent?: unknown;
+      } | null;
+      return {
+        id: order.id,
+        goodId: order.good_id,
+        amountCents: order.amount_cents,
+        catalogVersion: order.catalog_version,
+        env: order.env,
+        status: order.status,
+        paidAt: order.paid_at,
+        createdAt: order.created_at,
+        purchaseConsent: snapshot?.purchaseConsent ?? null,
+        entitlements: all(
+          "SELECT b.id,b.kind,b.starts_at,b.ends_at,b.grant_credits FROM commercial_order_grants g JOIN commercial_buckets b ON b.id=g.bucket_id WHERE g.order_id=? AND b.user_id=? ORDER BY b.starts_at,b.id",
+          String(order.id),
+          user.id,
+        ).map((bucket) => ({
+          id: bucket.id,
+          kind: bucket.kind,
+          startsAt: bucket.starts_at,
+          endsAt: bucket.ends_at,
+          grantCredits: bucket.grant_credits,
+        })),
+      };
+    });
     return {
       // Implicit label first (标识办法第五条, 用户协议 6.5): what is generated,
       // the service provider and this export's number (from the account and
@@ -456,16 +499,74 @@ export class AccountService {
       },
       format: "zhiye-export/1",
       exportedAt,
+      commercial: {
+        // Export the learner's own accounting history, not provider credentials
+        // or the operator's internal model/price configuration.
+        calls: all(
+          "SELECT id,source,status,reserved_credits,charged_credits,created_at,finished_at FROM commercial_calls WHERE user_id=? ORDER BY rowid",
+          user.id,
+        ),
+        usage: all(
+          "SELECT id,kind,status,usage,created_at,finished_at FROM commercial_usage WHERE user_id=? ORDER BY rowid",
+          user.id,
+        ).map((row) => ({ ...row, usage: parse(row.usage) })),
+        orders: commercialOrders,
+        buckets: ownedRows("commercial_buckets"),
+        entries: all(
+          "SELECT e.id,e.bucket_id,e.call_id,e.kind,e.delta,e.created_at FROM commercial_entries e JOIN commercial_buckets b ON b.id=e.bucket_id WHERE b.user_id=? ORDER BY e.id",
+          user.id,
+        ),
+      },
+      support: {
+        notifications: all("SELECT n.ticket_id,n.template_id,n.status,n.created_at,n.updated_at FROM support_notifications n JOIN support_tickets t ON t.id=n.ticket_id WHERE t.user_id=? ORDER BY n.created_at,n.ticket_id", user.id),
+        requests: all("SELECT session_id,turn_id,raw_text,answer,layer,status,created_at,finished_at FROM support_chat_requests WHERE user_id=? ORDER BY created_at,id", user.id)
+          .map(({ layer, ...request }) => ({ ...request, layer, ...(layer === "generate" ? AI_MARK : {}) })),
+        sessions: all("SELECT id,turn_count,created_at,updated_at FROM support_sessions WHERE user_id=? ORDER BY created_at,id", user.id),
+        sessionTurns: all("SELECT st.session_id,st.turn_id,st.position FROM support_session_turns st JOIN support_sessions s ON s.id=st.session_id WHERE s.user_id=? ORDER BY st.session_id,st.position", user.id),
+        turns: all(
+          "SELECT id,raw_text,answer,layer,ticket_eligible,created_at FROM support_turns WHERE user_id=? ORDER BY created_at,rowid",
+          user.id,
+        ).map((turn) => ({
+          id: turn.id,
+          rawText: turn.raw_text,
+          answer: turn.answer,
+          layer: turn.layer,
+          ticketEligible: Boolean(turn.ticket_eligible),
+          createdAt: turn.created_at,
+          ...(turn.layer === "generate" ? AI_MARK : {}),
+        })),
+        tickets: all(
+          "SELECT id,turn_id,status,content,due_at,created_at,updated_at FROM support_tickets WHERE user_id=? ORDER BY created_at,rowid",
+          user.id,
+        ).map((ticket) => ({
+          id: ticket.id,
+          turnId: ticket.turn_id,
+          status: ticket.status,
+          content: ticket.content,
+          dueAt: ticket.due_at,
+          createdAt: ticket.created_at,
+          updatedAt: ticket.updated_at,
+          replies: all(
+            "SELECT content,created_at FROM ticket_replies WHERE ticket_id=? ORDER BY created_at,rowid",
+            String(ticket.id),
+          ).map((reply) => ({
+            content: reply.content,
+            createdAt: reply.created_at,
+          })),
+        })),
+      },
       note: "原图不在导出文件中，可在小程序里查看；删除资料或注销账号时会一并删除。",
       user: {
         id: user.id,
         nickname: user.nickname,
-        avatar: user.avatar ? {
-          type: user.avatar.type,
-          bytes: user.avatar.bytes,
-          updatedAt: user.avatar.updatedAt,
-          note: "头像原图不在 JSON 导出中，可在“我的”查看、修改或清除；仅本人登录后可读取。",
-        } : null,
+        avatar: user.avatar
+          ? {
+              type: user.avatar.type,
+              bytes: user.avatar.bytes,
+              updatedAt: user.avatar.updatedAt,
+              note: "头像原图不在 JSON 导出中，可在“我的”查看、修改或清除；仅本人登录后可读取。",
+            }
+          : null,
         createdAt: user.createdAt,
         ageBand: user.ageBand ?? null,
         consents: user.consents ?? [],
@@ -528,15 +629,14 @@ export class AccountService {
         "candidates",
         // text left past the import limit, as an object.
         "extra",
-      ]).map(
-        (i) =>
-          aiFields(i, [
-            ...(["photo", "screenshot"].includes(String(i.source)) &&
-            filled(i.segments)
-              ? ["segments"]
-              : []),
-            ...(filled(i.candidates) ? ["candidates"] : []),
-          ]),
+      ]).map((i) =>
+        aiFields(i, [
+          ...(["photo", "screenshot"].includes(String(i.source)) &&
+          filled(i.segments)
+            ? ["segments"]
+            : []),
+          ...(filled(i.candidates) ? ["candidates"] : []),
+        ]),
       ),
       retests: ownedRows("retests"),
       // 功能使用记录 (隐私政策 2.12), e.g. card_close, retest_scheduled, crisis_shown.
@@ -577,11 +677,14 @@ export class AccountService {
         .prepare("SELECT COUNT(*) AS n FROM materials WHERE user_id=?")
         .get(userId) as { n: number }
     ).n;
-    this.store.transaction(() => {
+    const retainedOrders = this.store.transaction(() => {
+      const retainedOrders = detachCommercialAccount(this.store, userId);
       this.store.db.prepare("DELETE FROM sessions WHERE user_id=?").run(userId);
       this.store.db.prepare("DELETE FROM users WHERE id=?").run(userId);
+      this.store.audit(userId, "account.erase", userId, { materials: count, retainedOrders });
+      return retainedOrders;
     });
     this.materials.removeImages(userId);
-    this.store.audit(userId, "account.erase", userId, { materials: count });
+    return { retainedOrders };
   }
 }

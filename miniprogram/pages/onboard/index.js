@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 首次设置页：收集使用流程需要的选择，按当前设置跳转到主要功能。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -33,7 +34,7 @@ const WALL = [
   ],
 ];
 // 新手引导 (02-onboard.html): three pages, 跳过 at any time.
-Page({
+Page(withShare({
   data: { current: 0, smile: asset("xiaoli-smile.webp"), first: FIRST, wall: WALL },
   // Shown for this run at once (so 随心记 does not open it again and again);
   // seen for good only at 开始使用 or 跳过, so a tour cut short by
@@ -62,4 +63,4 @@ Page({
   hideSmile() {
     this.setData({ smile: "" });
   },
-});
+}));

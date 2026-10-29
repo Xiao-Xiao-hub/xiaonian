@@ -68,6 +68,7 @@ function load(file, { api, account = "u1", wx, kind = "Page" } = {}) {
   };
   const sandbox = {
     require: (n) => {
+      if (n.endsWith("/share")) return { withShare: (page) => page };
       const name = path.basename(n).replace(/\.js$/, "");
       if (stubs[name]) return stubs[name];
       return require(path.join(root, "utils", `${name}.js`));

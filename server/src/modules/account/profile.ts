@@ -15,10 +15,20 @@ import {
 import { join, resolve } from "node:path";
 import { z } from "zod";
 import { crc32 } from "node:zlib";
-import { AppError, PRIVACY_VERSION, type User } from "../../shared/domain.js";
+import { AppError, type User } from "../../shared/domain.js";
 import type { SqliteStore } from "../../shared/store.js";
+import { reserveUploadBytes } from "../../shared/upload-budget.js";
 
 export const AVATAR_LIMIT = 2 * 1024 * 1024;
+// Profile permission was introduced in this version. A later legal update
+// must not revoke that existing permission while old clients are still live.
+export const PROFILE_CONSENT_MIN_VERSION = "2026-10-20.2";
+const allowsProfile = (version: string) => {
+  const match = /^(\d{4}-\d{2}-\d{2})\.(\d{1,3})$/.exec(version);
+  if (!match) return false;
+  const [date, revision] = PROFILE_CONSENT_MIN_VERSION.split(".");
+  return match[1]! > date! || (match[1] === date && Number(match[2]) >= Number(revision));
+};
 export const profileNickname = z
   .string()
   .trim()
@@ -175,7 +185,7 @@ export class ProfileService {
     const latest = consents[index];
     if (
       latest?.kind !== "docs" ||
-      latest.version !== PRIVACY_VERSION ||
+      !allowsProfile(latest.version) ||
       !user.ageBand
     )
       throw new AppError(
@@ -191,7 +201,7 @@ export class ProfileService {
           (item) =>
             item.kind === "guardian" &&
             item.scope === "basic" &&
-            item.version === PRIVACY_VERSION,
+            item.version === latest.version,
         )
     )
       throw new AppError(
@@ -250,6 +260,7 @@ export class ProfileService {
         ].includes(input.mime)
       )
         throw invalidImage();
+      reserveUploadBytes(this.root, userId, input.image.length);
       const version = randomUUID().replaceAll("-", "");
       const relative = `${userId}/profile/${version}.${type}`;
       const dir = join(this.root, userId, "profile");

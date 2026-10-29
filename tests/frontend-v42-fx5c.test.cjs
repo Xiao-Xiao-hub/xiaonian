@@ -175,6 +175,7 @@ test("F22: the card page draws its steps from the same stage", async () => {
   };
   vm.runInNewContext(read("pages/card/index.js"), {
     require: (n) => {
+      if (n.endsWith("/share")) return { withShare: (page) => page };
       const name = path.basename(n).replace(/\.js$/, "");
       return stubs[name] || require(path.join(root, "utils", `${name}.js`));
     },

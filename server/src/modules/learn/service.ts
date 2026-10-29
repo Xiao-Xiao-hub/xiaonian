@@ -1326,6 +1326,7 @@ export class LearnService {
   // The reply reached the student: one receipt on the shared chat allowance,
   // and the point counts as helped today.
   private deliverStuck(userId: string, pointId: string, usage: unknown) {
+    this.store.transaction(() => {
     const id = `map_${randomUUID().replaceAll("-", "")}`;
     this.store.db
       .prepare(
@@ -1334,6 +1335,7 @@ export class LearnService {
       .run(id, userId, this.clock().toISOString());
     this.ai?.budget?.charge(userId, "chat", id, usage);
     this.markStuckHelp(userId, pointId);
+    });
   }
   // GET …/stuck: the help of the current 卡住了, if any. A reply never shown
   // is charged now, as it is shown.

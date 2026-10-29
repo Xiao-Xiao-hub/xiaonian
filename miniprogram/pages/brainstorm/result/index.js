@@ -1,3 +1,4 @@
+const { withShare } = require("../../../utils/share");
 /*
  * 头脑风暴结果页：展示已保存的整理与回顾，提供关联卡片和继续讨论入口。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -24,7 +25,7 @@ const dateLabel = (value) => {
     : "";
 };
 
-Page({
+Page(withShare({
     data: {
       loading: true,
       error: "",
@@ -330,4 +331,4 @@ Page({
         { fromHome: true },
       );
     },
-  });
+  }));

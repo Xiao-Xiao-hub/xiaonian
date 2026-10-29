@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 标签管理：列出、重命名或删除本人标签，并进入相应卡片筛选；加载前不显示空列表结论。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -13,7 +14,7 @@ const colors = TAG_COLORS.map((color, index) => ({
   style: `background:${color.bg};color:${color.ink}`,
 }));
 
-Page({
+Page(withShare({
     data: {
       tags: [],
       name: "",
@@ -226,4 +227,4 @@ Page({
         },
       });
     },
-  });
+  }));

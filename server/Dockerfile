@@ -1,4 +1,4 @@
-FROM node:24-bookworm-slim AS build
+FROM node:24.22.1-bookworm-slim AS build
 WORKDIR /app/server
 COPY server/package*.json ./
 RUN npm ci
@@ -7,9 +7,10 @@ COPY server/src ./src
 COPY scripts/build-map-graph.ts scripts/validate-map.ts /app/scripts/
 RUN npm run build
 
-FROM node:24-bookworm-slim
+FROM node:24.22.1-bookworm-slim
 # Chinese inside formulas (\text{...}) needs a CJK font, or it renders blank.
-RUN apt-get update && apt-get install -y --no-install-recommends fonts-wqy-microhei poppler-utils \
+RUN apt-get update && apt-get install -y --no-install-recommends fonts-wqy-microhei poppler-utils util-linux \
+  && apt-get install -y --only-upgrade perl-base \
   && rm -rf /var/lib/apt/lists/*
 WORKDIR /app/server
 COPY server/package*.json ./

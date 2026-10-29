@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 协议正文页：按文档标识读取服务端法律文件，展示当前正文及版本。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -11,7 +12,7 @@ const DOCS = [
   { key: "privacy-policy", name: "隐私政策" },
   { key: "children-privacy", name: "儿童隐私政策" },
 ];
-Page({
+Page(withShare({
   data: { docs: DOCS, doc: "privacy-policy", view: null, loading: false, error: "" },
   onLoad(query) {
     this.cache = {};
@@ -45,4 +46,4 @@ Page({
   jump(e) {
     wx.pageScrollTo({ selector: `#s${e.currentTarget.dataset.index}`, offsetTop: -64, duration: 200 });
   },
-});
+}));

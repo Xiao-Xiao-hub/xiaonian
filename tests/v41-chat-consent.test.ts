@@ -8,8 +8,8 @@ import { fakeServices, makeApp } from "./fixtures.js";
 // Keep released clients compatible with existing features during rollout.
 // Store the version actually consented to, rather than silently upgrading it.
 test("consent takes the current and the previous version and records which", async (t) => {
-  assert.equal(PRIVACY_VERSION, "2026-10-20.2");
-  assert.equal(PREVIOUS_PRIVACY_VERSION, "2026-10-20.1");
+  assert.equal(PRIVACY_VERSION, "2026-10-25.1");
+  assert.equal(PREVIOUS_PRIVACY_VERSION, "2026-10-24.1");
   const store = new SqliteStore(":memory:");
   const app = makeApp(fakeServices(), {}, undefined, store);
   t.after(() => app.close());
@@ -54,11 +54,11 @@ test("consent takes the current and the previous version and records which", asy
   for (const doc of ["privacy-policy", "user-agreement", "children-privacy"])
     assert.match(
       readFileSync(new URL(`../server/legal/${doc}.md`, import.meta.url), "utf8"),
-      /版本：2026-10-20\.2　更新日期：2026-10-20　生效日期：2026-10-20/,
+      /版本：2026-10-25\.1　更新日期：2026-10-25　生效日期：2026-10-25/,
     );
   assert.match(
     readFileSync(new URL("../miniprogram/utils/config.js", import.meta.url), "utf8"),
-    /PRIVACY_VERSION: "2026-10-20\.2"/,
+    /PRIVACY_VERSION: "2026-10-25\.1"/,
   );
 });
 

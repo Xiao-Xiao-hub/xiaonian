@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 聊一聊标签页：复用 utils/chat-room 的会话行为，保留本页自己的布局与标签页导航。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -75,7 +76,7 @@ function line(m) {
 const base = room({ tab: true });
 
 Page(
-  studyClock.track({
+  withShare(studyClock.track({
     ...base,
     data: {
       ...base.data,
@@ -170,5 +171,5 @@ Page(
     guestTap() {
       gate.ask();
     },
-  }),
+  })),
 );

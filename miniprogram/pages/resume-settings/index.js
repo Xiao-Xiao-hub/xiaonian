@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 回顾设置：读取和修改卡片接续偏好，设置保存后由服务端安排后续回顾。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -16,7 +17,7 @@ const DAYS = [
   { id: 6, name: "六" },
   { id: 0, name: "日" },
 ];
-Page({
+Page(withShare({
     data: {
       settings: null,
       days: [],
@@ -119,4 +120,4 @@ Page({
         url: `/pages/resume-list/index?state=${event.currentTarget.dataset.state}`,
       });
     },
-  });
+  }));

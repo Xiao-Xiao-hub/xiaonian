@@ -35,6 +35,19 @@ test("continuation persists across a cold module load, stores only the pointer, 
   assert.equal(storage.has("zhiye_last_point:bob"), true);
 });
 
+test("clearing an account also removes the unsent text other pages keep on this phone", () => {
+  global.wx.getStorageInfoSync = () => ({ keys: [...storage.keys()] });
+  const kept = ["zhiye_notes_draft:n1", "zhiye_chat_draft", "zhiye_bs_draft:b1", "zhiye_import_text:alice", "mistake-redo:m1",
+    "zhiye_material_ask:x:alice", "practice-draft:p1", "practice-last:p1", "stuck_thread:pt1", "tool_draft:teach:one"];
+  for (const key of kept) storage.set(key, { text: "我自己写的话" });
+  storage.set("zhiye_session", { token: "t" });
+  storage.set("zhiye_theme", "dark");
+  space.clear("alice");
+  assert.deepEqual(kept.filter((key) => storage.has(key)), []);
+  assert.equal(storage.has("zhiye_session"), true, "the session is cleared by its own owner");
+  assert.equal(storage.has("zhiye_theme"), true);
+});
+
 test("deleted, hidden and unopened pointers fall back to an unfinished visible task", () => {
   for (const id of ["missing", "hidden", "draft"]) {
     space.remember("alice", id, 100);

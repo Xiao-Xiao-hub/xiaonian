@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 卡片列表：提供搜索、筛选、收藏、多选、合并和头脑风暴入口；列表数据来自 cards 接口。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -123,7 +124,7 @@ const noFilters = () => ({
   pointFilter: "",
   pointFilterName: "",
 });
-Page({
+Page(withShare({
   data: {
     ready: false,
     guest: false,
@@ -855,4 +856,4 @@ Page({
   demoBrainstorm() {
     wx.navigateTo({ url: "/pages/brainstorm/process/index?example=1" });
   },
-});
+}));

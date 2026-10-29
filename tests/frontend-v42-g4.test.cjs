@@ -37,8 +37,11 @@ test("budget lines: percentages, the reset, and a notice only from 80%", () => {
 test("count wording that budgets made wrong is gone from the pages", () => {
   const help = read("pages/help/index.js");
   assert.doesNotMatch(help, /次数|算一次|每天能用几次|今天还能用/);
-  assert.match(help, /额度怎么算/);
-  assert.match(help, /没成功的不扣额度/);
+  const knowledge = fs.readFileSync(path.resolve(__dirname, "../server/src/modules/support/knowledge.ts"), "utf8");
+  assert.match(help, /\/v1\/support\/knowledge/);
+  assert.match(read("pages/help/index.wxml"), /item\.answer/);
+  assert.match(knowledge, /额度怎么算/);
+  assert.match(knowledge, /没成功的不扣额度/);
   assert.match(read("pages/teach/index.wxml"), /这次没对上要点，不扣额度。/);
   assert.doesNotMatch(read("pages/teach/index.wxml"), /不算次数/);
   assert.match(read("components/resume-card/index.wxml"), /额度用完了，恢复后再理一遍/);

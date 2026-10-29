@@ -1,14 +1,9 @@
-/*
- * 帮助页：解释现有功能和使用路径，向用户提供遇到问题时的操作入口。
- * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
- */
-// 帮助中心 : 新手入门, 产品资料, then  学习与卡片 and 反馈与隐私
-// with a real 意见反馈 (WeChat's own feedback page), then the hotline. Every
-// answer folds open in place; 再看一遍新手引导 and the last rows leave.
+const { withShare } = require("../../utils/share");
+const api = require("../../utils/api");
 Page(
-  {
+  withShare({
     data: {
-      // "三步上手" starts open; everything else starts folded.
+      supportKnowledge: [{ id: "quota", title: "额度怎么算？", answer: "AI 功能按实际用量扣额度；免费额度每天 0 点、每周一 0 点恢复（北京时间）。" }],
       open: { start: true },
       steps: [
         "说一句或写一句",
@@ -26,7 +21,7 @@ Page(
         {
           id: "intro",
           title: "晓念是什么",
-          text: "晓念用 AI 帮你学习：随手记下想法，整理成卡片；跟着高数学习地图做题、复习；有什么想聊的，也可以随便聊聊。\n\n目前免费使用，AI 帮忙的部分每天、每周各有一份额度。",
+          text: "晓念用 AI 帮你学习：随手记下想法，整理成卡片；跟着高数学习地图做题、复习；有什么想聊的，也可以随便聊聊。\n\nAI 帮忙的部分每天、每周各有一份免费额度，当前可用权益以额度中心为准。",
         },
         {
           id: "idea",
@@ -65,13 +60,7 @@ Page(
           title: "段位和贴纸怎么算？",
           text: "段位、等级和经验按题目原来的难度层算。只有你自己做、又能确认对错的题才加经验；说“我会了”、推出来的、记卡和 AI 理卡都不加。回头看看时再做对，不会重复加第一次做对的经验。\n\n先放着的章不算进整本书的段位和做对数，放回来就重新算。章节贴纸只是把每章的段位摆出来，不另加分。地图里的“老师讲到哪了”只影响推荐的下一步，没讲到的点也能打开做。",
         },
-        {
-          id: "quota",
-          title: "额度怎么算？",
-          text: "AI 帮你做的事都从同一份额度里扣，按实际用量算：长文件、整页批改用得多些，一句追问用得少。每天北京时间 0 点恢复今天的，每周一 0 点恢复本周的。\n\n在“我的 › 额度”里能看到今天和本周各用了多少；快用完时，“我的”页最上面会提醒一句。\n\n没成功的不扣额度。回答提醒里的问题、写你自己的话、看卡片，都不用额度。",
-        },
       ],
-      // 反馈与隐私: after 意见反馈 in the page.
       privacy: [
         {
           id: "privacy",
@@ -80,20 +69,27 @@ Page(
         },
       ],
     },
+    onShow() {
+      this.active = true;
+      api.get("/v1/support/knowledge").then((items) => {
+        if (this.active && Array.isArray(items)) this.setData({ supportKnowledge: items });
+      }).catch(() => {});
+    },
+    onHide() { this.active = false; },
+    onUnload() { this.active = false; },
+    openSupport() { wx.navigateTo({ url: "/pages/support/chat/index" }); },
     toggle(event) {
       const id = event.currentTarget.dataset.id;
       this.setData({ open: { ...this.data.open, [id]: !this.data.open[id] } });
     },
-    // 新手引导 again; its last page comes back here.
     openTour() {
       wx.navigateTo({ url: "/pages/onboard/index?from=help" });
     },
     openPrivacy() {
       wx.navigateTo({ url: "/pages/privacy/index" });
     },
-    // The crisis page goes back here from 我现在安全，继续.
     openHotline() {
       wx.navigateTo({ url: "/pages/crisis/index" });
     },
-  },
+  }, true),
 );

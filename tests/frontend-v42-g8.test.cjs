@@ -15,7 +15,7 @@ function load(file, deps, wx = {}, extra = {}) {
   let definition;
   vm.runInNewContext(read(file), {
     Page: (x) => (definition = x),
-    require: (n) => deps[n.split("/").at(-1)] || {},
+    require: (n) => n.endsWith("/share") ? { withShare: (page) => page } : deps[n.split("/").at(-1)] || {},
     getApp: () => ({ globalData: {} }),
     getCurrentPages: () => [],
     setTimeout,
@@ -336,7 +336,9 @@ test("帮助: a real 意见反馈, no colour that the mark no longer has, no pro
   assert.doesNotMatch(js, /各算各的/);
   assert.doesNotMatch(js, /拿不准的时候先问你要不要再试/);
   // one budget by actual use replaced the shared counts.
-  assert.match(js, /AI 帮你做的事都从同一份额度里扣，按实际用量算/);
+  assert.match(js, /\/v1\/support\/knowledge/);
+  const quotaKnowledge = fs.readFileSync(path.resolve(__dirname, "../server/src/modules/support/knowledge.ts"), "utf8");
+  assert.match(quotaKnowledge, /AI 帮你做的事都从同一份额度里扣，按实际用量算/);
 });
 
 // ---- 欢迎和新手引导 -------------------------------------------------------

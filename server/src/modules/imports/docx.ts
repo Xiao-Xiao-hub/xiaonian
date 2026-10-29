@@ -2,7 +2,8 @@
 // Office Math kept as LaTeX ($…$ inline, $$…$$ on its own line) and line
 // breaks inside a paragraph kept. mammoth's raw text dropped both.
 import { DOMParser } from "@xmldom/xmldom";
-import JSZip from "jszip";
+import { boundedDocx } from "./zip-limits.js";
+import { ResourceLimitError } from "../../shared/isolated-worker.js";
 import { M_NS, ommlToLatex } from "./omml.js";
 
 const W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
@@ -35,24 +36,60 @@ const PASS = new Set([
 ]);
 
 export async function readDocxText(data: Buffer): Promise<DocxText> {
-  const zip = await JSZip.loadAsync(data);
+  const zip = await boundedDocx(data);
   const file = zip.file("word/document.xml");
   if (!file) throw new Error("not a docx");
   const xml = await file.async("string");
-  const document = new DOMParser({
-    errorHandler: {
-      warning: () => {},
-      error: () => {},
-      fatalError: (message: string) => {
-        throw new Error(message);
-      },
-    },
-  } as never).parseFromString(xml, "text/xml") as unknown as XmlNode;
+  if (/<!DOCTYPE|<!ENTITY/i.test(xml)) throw new ResourceLimitError("xml_entities");
+  // Keep a normal 500,000-character, heavily formatted document within the
+  // worker's heap by parsing body blocks separately, rather than building one
+  // enormous DOM. Tables and each paragraph still retain their full context.
+  const chunks: string[] = [];
+  let depth = 0, nodes = 0, previousEnd = 0, bodyDepth = 0, bodyStart = 0,
+    blockStart = 0, batchStart = 0, batchNodes = 0;
+  let prefix = "", suffix = "", bodyName = "";
+  const stack: string[] = [];
+  for (const tag of xml.matchAll(/<!--[^]*?-->|<!\[CDATA\[[^]*?\]\]>|<[^>]*>/g)) {
+    if (++nodes > 1_000_000) throw new ResourceLimitError("xml_nodes");
+    if (tag.index! - previousEnd > 500_000) throw new ResourceLimitError("docx_text");
+    previousEnd = tag.index! + tag[0].length;
+    if (/^<[!?]/.test(tag[0])) continue;
+    const closing = /^<\//.test(tag[0]);
+    const name = /^<\/?([^\s/>]+)/.exec(tag[0])?.[1] ?? "";
+    const selfClosing = /\/>$/.test(tag[0]);
+    if (closing) {
+      if (name !== stack.pop()) throw new Error("unbalanced xml");
+      depth--;
+      if (bodyDepth && depth === bodyDepth) {
+        if (!batchStart) batchStart = blockStart;
+        if (nodes - batchNodes >= 8_000) {
+          chunks.push(xml.slice(batchStart, previousEnd));
+          batchStart = 0;
+          batchNodes = nodes;
+        }
+      } else if (bodyDepth && name === bodyName && depth === bodyDepth - 1) {
+        if (batchStart) chunks.push(xml.slice(batchStart, tag.index));
+        bodyDepth = 0;
+      }
+    } else {
+      if (bodyDepth && depth === bodyDepth) blockStart = tag.index!;
+      if (!selfClosing) {
+        stack.push(name);
+        depth++;
+        if (depth > 64) throw new ResourceLimitError("xml_depth");
+        if (!prefix && name.split(":").at(-1) === "body") {
+          bodyDepth = depth;
+          bodyName = name;
+          bodyStart = previousEnd;
+          prefix = xml.slice(0, bodyStart);
+          suffix = stack.slice().reverse().map((entry) => `</${entry}>`).join("");
+          batchNodes = nodes;
+        }
+      } else if (bodyDepth && depth === bodyDepth && !batchStart) batchStart = blockStart;
+    }
+  }
+  if (depth || !prefix) throw new Error("no body");
   const counts = { mathImages: 0, images: 0 };
-  const body = (
-    document.getElementsByTagNameNS?.(W_NS, "body") ?? []
-  )[0] as XmlNode | undefined;
-  if (!body) throw new Error("no body");
 
   // An embedded object or picture: counted, never read.
   const picture = (node: XmlNode) => {
@@ -151,9 +188,22 @@ export async function readDocxText(data: Buffer): Promise<DocxText> {
     }
     return out;
   };
-  const text = blocks(body)
-    .join("\n\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+  const parts: string[] = [];
+  let chars = 0;
+  for (const chunk of chunks) {
+    const document = new DOMParser({
+      errorHandler: {
+        warning: () => {}, error: () => {},
+        fatalError: (message: string) => { throw new Error(message); },
+      },
+    } as never).parseFromString(prefix + chunk + suffix, "text/xml") as unknown as XmlNode;
+    const body = (document.getElementsByTagNameNS?.(W_NS, "body") ?? [])[0];
+    if (!body) throw new Error("no body");
+    const part = blocks(body).join("\n\n");
+    chars += part.length + (parts.length ? 2 : 0);
+    if (chars > 500_000) throw new ResourceLimitError("docx_text");
+    parts.push(part);
+  }
+  const text = parts.join("\n\n").replace(/\n{3,}/g, "\n\n").trim();
   return { text, ...counts };
 }

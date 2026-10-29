@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 收卡页：确认需要保存的文字、类型与来源，再调用卡片接口写入。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -33,7 +34,7 @@ const remindBody = (id) =>
       ? { remindEvery: id }
       : {};
 
-Page({
+Page(withShare({
     data: {
       consent: false,
       mode: "message",
@@ -330,4 +331,4 @@ Page({
         .catch(done);
     },
     noop() {},
-  });
+  }));

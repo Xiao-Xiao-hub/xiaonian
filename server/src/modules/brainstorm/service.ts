@@ -753,7 +753,8 @@ export class BrainstormService {
     const { job } = runner.enqueue({
       userId,
       kind: "brainstorm_report",
-      params: { brainstormId: id, clientId },
+      params: { brainstormId: id, clientId,
+        ...(!stored && !previous && row.job_id ? { continuationJobId: row.job_id } : {}) },
       ...(stored ? { refresh: true } : {}),
     });
     // One brainstorm, one charge : the report belongs to a
@@ -792,6 +793,17 @@ export class BrainstormService {
     return {
       brainstorm_report: {
         // No quota bucket : see report.
+        activityId: (job) => {
+          if (job.params._securityAttempt !== 1 || typeof job.params.continuationJobId !== "string") return undefined;
+          // Only the initial report of this server-owned successful parent
+          // continues its attempt. Refreshes and failed retries are new work.
+          const parent = this.store.db.prepare(`SELECT j.id,json_extract(j.params,'$._securityAttempt') AS attempt
+            FROM brainstorms b JOIN jobs j ON j.id=b.job_id
+            WHERE b.id=? AND b.user_id=? AND j.id=? AND j.user_id=? AND j.kind='brainstorm' AND j.status='succeeded'`)
+            .get(String(job.params.brainstormId), job.userId, job.params.continuationJobId, job.userId);
+          return parent && Number.isSafeInteger(parent.attempt) && Number(parent.attempt) > 0
+            ? `${parent.id}:${parent.attempt}` : undefined;
+        },
         timeoutMs: () => 120_000,
         run: async (job, signal, report) => {
           report({ stage: "write" });

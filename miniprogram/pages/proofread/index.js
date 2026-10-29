@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 原文校对页：等待识别任务，允许修订文字并确认材料版本，然后进入学习流程。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -6,7 +7,7 @@ const api = require("../../utils/api");
 const gate = require("../../utils/gate");
 const { countChars, errorText } = require("../../utils/format");
 const TEXT_LIMIT = 2000;
-Page({
+Page(withShare({
   data: {
     id: "",
     loading: true,
@@ -137,4 +138,4 @@ Page({
       })
       .finally(() => this.setData({ busy: false }));
   },
-});
+}));

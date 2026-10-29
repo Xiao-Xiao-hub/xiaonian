@@ -1,3 +1,4 @@
+const { withShare } = require("../../utils/share");
 /*
  * 对话历史：分页展示会话并进入原会话；不同工具的历史仍按服务端工具范围区分。
  * 界面结构与样式见同目录 WXML/WXSS；网络与登录通过 utils 公共模块衔接。
@@ -27,7 +28,7 @@ function row(t) {
   };
 }
 
-Page({
+Page(withShare({
   data: { threads: [], query: "", next: null, loaded: false, loading: false, error: "" },
   onShow() {
     if (!gate.check()) return;
@@ -98,4 +99,4 @@ Page({
       },
     });
   },
-});
+}));

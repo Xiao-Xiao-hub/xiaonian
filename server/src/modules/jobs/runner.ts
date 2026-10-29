@@ -7,6 +7,7 @@ import { randomUUID } from "node:crypto";
 import type { Budget } from "../../shared/budget.js";
 import { AppError } from "../../shared/domain.js";
 import { withJobDeadline } from "../../shared/job-deadline.js";
+import { runWithCallContext } from "../../shared/call-context.js";
 import { digest, type SqliteStore } from "../../shared/store.js";
 import {
   chinaDayStart,
@@ -54,6 +55,9 @@ export class JobError extends Error {
   }
 }
 export type JobHandler = {
+  // A server-owned continuation may share its parent's safety attempt while
+  // retaining a separate billing scope. Ordinary executions use id:attempt.
+  activityId?: (job: Job) => string | undefined;
   // Quota bucket counted per user per day; unmetered when absent.
   quota?: string;
   // One receipt is written for each unit. Scan handlers use this for pages.
@@ -79,6 +83,8 @@ export type JobHandler = {
 export type RunnerOptions = {
   concurrency: number;
   timeoutMs: number;
+  queueLimit?: number;
+  userQueueLimit?: number;
   limits: Record<string, number>;
   // Per-account limit (admin overrides and global settings); falls back to limits.
   limitFor?: (userId: string, bucket: string) => number | undefined;
@@ -189,6 +195,7 @@ export class JobRunner {
         )
         .get(input.userId, input.kind, hash);
       if (existing) return { job: toJob(existing), reused: true };
+      this.checkQueue(input.userId);
       const quotaUnits = handler.quota
         ? this.validateQuotaUnits(handler.quotaUnits?.(params) ?? 1)
         : 0;
@@ -221,6 +228,14 @@ export class JobRunner {
     });
     if (!outcome.reused) this.pump();
     return outcome;
+  }
+  checkQueue(userId: string) {
+    const counts = this.store.db.prepare(
+      "SELECT COUNT(*) AS total,COALESCE(SUM(user_id=?),0) AS own FROM jobs WHERE status IN ('queued','running')",
+    ).get(userId)!;
+    if (Number(counts.total) >= (this.options.queueLimit ?? 128) ||
+        Number(counts.own) >= (this.options.userQueueLimit ?? 32))
+      throw new AppError(429, "JOB_QUEUE_FULL", "等待中的任务较多，请处理完后再试");
   }
   usedToday(userId: string, bucket: string) {
     const since = chinaDayStart(this.now().getTime());
@@ -310,6 +325,7 @@ export class JobRunner {
           "NOT_RETRYABLE",
           "只有最近 7 天内因服务原因失败的任务可以重试",
         );
+      this.checkQueue(String(row.user_id));
       if (
         this.store.db
           .prepare(
@@ -406,13 +422,18 @@ export class JobRunner {
         .get(this.scanActive ? 1 : 0);
       if (!row) return;
       const startedAt = this.now().toISOString();
+      const before = toJob(row);
+      const previousAttempt = before.params._securityAttempt;
+      const attempt = typeof previousAttempt === "number" && Number.isSafeInteger(previousAttempt) && previousAttempt > 0
+        ? previousAttempt + 1 : 1;
+      const params = { ...before.params, _securityAttempt: attempt };
       const claimed = this.store.db
         .prepare(
-          "UPDATE jobs SET status='running',started_at=? WHERE id=? AND status='queued'",
+          "UPDATE jobs SET status='running',started_at=?,params=? WHERE id=? AND status='queued'",
         )
-        .run(startedAt, row.id as string).changes;
+        .run(startedAt, JSON.stringify(params), row.id as string).changes;
       if (!claimed) continue;
-      const job: Job = { ...toJob(row), status: "running", startedAt };
+      const job: Job = { ...before, params, status: "running", startedAt };
       const scan = job.kind === "import_scan_pdf";
       if (scan) this.scanActive = true;
       const task: Promise<void> = this.execute(job).finally(() => {
@@ -477,10 +498,18 @@ export class JobRunner {
     );
   }
   private async execute(job: Job) {
+    const activityId = this.handlers[job.kind]?.activityId?.(job)
+      ?? `${job.id}:${job.params._securityAttempt}`;
+    return runWithCallContext({ userId: job.userId, source: "job" }, () =>
+      this.executeInCallContext(job), activityId,
+    );
+  }
+  private async executeInCallContext(job: Job) {
     const handler = this.handlers[job.kind];
     const controller = new AbortController();
     let timeout: AbortSignal | undefined;
     let completedUsage: unknown;
+    let delivered = false;
     this.controllers.set(job.id, controller);
     try {
       const timeoutMs = this.timeoutFor(handler, job.params);
@@ -508,15 +537,18 @@ export class JobRunner {
               .prepare("UPDATE jobs SET usage=COALESCE(usage,?) WHERE id=?")
               .run(json(usage), job.id);
           // The calls finished, so they are spent like the receipt.
-          this.options.budget?.charge(job.userId, "job", job.id, usage);
+          if (!this.options.budget?.commercialEnabled)
+            this.options.budget?.charge(job.userId, "job", job.id, usage);
           return;
         }
         const result = handler.commit ? handler.commit(job, output) : output;
         this.finish(job.id, "succeeded", { result, usage });
         // Only a succeeded job is charged : failures cost nothing.
         this.options.budget?.charge(job.userId, "job", job.id, usage);
+        delivered = true;
       });
     } catch (error) {
+      delivered = false;
       let status: JobStatus = "failed";
       let failure = { code: "JOB_FAILED", message: INTERRUPTED };
       if (controller.signal.aborted) {
@@ -572,6 +604,8 @@ export class JobRunner {
         this.options.log?.(inner, job);
       }
     } finally {
+      try { this.options.budget?.finishCall(delivered); }
+      catch (error) { this.options.log?.(error, job); }
       this.controllers.delete(job.id);
       this.progress.delete(job.id);
     }

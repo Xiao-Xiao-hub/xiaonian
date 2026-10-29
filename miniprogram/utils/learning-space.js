@@ -4,11 +4,16 @@
  */
 // Only per-account pointers live on this device (the last point, the last 问 AI
 // conversation), and since V4.2 the unfinished answers on 练一题 so leaving the
-// page keeps them; never messages or note contents. All go with the account.
+// page keeps them; never messages or note contents. All go with the account,
+// and so does the unsent text other pages keep (clear).
 const prefix = "zhiye_last_point:";
 const draftPrefix = "zhiye_point_draft:";
 const DRAFTS = 20;
 const threadPrefix = "ask_thread:";
+// Unsent text other pages keep on this phone; some keys carry no account.
+// A WeChat user has one account here, so when it goes they all go.
+const UNSENT = ["zhiye_notes_draft:", "zhiye_chat_draft", "zhiye_bs_draft:", "zhiye_import_", "mistake-redo:",
+  "zhiye_material_ask:", "practice-draft:", "practice-last:", "stuck_thread:", "tool_draft:"];
 function remember(owner, pointId, now = Date.now()) {
   if (!owner || typeof pointId !== "string" || !pointId || !Number.isFinite(now)) return;
   try { wx.setStorageSync(prefix + owner, { pointId, openedAt: now }); } catch (_) { /* Optional convenience; learning still works. */ }
@@ -25,6 +30,9 @@ function clear(owner) {
   // The 学习时长 switch is kept per phone (utils/study-clock.js PREF_KEY); it
   // goes with the account, and the next one starts from its own setting.
   try { wx.removeStorageSync("zhiye_study_time"); } catch (_) { /* Only decides whether to time. */ }
+  try {
+    wx.getStorageInfoSync().keys.filter((key) => UNSENT.some((p) => key.startsWith(p))).forEach((key) => wx.removeStorageSync(key));
+  } catch (_) { /* What could not be read stays; nothing on the server depends on it. */ }
 }
 function lastThread(owner) {
   try { return (owner && wx.getStorageSync(threadPrefix + owner)) || ""; } catch (_) { return ""; }

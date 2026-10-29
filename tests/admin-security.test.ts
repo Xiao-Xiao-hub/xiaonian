@@ -350,6 +350,7 @@ test("operations publishes useful state without private paths or credentials", a
     assert.deepEqual(response.json().data.accounting, {
       status: "ok",
       writeFailures: 0,
+      commercialWriteFailures: 0,
     });
     assert.equal(response.json().data.security.adminIdleTimeoutSec, 900);
     assert.ok(response.json().data.process.rssBytes > 0);

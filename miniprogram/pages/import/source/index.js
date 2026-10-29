@@ -1,3 +1,4 @@
+const { withShare } = require("../../../utils/share");
 /*
  * 导入来源页：选择文字、图片或文档，跟踪读取进度，校对原文后进入拆卡确认。
  * 页面中的请求标识、账号快照和 alive 状态用于拦截过期回包；不能仅因离开页面就删除另一份新草稿。
@@ -60,7 +61,7 @@ function present(file) {
   }
 }
 
-Page({
+Page(withShare({
     data: {
       text: "",
       charCount: 0,
@@ -1172,4 +1173,4 @@ Page({
         },
       });
     },
-  });
+  }));
